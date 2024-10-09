@@ -1042,104 +1042,104 @@ pub fn init(path: String) {
         PATH = Some(path);
     }
 
-    for i in 0..5 {
-        init_tb(&format!("K{}vK", P[i]));
-    }
+    P.iter().for_each(|item| {
+        init_tb(&format!("K{}vK", item));
+    });
 
-    for i in 0..5 {
-        for j in i..5 {
-            init_tb(&format!("K{}vK{}", P[i], P[j]));
-        }
-    }
+    P.iter().enumerate().for_each(|(i, item1)| {
+        P.iter().skip(i).for_each(|item2| {
+            init_tb(&format!("K{}vK{}", item1, item2));
+        });
+    });
 
-    for i in 0..5 {
-        for j in i..5 {
-            init_tb(&format!("K{}{}vK", P[i], P[j]));
-        }
-    }
+    P.iter().enumerate().for_each(|(i, item1)| {
+        P.iter().skip(i).for_each(|item2| {
+            init_tb(&format!("K{}{}vK", item1, item2));
+        });
+    });
 
-    for i in 0..5 {
-        for j in i..5 {
-            for k in 0..5 {
-                init_tb(&format!("K{}{}vK{}", P[i], P[j], P[k]));
-            }
-        }
-    }
+    P.iter().enumerate().for_each(|(i, item1)| {
+        P.iter().skip(i).for_each(|item2| {
+            P.iter().for_each(|item3| {
+                init_tb(&format!("K{}{}vK{}", item1, item2, item3));
+            });
+        });
+    });
 
-    for i in 0..5 {
-        for j in i..5 {
-            for k in j..5 {
-                init_tb(&format!("K{}{}{}vK", P[i], P[j], P[k]));
-            }
-        }
-    }
+    P.iter().enumerate().for_each(|(i, item1)| {
+        P.iter().skip(i).enumerate().for_each(|(j, item2)| {
+            P.iter().skip(i + j).for_each(|item3| {
+                init_tb(&format!("K{}{}{}vK", item1, item2, item3));
+            });
+        });
+    });
 
     if !max5 {
-        for i in 0..5 {
-            for j in i..5 {
-                for k in i..5 {
-                    for l in (if i == k { j } else { k })..5 {
-                        init_tb(&format!("K{}{}vK{}{}", P[i], P[j], P[k], P[l]));
-                    }
-                }
-            }
-        }
+        P.iter().enumerate().for_each(|(i, item1)| {
+            P.iter().skip(i).enumerate().for_each(|(j, item2)| {
+                P.iter().skip(i).enumerate().for_each(|(k, item3)| {
+                    P.iter().skip(if i == k { j } else { k }).for_each(|item4| {
+                        init_tb(&format!("K{}{}vK{}{}", item1, item2, item3, item4));
+                    });
+                });
+            });
+        });
 
-        for i in 0..5 {
-            for j in i..5 {
-                for k in j..5 {
-                    for l in 0..5 {
-                        init_tb(&format!("K{}{}{}vK{}", P[i], P[j], P[k], P[l]));
-                    }
-                }
-            }
-        }
+        P.iter().enumerate().for_each(|(i, item1)| {
+            P.iter().skip(i).enumerate().for_each(|(j, item2)| {
+                P.iter().skip(j).enumerate().for_each(|(k, item3)| {
+                    P.iter().for_each(|item4| {
+                        init_tb(&format!("K{}{}{}vK{}", item1, item2, item3, item4));
+                    });
+                });
+            });
+        });
 
-        for i in 0..5 {
-            for j in i..5 {
-                for k in j..5 {
-                    for l in k..5 {
-                        init_tb(&format!("K{}{}{}{}vK", P[i], P[j], P[k], P[l]));
-                    }
-                }
-            }
-        }
+        P.iter().enumerate().for_each(|(i, item1)| {
+            P.iter().skip(i).enumerate().for_each(|(j, item2)| {
+                P.iter().skip(j).enumerate().for_each(|(k, item3)| {
+                    P.iter().skip(k).for_each(|item4| {
+                        init_tb(&format!("K{}{}{}{}vK", item1, item2, item3, item4));
+                    });
+                });
+            });
+        });
 
-        for i in 0..5 {
-            for j in i..5 {
-                for k in j..5 {
-                    for l in 0..5 {
-                        for m in l..5 {
-                            init_tb(&format!("K{}{}{}vK{}{}", P[i], P[j], P[k], P[l], P[m]));
-                        }
-                    }
-                }
-            }
-        }
+        P.iter().enumerate().for_each(|(i, item1)| {
+            P.iter().skip(i).enumerate().for_each(|(j, item2)| {
+                P.iter().skip(j).enumerate().for_each(|(k, item3)| {
+                    P.iter().enumerate().for_each(|(l, item4)| {
+                        P.iter().skip(l).for_each(|item5| {
+                            init_tb(&format!("K{}{}{}vK{}{}", item1, item2, item3, item4, item5));
+                        });
+                    });
+                });
+            });
+        });
 
-        for i in 0..5 {
-            for j in i..5 {
-                for k in j..5 {
-                    for l in k..5 {
-                        for m in 0..5 {
-                            init_tb(&format!("K{}{}{}{}vK{}", P[i], P[j], P[k], P[l], P[m]));
-                        }
-                    }
-                }
-            }
-        }
+        P.iter().enumerate().for_each(|(i, item1)| {
+            P.iter().skip(i).enumerate().for_each(|(j, item2)| {
+                P.iter().skip(j).enumerate().for_each(|(k, item3)| {
+                    P.iter().skip(k).enumerate().for_each(|(l, item4)| {
+                        P.iter().for_each(|item5| {
+                            init_tb(&format!("K{}{}{}{}vK{}", item1, item2, item3, item4, item5));
+                        });
+                    });
+                });
+            });
+        });
 
-        for i in 0..5 {
-            for j in i..5 {
-                for k in j..5 {
-                    for l in k..5 {
-                        for m in l..5 {
-                            init_tb(&format!("K{}{}{}{}{}vK", P[i], P[j], P[k], P[l], P[m]));
-                        }
-                    }
-                }
-            }
-        }
+        P.iter().enumerate().for_each(|(i, item1)| {
+            P.iter().skip(i).enumerate().for_each(|(j, item2)| {
+                P.iter().skip(j).enumerate().for_each(|(k, item3)| {
+                    P.iter().skip(k).enumerate().for_each(|(l, item4)| {
+                        P.iter().skip(l).for_each(|item5| {
+                            init_tb(&format!("K{}{}{}{}{}vK", item1, item2, item3, item4, item5));
+                        });
+                    });
+                });
+            });
+        });
     }
 
     println!(
