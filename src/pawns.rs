@@ -4,8 +4,6 @@ use crate::bitboard::*;
 use crate::position::Position;
 use crate::types::*;
 
-use std;
-
 macro_rules! V { ($x:expr) => (Value($x)) }
 macro_rules! S { ($x:expr, $y:expr) => (Score(($y << 16) + $x)) }
 

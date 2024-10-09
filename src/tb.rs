@@ -9,7 +9,6 @@ use crate::types::*;
 use crate::ucioption;
 
 use memmap::*;
-use std;
 use std::cell::UnsafeCell;
 use std::collections::HashMap;
 use std::fs;

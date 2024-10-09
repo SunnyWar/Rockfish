@@ -9,7 +9,6 @@ use crate::tb;
 use crate::types::*;
 use crate::ucioption;
 
-use std;
 use std::cell::Cell;
 use std::sync::{Arc, Condvar, Mutex, RwLock};
 use std::sync::atomic::*;

@@ -6,8 +6,6 @@ use crate::pawns;
 use crate::position::Position;
 use crate::types::*;
 
-use std;
-
 pub const TEMPO: Value = Value(20);
 
 pub static mut CONTEMPT: Score = Score::ZERO;

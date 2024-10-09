@@ -5,8 +5,6 @@ use crate::endgame::*;
 use crate::position::Position;
 use crate::types::*;
 
-use std;
-
 pub struct Entry {
     key: Key,
     scaling_function: [Option<ScaleFn>; 2],

@@ -2,8 +2,6 @@
 
 #![allow(dead_code)]
 
-use std;
-
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Key(pub u64);
 

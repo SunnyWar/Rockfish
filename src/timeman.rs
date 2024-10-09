@@ -4,8 +4,6 @@ use crate::search;
 use crate::types::*;
 use crate::ucioption;
 
-use std;
-
 static mut START_TIME: Option<std::time::Instant> = None;
 static mut OPTIMUM_TIME: i64 = 0;
 static mut MAXIMUM_TIME: i64 = 0;

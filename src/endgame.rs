@@ -7,8 +7,6 @@ use crate::position::Position;
 use crate::position::zobrist;
 use crate::types::*;
 
-use std;
-
 pub type EvalFn = fn(&Position, Color) -> Value;
 pub type ScaleFn = fn(&Position, Color) -> ScaleFactor;
 

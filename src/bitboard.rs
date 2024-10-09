@@ -5,8 +5,6 @@
 use crate::types::*;
 use crate::uci;
 
-use std;
-
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Bitboard(pub u64);
 

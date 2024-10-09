@@ -17,7 +17,6 @@ use std::sync::Arc;
 
 pub mod zobrist {
     use crate::types::*;
-    use bitboard;
     use crate::misc;
 
     static mut PSQ: [[Key; 64]; 16] = [[Key(0); 64]; 16];

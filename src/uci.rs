@@ -10,7 +10,6 @@ use threads::PosData;
 use crate::types::*;
 use crate::ucioption;
 
-use std;
 use std::env;
 use std::sync::{Arc, RwLock};
 use std::time::Instant;

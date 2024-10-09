@@ -14,7 +14,6 @@ use crate::types::*;
 use crate::uci;
 use crate::ucioption;
 
-use std;
 use std::io::stdout;
 use std::io::Write;
 use std::time::Instant;
