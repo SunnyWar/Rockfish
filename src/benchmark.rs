@@ -81,19 +81,11 @@ pub fn setup_bench(pos: &Position, args: &str) -> Vec<String> {
     let mut iter = args.split_whitespace();
 
     // Assign default values to missing arguments
-    let tt_size = if let Some(t) = iter.next() { t } else { "16" };
-    let threads = if let Some(t) = iter.next() { t } else { "1" };
-    let limit = if let Some(t) = iter.next() { t } else { "13" };
-    let fen_file = if let Some(t) = iter.next() {
-        t
-    } else {
-        "default"
-    };
-    let limit_type = if let Some(t) = iter.next() {
-        t
-    } else {
-        "depth"
-    };
+    let tt_size = iter.next().unwrap_or("16");
+    let threads = iter.next().unwrap_or("1");
+    let limit = iter.next().unwrap_or("13");
+    let fen_file = iter.next().unwrap_or("default");
+    let limit_type = iter.next().unwrap_or("depth");
 
     let go = format!("go {} {}", limit_type, limit);
 

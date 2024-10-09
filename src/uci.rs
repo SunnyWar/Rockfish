@@ -191,7 +191,7 @@ pub fn cmd_loop() {
         if env::args().len() == 1 {
             cmd = String::new();
             // Block here waiting for input or EOF
-            if let Err(_) = std::io::stdin().read_line(&mut cmd) {
+            if std::io::stdin().read_line(&mut cmd).is_err() {
                 cmd = String::from("quit");
             }
         }
@@ -267,7 +267,7 @@ pub fn value(v: Value) -> String {
         s.push_str(&dtm.to_string());
     }
 
-    return s;
+    s
 }
 
 // square() converts a Square to a string in algebraic notation (g1, a7, etc.)
