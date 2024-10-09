@@ -15,7 +15,7 @@ use std::sync::{Arc, RwLock};
 use std::time::Instant;
 
 // FEN string of the initial position, normal chess
-const START_FEN: &'static str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+const START_FEN: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 // position() is called when engine receives the "position" UCI command.
 // The function sets up the position described in the given FEN string ("fen")
@@ -149,8 +149,7 @@ fn bench(pos: &mut Position, pos_data: &Arc<RwLock<PosData>>, args: &str) {
     }
 
     let duration = now.elapsed();
-    let elapsed =
-        duration.as_secs() * 1000 + (duration.subsec_nanos() as u64) / 10000000 + 1;
+    let elapsed = duration.as_secs() * 1000 + (duration.subsec_nanos() as u64) / 10000000 + 1;
 
     eprintln!(
         "\n===========================\

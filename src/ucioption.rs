@@ -90,7 +90,7 @@ fn on_threads(opt_val: &OptVal) {
 }
 
 fn on_tb_path(opt_val: &OptVal) {
-    if let &OptVal::StringOpt { ref cur, .. } = opt_val {
+    if let OptVal::StringOpt { cur, .. } = opt_val {
         tb::init(String::from(cur.as_str()));
     }
 }
@@ -155,8 +155,7 @@ pub fn print() {
                 OptVal::StringOpt { def, .. } => format!("string default {}", def),
                 OptVal::Spin { def, min, max, .. } =>
                     format!("spin default {} min {} max {}", def, min, max),
-                OptVal::Check { def, .. } =>
-                    format!("check default {}", if def { true } else { false }),
+                OptVal::Check { def, .. } => format!("check default {}", def),
                 OptVal::Button => "button".to_string(),
                 OptVal::Combo { def, .. } => format!("combo default {}", def),
             }

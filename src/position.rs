@@ -55,17 +55,17 @@ pub mod zobrist {
         let mut rng = misc::Prng::new(1070372);
 
         unsafe {
-            for i in 1..15 {
+            (1..15).for_each(|i| {
                 if i != 7 && i != 8 {
                     for s in 0..64 {
                         PSQ[i][s] = Key(rng.rand64());
                     }
                 }
-            }
+            });
 
-            for f in 0..8 {
+            (0..8).for_each(|f| {
                 ENPASSANT[f] = Key(rng.rand64());
-            }
+            });
 
             for cr in 0..16 {
                 let b = crate::bitboard::Bitboard(cr);
@@ -540,7 +540,7 @@ impl Position {
                     while self.piece_on(rsq) != rook {
                         rsq += EAST;
                     }
-                } else if side >= 'A' && side <= 'H' {
+                } else if ('A'..='H').contains(&side) {
                     let file = side.to_digit(18).unwrap() - 10;
                     rsq = Square::make(file, relative_rank(color, RANK_1));
                 } else {
@@ -1476,7 +1476,7 @@ impl Position {
 
     pub fn is_draw(&self, ply: i32) -> bool {
         if self.st().rule50 > 99
-            && (self.checkers() == 0 || MoveList::new::<Legal>(&self).len() != 0)
+            && (self.checkers() == 0 || MoveList::new::<Legal>(self).len() != 0)
         {
             return true;
         }

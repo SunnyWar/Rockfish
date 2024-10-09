@@ -280,26 +280,25 @@ impl Entry {
 pub fn init() {
     const SEED: [i32; 8] = [0, 13, 24, 18, 76, 100, 175, 330];
 
-    for opposed in 0..2 {
-        for phalanx in 0..2 {
-            for support in 0..3 {
-                for r in 1..7i32 {
-                    let v = 17 * support
-                        + ((SEED[r as usize]
-                            + (if phalanx != 0 {
-                                (SEED[(r + 1) as usize] - SEED[r as usize]) / 2
-                            } else {
-                                0
-                            }))
-                            >> opposed);
+    (0..2).for_each(|opposed| {
+        (0..2).for_each(|phalanx| {
+            (0..3).for_each(|support| {
+                (1..7).for_each(|r| {
+                    let delta = if phalanx != 0 {
+                        (SEED[(r + 1) as usize] - SEED[r as usize]) / 2
+                    } else {
+                        0
+                    };
+                    let v = 17 * support + ((SEED[r as usize] + delta) >> opposed);
+                    let score = Score::make(v, v * (r - 2) / 4);
+
                     unsafe {
-                        CONNECTED[opposed as usize][phalanx as usize][support as usize]
-                            [r as usize] = Score::make(v, v * (r - 2) / 4);
+                        CONNECTED[opposed][phalanx][support as usize][r as usize] = score;
                     }
-                }
-            }
-        }
-    }
+                });
+            });
+        });
+    });
 }
 
 // pawns::probe() looks up the current position's pawn configuration in the
@@ -328,10 +327,22 @@ pub fn probe(pos: &Position) -> &mut Entry {
 
 fn evaluate<Us: ColorTrait>(pos: &Position, e: &mut Entry) -> Score {
     let us = Us::COLOR;
-    let them = if us == WHITE { BLACK } else { WHITE };
-    let up = if us == WHITE { NORTH } else { SOUTH };
-    let right = if us == WHITE { NORTH_EAST } else { SOUTH_WEST };
-    let left = if us == WHITE { NORTH_WEST } else { SOUTH_EAST };
+    let them = match us {
+        WHITE => BLACK,
+        _ => WHITE,
+    };
+    let up = match us {
+        WHITE => NORTH,
+        _ => SOUTH,
+    };
+    let right = match us {
+        WHITE => NORTH_EAST,
+        _ => SOUTH_WEST,
+    };
+    let left = match us {
+        WHITE => NORTH_WEST,
+        _ => SOUTH_EAST,
+    };
 
     let mut score = Score::ZERO;
 

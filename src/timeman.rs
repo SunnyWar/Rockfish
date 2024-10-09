@@ -18,7 +18,7 @@ pub fn maximum() -> i64 {
 
 pub fn elapsed() -> i64 {
     let duration = unsafe { START_TIME.unwrap().elapsed() };
-    (duration.as_secs() * 1000 + (duration.subsec_nanos() / 1000000) as u64) as i64
+    (duration.as_secs() * 1000 + duration.subsec_millis() as u64) as i64
 }
 
 #[derive(PartialEq, Eq)]
@@ -46,7 +46,7 @@ fn importance(ply: i32) -> f64 {
     const XSHIFT: f64 = 64.5;
     const SKEW: f64 = 0.171;
 
-    (1. + ((ply as f64 - XSHIFT) / XSCALE).exp()).powf(-SKEW) + std::f64::MIN_POSITIVE
+    (1. + ((ply as f64 - XSHIFT) / XSCALE).exp()).powf(-SKEW) + f64::MIN_POSITIVE
 }
 
 fn remaining(my_time: i64, movestogo: i32, ply: i32, slow_mover: i64, time_type: TimeType) -> i64 {
