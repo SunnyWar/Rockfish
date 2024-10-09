@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use position::Position;
+use crate::position::Position;
 
 use std;
 use std::fs::File;

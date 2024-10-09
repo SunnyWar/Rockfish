@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use bitbases;
-use bitboard::*;
-use movegen::*;
-use position::Position;
-use position::zobrist;
-use types::*;
+use crate::bitbases;
+use crate::bitboard::*;
+use crate::movegen::*;
+use crate::position::Position;
+use crate::position::zobrist;
+use crate::types::*;
 
 use std;
 

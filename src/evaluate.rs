@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use bitboard::*;
-use material;
-use pawns;
-use position::Position;
-use types::*;
+use crate::bitboard::*;
+use crate::material;
+use crate::pawns;
+use crate::position::Position;
+use crate::types::*;
 
 use std;
 

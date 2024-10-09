@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use movegen::*;
-use position::Position;
-use search;
-use types::*;
+use crate::movegen::*;
+use crate::position::Position;
+use crate::search;
+use crate::types::*;
 
 use std::cell::Cell;
 

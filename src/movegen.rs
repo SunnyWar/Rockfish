@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use types::*;
-use bitboard::*;
-use position::Position;
+use crate::types::*;
+use crate::bitboard::*;
+use crate::position::Position;
 
 const CAPTURES: i32 = 0;
 const QUIETS: i32 = 1;

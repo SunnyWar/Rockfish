@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use bitboard::*;
-use evaluate;
-use evaluate::evaluate;
-use movegen::*;
-use movepick::*;
-use position::*;
-use tb;
-use threads;
-use timeman;
-use tt;
-use types::*;
-use uci;
-use ucioption;
+use crate::bitboard::*;
+use crate::evaluate;
+use crate::evaluate::evaluate;
+use crate::movegen::*;
+use crate::movepick::*;
+use crate::position::*;
+use crate::tb;
+use crate::threads;
+use crate::timeman;
+use crate::tt;
+use crate::types::*;
+use crate::uci;
+use crate::ucioption;
 
 use std;
 use std::io::stdout;

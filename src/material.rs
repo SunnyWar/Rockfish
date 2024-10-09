@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use bitboard::*;
-use endgame::*;
-use position::Position;
-use types::*;
+use crate::bitboard::*;
+use crate::endgame::*;
+use crate::position::Position;
+use crate::types::*;
 
 use std;
 

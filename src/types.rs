@@ -117,7 +117,7 @@ impl CastlingRightTrait for BlackOOO {
 
 impl CastlingRight {
     pub fn make(c: Color, cs: CastlingSide) -> CastlingRight {
-        use types::CastlingSide::*;
+        use crate::types::CastlingSide::*;
         match (c, cs) {
             (WHITE, KING) => WHITE_OO,
             (WHITE, _   ) => WHITE_OOO,

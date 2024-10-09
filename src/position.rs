@@ -1,24 +1,24 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use bitboard::*;
-use material;
-use movegen::*;
-use movepick::*;
-use pawns;
-use psqt;
-use search;
-use tb;
-use threads::ThreadCtrl;
-use types::*;
-use uci;
+use crate::bitboard::*;
+use crate::material;
+use crate::movegen::*;
+use crate::movepick::*;
+use crate::pawns;
+use crate::psqt;
+use crate::search;
+use crate::tb;
+use crate::threads::ThreadCtrl;
+use crate::types::*;
+use crate::uci;
 
 use std;
 use std::sync::Arc;
 
 pub mod zobrist {
-    use types::*;
+    use crate::types::*;
     use bitboard;
-    use misc;
+    use crate::misc;
 
     static mut PSQ: [[Key; 64]; 16] = [[Key(0); 64]; 16];
     static mut ENPASSANT: [Key; 8] = [Key(0); 8];
@@ -70,7 +70,7 @@ pub mod zobrist {
             }
 
             for cr in 0..16 {
-                let b = bitboard::Bitboard(cr);
+                let b = crate::bitboard::Bitboard(cr);
                 for s in b {
                     let k = CASTLING[1usize << s.0];
                     CASTLING[cr as usize] ^=

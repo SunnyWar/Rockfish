@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use search;
-use types::*;
-use ucioption;
+use crate::search;
+use crate::types::*;
+use crate::ucioption;
 
 use std;
 

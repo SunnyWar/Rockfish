@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use benchmark::*;
-use misc;
-use movegen::*;
-use position::*;
-use search;
-use threads;
+use crate::benchmark::*;
+use crate::misc;
+use crate::movegen::*;
+use crate::position::*;
+use crate::search;
+use crate::threads;
 use threads::PosData;
-use types::*;
-use ucioption;
+use crate::types::*;
+use crate::ucioption;
 
 use std;
 use std::env;

@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use material;
-use movegen::*;
-use pawns;
-use position::Position;
-use search::*;
-use tb;
-use types::*;
-use ucioption;
+use crate::material;
+use crate::movegen::*;
+use crate::pawns;
+use crate::position::Position;
+use crate::search::*;
+use crate::tb;
+use crate::types::*;
+use crate::ucioption;
 
 use std;
 use std::cell::Cell;

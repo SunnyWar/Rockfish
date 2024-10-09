@@ -2,8 +2,8 @@
 
 #![allow(dead_code)]
 
-use types::*;
-use uci;
+use crate::types::*;
+use crate::uci;
 
 use std;
 

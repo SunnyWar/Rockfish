@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: (GPL-3.0-or-later OR UPL-1.0)
 
-use bitboard::*;
-use movegen::*;
-use position::Position;
-use position::zobrist::material;
-use search::RootMoves;
-use types::*;
-use ucioption;
+use crate::bitboard::*;
+use crate::movegen::*;
+use crate::position::Position;
+use crate::position::zobrist::material;
+use crate::search::RootMoves;
+use crate::types::*;
+use crate::ucioption;
 
 use memmap::*;
 use std;

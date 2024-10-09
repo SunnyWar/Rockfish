@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use types::*;
+use crate::types::*;
 
 use std;
 

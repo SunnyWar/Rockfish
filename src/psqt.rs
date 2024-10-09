@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use bitboard::*;
-use types::*;
+use crate::bitboard::*;
+use crate::types::*;
 
 use std;
 

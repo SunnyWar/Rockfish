@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use tb;
-use threads;
-use tt;
+use crate::tb;
+use crate::threads;
+use crate::tt;
 
 use std;
 
