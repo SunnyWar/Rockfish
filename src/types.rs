@@ -492,11 +492,14 @@ pub fn relative_square(c: Color, s: Square) -> Square {
 
 impl std::ops::Not for Square {
     type Output = Self;
+    #[inline(always)]
     fn not(self) -> Self { Square(self.0 ^ Square::A8.0) }
 }
 
+
 impl std::ops::BitXor<bool> for Square {
     type Output = Self;
+    #[inline(always)]
     fn bitxor(self, rhs: bool) -> Self {
         Square(self.0 ^ if rhs { 0x38 } else { 0 })
     }
@@ -504,6 +507,7 @@ impl std::ops::BitXor<bool> for Square {
 
 impl Iterator for Square {
     type Item = Self;
+    #[inline(always)]
     fn next(&mut self) -> Option<Self::Item> {
         let sq = self.0;
         *self = Square(sq + 1);
@@ -554,6 +558,7 @@ impl<'a> Iterator for SquareList<'a> {
     }
 }
 
+#[inline(always)]
 pub fn opposite_colors(s1: Square, s2: Square) -> bool {
     let s = s1.0 ^ s2.0;
     (((s >> 3) ^ s) & 1) != 0
