@@ -12,7 +12,6 @@ use crate::threads::ThreadCtrl;
 use crate::types::*;
 use crate::uci;
 
-use std;
 use std::sync::Arc;
 
 pub mod zobrist {

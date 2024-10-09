@@ -2,8 +2,6 @@
 
 use crate::types::*;
 
-use std;
-
 // TTEntry struct is the 10 bytes transposition-table entry, defined as below:
 //
 // key        16 bit

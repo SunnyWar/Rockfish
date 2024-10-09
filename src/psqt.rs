@@ -3,8 +3,6 @@
 use crate::bitboard::*;
 use crate::types::*;
 
-use std;
-
 macro_rules! S {
     ($x:expr, $y:expr) => {
         Score(($y << 16) + $x)

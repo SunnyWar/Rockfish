@@ -248,7 +248,7 @@ impl MovePicker {
             cur: 0,
             end_moves: 0,
             end_bad_captures: 0,
-            stage: stage,
+            stage,
             tt_move: ttm,
             countermove: pos.counter_moves.get(pos.piece_on(prev_sq), prev_sq),
             killers: [ss[5].killers[0], ss[5].killers[1]],
@@ -413,9 +413,9 @@ impl MovePickerQ {
         MovePickerQ {
             cur: 0,
             end_moves: 0,
-            stage: stage,
+            stage,
             depth: d,
-            tt_move: tt_move,
+            tt_move,
             recapture_square: s,
             list: [ExtMove {
                 m: Move::NONE,
@@ -517,9 +517,9 @@ impl MovePickerPC {
         MovePickerPC {
             cur: 0,
             end_moves: 0,
-            stage: stage,
-            tt_move: tt_move,
-            threshold: threshold,
+            stage,
+            tt_move,
+            threshold,
             list: [ExtMove {
                 m: Move::NONE,
                 value: 0,

@@ -4,8 +4,6 @@ use crate::tb;
 use crate::threads;
 use crate::tt;
 
-use std;
-
 type OnChange = Option<fn(&OptVal)>;
 
 struct Opt {

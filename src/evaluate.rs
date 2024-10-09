@@ -82,8 +82,8 @@ struct EvalInfo<'a> {
 impl<'a> EvalInfo<'a> {
     fn new(me: &'a material::Entry, pe: &'a mut pawns::Entry) -> EvalInfo<'a> {
         EvalInfo {
-            me: me,
-            pe: pe,
+            me,
+            pe,
             mobility_area: [Bitboard(0); 2],
             mobility: [Score::ZERO; 2],
             attacked_by: [[Bitboard(0); 8]; 2],
