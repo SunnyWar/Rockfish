@@ -7,7 +7,11 @@ use crate::types::*;
 const MAX_INDEX: usize = 2 * 24 * 64 * 64;
 
 // Each u32 stores results of 32 positions, one per bit
-static mut KPK_BITBASE: [u32; MAX_INDEX / 32] = [0; MAX_INDEX / 32];
+use std::sync::Once;
+
+static mut KPK_BITBASE: Option<&[u32; MAX_INDEX / 32]> = None;
+static KPK_BITBASE_INIT: Once = Once::new();
+
 
 // A KPK bitbase index is an integer in [0, IndexMax] range
 //
@@ -151,6 +155,7 @@ impl KPKPosition {
 }
 
 pub fn init() {
+    static mut BITBASE_STORAGE: [u32; MAX_INDEX / 32] = [0; MAX_INDEX / 32];
     let mut db: Vec<KPKPosition> = Vec::with_capacity(MAX_INDEX);
 
     // Initialize db with known win/draw positions
@@ -179,9 +184,15 @@ pub fn init() {
     for idx in 0..MAX_INDEX {
         if db[idx].result == WIN {
             unsafe {
-                KPK_BITBASE[idx / 32] |= 1u32 << (idx & 0x1f);
+                BITBASE_STORAGE[idx / 32] |= 1u32 << (idx & 0x1f);
             }
         }
+    }
+
+    unsafe {
+        KPK_BITBASE_INIT.call_once(|| {
+            KPK_BITBASE = Some(&BITBASE_STORAGE);
+        });
     }
 }
 
@@ -189,5 +200,5 @@ pub fn probe(wksq: Square, wpsq: Square, bksq: Square, us: Color) -> bool {
     debug_assert!(wpsq.file() <= FILE_D);
 
     let idx = index(us, bksq, wksq, wpsq);
-    unsafe { KPK_BITBASE[idx / 32] & (1 << (idx & 0x1f)) != 0 }
+    unsafe { KPK_BITBASE.unwrap()[idx / 32] & (1 << (idx & 0x1f)) != 0 }
 }
