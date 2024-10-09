@@ -848,12 +848,12 @@ static mut NUM_DTM: u32 = 0;
 static mut NUM_DTZ: u32 = 0;
 
 pub fn init_tb(name: &str) {
-    if !test_tb(&name, WDL_SUFFIX) {
+    if !test_tb(name, WDL_SUFFIX) {
         return;
     }
 
-    let has_dtm = test_tb(&name, DTM_SUFFIX);
-    let has_dtz = test_tb(&name, DTZ_SUFFIX);
+    let has_dtm = test_tb(name, DTM_SUFFIX);
+    let has_dtz = test_tb(name, DTZ_SUFFIX);
 
     let mut pcs = [0; 16];
     let mut color = 0;
@@ -890,13 +890,13 @@ pub fn init_tb(name: &str) {
 
     if pcs[W_PAWN.0 as usize] + pcs[B_PAWN.0 as usize] == 0 {
         let entry = PieceEntry {
-            key: key,
+            key,
             lock: Mutex::new(()),
             num: num as u8,
-            symmetric: symmetric,
+            symmetric,
             kk_enc: pcs.iter().filter(|&n| *n == 1).count() == 2,
-            has_dtm: has_dtm,
-            has_dtz: has_dtz,
+            has_dtm,
+            has_dtz,
             wdl: UnsafeCell::new(WdlPiece {
                 mapping: None,
                 ready: AtomicBool::new(false),
@@ -930,13 +930,13 @@ pub fn init_tb(name: &str) {
             std::mem::swap(&mut p0, &mut p1);
         }
         let entry = PawnEntry {
-            key: key,
+            key,
             lock: Mutex::new(()),
             num: num as u8,
-            symmetric: symmetric,
+            symmetric,
             pawns: [p0 as u8, p1 as u8],
-            has_dtm: has_dtm,
-            has_dtz: has_dtz,
+            has_dtm,
+            has_dtz,
             wdl: UnsafeCell::new(WdlPawn {
                 mapping: None,
                 ready: AtomicBool::new(false),

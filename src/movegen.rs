@@ -95,7 +95,7 @@ impl MoveList {
             }
             i += 1;
         }
-        return false;
+        false
     }
 }
 

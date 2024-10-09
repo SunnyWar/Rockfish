@@ -284,7 +284,7 @@ pub fn init() {
         for phalanx in 0..2 {
             for support in 0..3 {
                 for r in 1..7i32 {
-                    let v = 17 * (support as i32)
+                    let v = 17 * support
                         + ((SEED[r as usize]
                             + (if phalanx != 0 {
                                 (SEED[(r + 1) as usize] - SEED[r as usize]) / 2

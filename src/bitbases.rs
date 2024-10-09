@@ -38,7 +38,7 @@ struct KPKPosition {
 
 impl KPKPosition {
     fn new(idx: u32) -> KPKPosition {
-        let ksq = [Square((idx >> 0) & 0x3f), Square((idx >> 6) & 0x3f)];
+        let ksq = [Square(idx & 0x3f), Square((idx >> 6) & 0x3f)];
         let us = Color((idx >> 12) & 0x01);
         let psq = Square::make((idx >> 13) & 0x03, RANK_7 - ((idx >> 15) & 0x07));
         let result;

@@ -337,7 +337,7 @@ pub fn mainthread_search(pos: &mut Position, th: &threads::ThreadCtrl) {
         );
     }
 
-    print!("\n");
+    println!();
     stdout().flush().unwrap();
 }
 
@@ -1511,7 +1511,7 @@ fn search<NT: NodeType>(
 
     debug_assert!(best_value > -Value::INFINITE && best_value < Value::INFINITE);
 
-    return best_value;
+    best_value
 }
 
 // qsearch() is the quiescence search function, which is called by the main
@@ -1773,7 +1773,7 @@ fn qsearch<NT: NodeType, InCheck: Bool>(
 
     debug_assert!(best_value > -Value::INFINITE && best_value < Value::INFINITE);
 
-    return best_value;
+    best_value
 }
 
 // value_to_tt() adjusts a mate score from "plies to mate from the root" to
@@ -1985,7 +1985,7 @@ fn print_pv(pos: &mut Position, depth: Depth, alpha: Value, beta: Value) {
         for &m in pos.root_moves[i].pv.iter() {
             print!(" {}", uci::move_str(m, pos.is_chess960()));
         }
-        println!("");
+        println!();
     }
     stdout().flush().unwrap();
 }
