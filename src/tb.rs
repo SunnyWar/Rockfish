@@ -695,28 +695,27 @@ fn prt_str(pos: &Position, flip: bool) -> String {
 fn calc_key_from_pcs(pcs: &[i32; 16], flip: bool) -> Key {
     let mut key = Key(0);
 
-    for c in 0..2 {
-        for pt in 1..7 {
+    (0..2).for_each(|c| {
+        (1..7).for_each(|pt| {
             let pc = Piece::make(Color(c), PieceType(pt));
-            for i in 0..pcs[pc.0 as usize] {
+            (0..pcs[pc.0 as usize]).for_each(|i| {
                 key ^= material(pc ^ flip, i);
-            }
-        }
-    }
+            });
+        });
+    });
 
     key
 }
 
 fn calc_key_from_pieces(pieces: &[u8]) -> Key {
     let mut key = Key(0);
-
     let mut cnt = [0; 16];
 
-    for &k in pieces.iter() {
+    pieces.iter().for_each(|&k| {
         let pc = Piece(k as u32);
         key ^= material(pc, cnt[k as usize]);
         cnt[k as usize] += 1;
-    }
+    });
 
     key
 }
@@ -758,9 +757,7 @@ fn open_tb(name: &str, suffix: &str) -> Option<fs::File> {
 
 fn map_file(name: &str, suffix: &str) -> Option<Box<Mmap>> {
     let file = open_tb(name, suffix);
-    if file.is_none() {
-        return None;
-    }
+    file.as_ref()?;
 
     let file = file.unwrap();
     match unsafe { MmapOptions::new().map(&file) } {
@@ -1034,7 +1031,7 @@ pub fn init(path: String) {
         }
     }
 
-    if path == "" || path == "<empty>" {
+    if path.is_empty() || path == "<empty>" {
         return;
     }
 
@@ -1152,13 +1149,8 @@ pub fn init(path: String) {
 
 // place k like pieces on n squares
 fn subfactor(k: usize, n: usize) -> usize {
-    let mut f = n;
-    let mut l = 1;
-    for i in 1..k {
-        f *= n - i;
-        l *= i + 1;
-    }
-
+    let f = (0..k).fold(n, |acc, i| acc * (n - i));
+    let l: usize = (1..=k).product();
     f / l
 }
 
@@ -1327,32 +1319,23 @@ fn setup_pairs(
     let min_len = data[9];
     let h = (max_len - min_len + 1) as usize;
     let num_syms = u16::from_le(cast_slice(&data[10 + 2 * h..], 1)[0]) as usize;
-    let mut sym_len = Vec::with_capacity(num_syms);
-    for _ in 0..num_syms {
-        sym_len.push(0u8);
-    }
+    let mut sym_len = vec![0u8; num_syms];
     let sym_pat = cast_slice::<[u8; 3]>(&data[12 + 2 * h..], num_syms);
 
-    let mut tmp = Vec::with_capacity(num_syms);
-    for _ in 0..num_syms {
-        tmp.push(0u8);
-    }
+    let mut tmp = vec![0u8; num_syms];
     for s in 0..num_syms {
         calc_sym_len(&mut sym_len, sym_pat, s, &mut tmp);
     }
 
     let num_indices = (tb_size + (1usize << idx_bits) - 1) >> idx_bits;
-    size[0] = num_indices as usize;
+    size[0] = num_indices;
     size[1] = num_blocks as usize;
     size[2] = (real_num_blocks as usize) << block_size;
 
     *data_ref = &data[12 + 2 * h + 3 * num_syms + (num_syms & 1)..];
 
     let offset = cast_slice::<u16>(&data[10..], h);
-    let mut base = Vec::with_capacity(h);
-    for _ in 0..h {
-        base.push(0u64);
-    }
+    let mut base = vec![0u64; h];
     for i in (0..h - 1).rev() {
         let b1 = u16::from_le(offset[i]) as u64;
         let b2 = u16::from_le(offset[i + 1]) as u64;
@@ -1366,14 +1349,14 @@ fn setup_pairs(
         index_table: &[],
         size_table: &[],
         data: &[],
-        offset: offset,
-        sym_len: sym_len,
-        sym_pat: sym_pat,
-        block_size: block_size,
-        idx_bits: idx_bits,
-        min_len: min_len,
+        offset,
+        sym_len,
+        sym_pat,
+        block_size,
+        idx_bits,
+        min_len,
         const_val: 0,
-        base: base,
+        base,
     })
 }
 
@@ -1536,7 +1519,7 @@ fn fill_squares(
             p[i] = sq;
             i += 1;
         }
-        if i == num as usize {
+        if i == num {
             break;
         }
     }
@@ -1993,7 +1976,7 @@ pub fn probe_dtz(pos: &mut Position, success: &mut i32) -> i32 {
     // *success < 0 means we need to probe DTZ for the other side to move
     let mut best;
     if wdl > 0 {
-        best = std::i32::MAX;
+        best = i32::MAX;
         // If wdl > 0, we have already generated all moves
     } else {
         // If (cursed) loss, the worst case is a losing capture or pawn
@@ -2493,7 +2476,7 @@ fn kk_idx(s1: usize, s2: Square) -> usize {
 }
 
 fn binomial(n: usize, k: usize) -> usize {
-    unsafe { BINOMIAL[k as usize][n] }
+    unsafe { BINOMIAL[k][n] }
 }
 
 fn pawn_idx<T: Encoding>(num: usize, s: usize) -> usize {
@@ -2655,7 +2638,7 @@ fn encode<T: Encoding>(p: &mut [Square; TB_PIECES], ei: &EncInfo, entry: &T::Ent
         idx *= ei.factor[0];
     } else {
         let t = entry.pawns(0) as usize;
-        idx = pawn_idx::<T>(t - 1, flap::<T>(p[0])) as usize;
+        idx = pawn_idx::<T>(t - 1, flap::<T>(p[0]));
         for i in 1..t {
             idx += binomial(ptwist::<T>(p[i]), t - i);
         }

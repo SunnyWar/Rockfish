@@ -15,9 +15,9 @@ struct Opt {
 impl Opt {
     pub fn new(key: &'static str, val: OptVal, on_change: OnChange) -> Opt {
         Opt {
-            key: key,
-            val: val,
-            on_change: on_change,
+            key,
+            val,
+            on_change,
         }
     }
 }
@@ -47,27 +47,27 @@ enum OptVal {
 impl OptVal {
     pub fn string(def: &'static str) -> OptVal {
         OptVal::StringOpt {
-            def: def,
+            def,
             cur: String::from(def),
         }
     }
 
     pub fn spin(def: i32, min: i32, max: i32) -> OptVal {
         OptVal::Spin {
-            def: def,
+            def,
             cur: def,
-            min: min,
-            max: max,
+            min,
+            max,
         }
     }
 
     pub fn check(def: bool) -> OptVal {
-        OptVal::Check { def: def, cur: def }
+        OptVal::Check { def, cur: def }
     }
 
     pub fn combo(def: &'static str) -> OptVal {
         OptVal::Combo {
-            def: def,
+            def,
             cur: String::from(&def[0..def.find(" var").unwrap()]).to_lowercase(),
         }
     }
@@ -157,12 +157,12 @@ pub fn print() {
                     format!("spin default {} min {} max {}", def, min, max),
                 OptVal::Check { def, .. } =>
                     format!("check default {}", if def { true } else { false }),
-                OptVal::Button => format!("button"),
+                OptVal::Button => "button".to_string(),
                 OptVal::Combo { def, .. } => format!("combo default {}", def),
             }
         );
     }
-    print!("\n");
+    println!();
     std::mem::forget(opts);
 }
 

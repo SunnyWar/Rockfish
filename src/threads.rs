@@ -51,7 +51,7 @@ pub struct ThreadCtrl {
 impl ThreadCtrl {
     pub fn new(idx: usize) -> ThreadCtrl {
         let thread_ctrl = ThreadCtrl {
-            idx: idx,
+            idx,
             state: Mutex::new(ThreadState {
                 exit: false,
                 searching: true,

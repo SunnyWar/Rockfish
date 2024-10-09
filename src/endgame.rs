@@ -398,7 +398,7 @@ fn evaluate_kqkp(pos: &Position, strong_side: Color) -> Value {
     let loser_ksq = pos.square(weak_side, KING);
     let pawn_sq = pos.square(weak_side, PAWN);
 
-    let mut result = Value(PUSH_CLOSE[Square::distance(winner_ksq, loser_ksq) as usize] as i32);
+    let mut result = Value(PUSH_CLOSE[Square::distance(winner_ksq, loser_ksq) as usize]);
 
     if pawn_sq.relative_rank(weak_side) != RANK_7
         || Square::distance(loser_ksq, pawn_sq) != 1

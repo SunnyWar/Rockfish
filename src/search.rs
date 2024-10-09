@@ -2016,5 +2016,5 @@ fn extract_ponder_from_tt(pos: &mut Position) -> bool {
     }
 
     pos.undo_move(m1);
-    return pos.root_moves[0].pv.len() > 1;
+    pos.root_moves[0].pv.len() > 1
 }

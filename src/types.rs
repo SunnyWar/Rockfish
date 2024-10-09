@@ -584,7 +584,7 @@ pub struct SquareList<'a> {
 
 impl<'a> SquareList<'a> {
     pub fn construct(list: &'a [Square]) -> SquareList<'a> {
-        SquareList { list: list, idx: 0 }
+        SquareList { list, idx: 0 }
     }
 }
 
