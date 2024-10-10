@@ -389,18 +389,18 @@ impl std::ops::Div<Depth> for Depth {
 
 pub const ONE_PLY: Depth = Depth(1);
 
-pub const DEPTH_ZERO: Depth = Depth(0 * ONE_PLY.0);
-pub const DEPTH_QS_CHECKS: Depth = Depth(0 * ONE_PLY.0);
-pub const DEPTH_QS_NO_CHECKS: Depth = Depth(-1 * ONE_PLY.0);
+pub const DEPTH_ZERO: Depth = Depth(0);
+pub const DEPTH_QS_CHECKS: Depth = Depth(0);
+pub const DEPTH_QS_NO_CHECKS: Depth = Depth(-ONE_PLY.0);
 pub const DEPTH_QS_RECAPTURES: Depth = Depth(-5 * ONE_PLY.0);
 
 pub const DEPTH_NONE: Depth = Depth(-6 * ONE_PLY.0);
 pub const DEPTH_MAX: Depth = Depth(MAX_PLY * ONE_PLY.0);
 
 impl Depth {
-    pub const ZERO: Depth = Depth(0 * ONE_PLY.0);
-    pub const QS_CHECKS: Depth = Depth(0 * ONE_PLY.0);
-    pub const QS_NO_CHECKS: Depth = Depth(-1 * ONE_PLY.0);
+    pub const ZERO: Depth = Depth(0);
+    pub const QS_CHECKS: Depth = Depth(0);
+    pub const QS_NO_CHECKS: Depth = Depth(-ONE_PLY.0);
     pub const QS_RECAPTURES: Depth = Depth(-5 * ONE_PLY.0);
 
     pub const NONE: Depth = Depth(-6 * ONE_PLY.0);
