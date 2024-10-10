@@ -159,12 +159,12 @@ fn partial_insertion_sort(list: &mut [ExtMove], limit: i32) {
             let tmp = list[p];
             sorted_end += 1;
             list[p] = list[sorted_end];
-            let mut q = sorted_end;
-            while q > 0 && list[q - 1].value < tmp.value {
-                list[q] = list[q - 1];
-                q -= 1;
-            }
-            list[q] = tmp;
+
+            let pos = (0..sorted_end)
+                .rfind(|&i| list[i].value >= tmp.value)
+                .map_or(0, |i| i + 1);
+            list.copy_within(pos..sorted_end, pos + 1);
+            list[pos] = tmp;
         }
     }
 }
@@ -173,15 +173,9 @@ fn partial_insertion_sort(list: &mut [ExtMove], limit: i32) {
 // Calling pick_best() is faster than sorting all the moves in advance if
 // there are few moves, e.g. the possible captures.
 fn pick_best(list: &mut [ExtMove]) -> Move {
-    let mut q = 0;
-    for p in 1..list.len() {
-        if list[p].value > list[q].value {
-            q = p;
-        }
+    if let Some((q, _)) = list.iter().enumerate().max_by_key(|&(_, x)| x.value) {
+        list.swap(0, q);
     }
-    //    let q = list.iter().enumerate()
-    //        .min_by(|&(_, x), &(_, y)| y.value.cmp(&x.value)).unwrap().0;
-    list.swap(0, q);
     list[0].m
 }
 
