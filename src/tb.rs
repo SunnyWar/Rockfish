@@ -2055,10 +2055,10 @@ fn root_probe_dtz(pos: &mut Position, root_moves: &mut RootMoves) -> bool {
         } else {
             // Otherwise, take dtz for the new position and correct by 1 ply
             v = -probe_dtz(pos, &mut success);
-            if v > 0 {
-                v += 1;
-            } else if v < 0 {
-                v -= 1;
+            match v.cmp(&0) {
+                std::cmp::Ordering::Greater => v += 1,
+                std::cmp::Ordering::Less => v -= 1,
+                _ => {}
             }
         }
         // Make sure that a mating move gets value 1
@@ -2076,37 +2076,29 @@ fn root_probe_dtz(pos: &mut Position, root_moves: &mut RootMoves) -> bool {
         // is in sight. Note that moves ranked 900 have dtz + cnt50 == 100,
         // which in rare cases may be insufficient to win as dtz may be
         // off by one (see the comments before probe_dtz()).
-        let r = if v > 0 {
-            if v + cnt50 <= 99 && !rep {
-                1000
-            } else {
-                1000 - (v + cnt50)
-            }
-        } else if v < 0 {
-            if -v * 2 + cnt50 < 100 {
-                -1000
-            } else {
-                -1000 + (-v + cnt50)
-            }
-        } else {
-            0
+        let r = match v {
+            v if v > 0 => match (v + cnt50 <= 99, !rep) {
+                (true, true) | (true, false) => 1000,
+                _ => 1000 - (v + cnt50),
+            },
+            v if v < 0 => match -v * 2 + cnt50 < 100 {
+                true => -1000,
+                false => -1000 + (-v + cnt50),
+            },
+            _ => 0,
         };
-        rm.tb_rank = r;
+        rm.tb_rank = r;        
 
         // Determine the score to be displayed for this move. Assign at
         // least 1 cp to cursed wins and let it grow to 49 cp as the position
         // gets closer to a real win.
-        rm.tb_score = if r >= bound {
-            Value::MATE - MAX_MATE_PLY - 1
-        } else if r > 0 {
-            std::cmp::max(3, r - 800) * PawnValueEg / 200
-        } else if r == 0 {
-            Value::DRAW
-        } else if r > -bound {
-            std::cmp::max(-3, r + 800) * PawnValueEg / 200
-        } else {
-            -Value::MATE + MAX_MATE_PLY + 1
-        };
+        rm.tb_score = match r {
+            _ if r >= bound => Value::MATE - MAX_MATE_PLY - 1,
+            _ if r > 0 => std::cmp::max(3, r - 800) * PawnValueEg / 200,
+            _ if r == 0 => Value::DRAW,
+            _ if r > -bound => std::cmp::max(-3, r + 800) * PawnValueEg / 200,
+            _ => -Value::MATE + MAX_MATE_PLY + 1,
+        };        
     }
 
     true
@@ -2143,12 +2135,10 @@ fn root_probe_wdl(pos: &mut Position, root_moves: &mut RootMoves) -> bool {
             return false;
         }
         if !move50 {
-            v = if v > 0 {
-                2
-            } else if v < 0 {
-                -2
-            } else {
-                0
+            v = match v {
+                v if v > 0 => 2,
+                v if v < 0 => -2,
+                _ => 0,
             };
         }
         rm.tb_rank = WDL_TO_RANK[(v + 2) as usize];
@@ -2547,18 +2537,13 @@ fn init_indices() {
 
 fn leading_pawn_table<T: Encoding>(pawns: Bitboard, flip: bool) -> u32 {
     if T::ENC == FileEnc::ENC {
-        if pawns & (FILEA_BB | FILEB_BB | FILEG_BB | FILEH_BB) != 0 {
-            if pawns & (FILEA_BB | FILEH_BB) != 0 {
-                FILE_A
-            } else {
-                FILE_B
-            }
-        } else {
-            if pawns & (FILEC_BB | FILEF_BB) != 0 {
-                FILE_C
-            } else {
-                FILE_D
-            }
+        match (pawns & (FILEA_BB | FILEB_BB | FILEG_BB | FILEH_BB) != 0, pawns & (FILEA_BB | FILEH_BB) != 0) {
+            (true, true) => FILE_A,
+            (true, false) => FILE_B,
+            (false, _) => match pawns & (FILEC_BB | FILEF_BB) != 0 {
+                true => FILE_C,
+                false => FILE_D,
+            },
         }
     } else {
         let b = if flip {
