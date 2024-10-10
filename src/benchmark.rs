@@ -91,28 +91,32 @@ pub fn setup_bench(pos: &Position, args: &str) -> Vec<String> {
 
     let mut fens: Vec<String> = Vec::new();
 
-    if fen_file == "default" {
-        for fen in DEFAULTS.iter() {
-            fens.push(String::from(*fen));
+    match fen_file {
+        "default" => {
+            for fen in DEFAULTS.iter() {
+                fens.push(String::from(*fen));
+            }
         }
-    } else if fen_file == "current" {
-        fens.push(pos.fen());
-    } else {
-        let file = match File::open(fen_file) {
-            Err(_) => {
-                eprintln!("Unable to open file {}", fen_file);
-                std::process::exit(-1);
-            }
-            Ok(file) => file,
-        };
-        let reader = std::io::BufReader::new(file);
-        for fen in reader.lines() {
-            if fen.is_ok() {
-                break;
-            }
-            let fen = fen.unwrap();
-            if !fen.is_empty() {
-                fens.push(fen);
+        "current" => {
+            fens.push(pos.fen());
+        }
+        _ => {
+            let file = match File::open(fen_file) {
+                Err(_) => {
+                    eprintln!("Unable to open file {}", fen_file);
+                    std::process::exit(-1);
+                }
+                Ok(file) => file,
+            };
+            let reader = std::io::BufReader::new(file);
+            for fen in reader.lines() {
+                if fen.is_ok() {
+                    break;
+                }
+                let fen = fen.unwrap();
+                if !fen.is_empty() {
+                    fens.push(fen);
+                }
             }
         }
     }

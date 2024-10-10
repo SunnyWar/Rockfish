@@ -2087,7 +2087,7 @@ fn root_probe_dtz(pos: &mut Position, root_moves: &mut RootMoves) -> bool {
             },
             _ => 0,
         };
-        rm.tb_rank = r;        
+        rm.tb_rank = r;
 
         // Determine the score to be displayed for this move. Assign at
         // least 1 cp to cursed wins and let it grow to 49 cp as the position
@@ -2098,7 +2098,7 @@ fn root_probe_dtz(pos: &mut Position, root_moves: &mut RootMoves) -> bool {
             _ if r == 0 => Value::DRAW,
             _ if r > -bound => std::cmp::max(-3, r + 800) * PawnValueEg / 200,
             _ => -Value::MATE + MAX_MATE_PLY + 1,
-        };        
+        };
     }
 
     true
@@ -2537,7 +2537,10 @@ fn init_indices() {
 
 fn leading_pawn_table<T: Encoding>(pawns: Bitboard, flip: bool) -> u32 {
     if T::ENC == FileEnc::ENC {
-        match (pawns & (FILEA_BB | FILEB_BB | FILEG_BB | FILEH_BB) != 0, pawns & (FILEA_BB | FILEH_BB) != 0) {
+        match (
+            pawns & (FILEA_BB | FILEB_BB | FILEG_BB | FILEH_BB) != 0,
+            pawns & (FILEA_BB | FILEH_BB) != 0,
+        ) {
             (true, true) => FILE_A,
             (true, false) => FILE_B,
             (false, _) => match pawns & (FILEC_BB | FILEF_BB) != 0 {

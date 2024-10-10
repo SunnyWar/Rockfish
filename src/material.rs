@@ -37,10 +37,7 @@ impl Entry {
     }
 
     pub fn specialized_eval_exists(&self) -> bool {
-        match self.evaluation_function {
-            Some(_) => true,
-            None => false,
-        }
+        self.evaluation_function.is_some()
     }
 
     pub fn evaluate(&self, pos: &Position) -> Value {

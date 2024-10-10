@@ -106,12 +106,13 @@ pub fn init(limits: &mut search::LimitsType, us: Color, ply: i32) {
     // We calculate optimum time usage for different hypothetical "moves to go"
     // values and choose the minimum of calculated search time values. Usually
     // the greates hyp_mtg givse the minimum values.
-    for hyp_mtg in 1..(max_mtg + 1) {
+    for hyp_mtg in 1..=max_mtg {
         // Calculate thinking time for hypothetical "moves to go" value
-        let mut hyp_my_time = limits.time[us.0 as usize]
-            + limits.inc[us.0 as usize] * (hyp_mtg - 1) as i64
-            - move_overhead * (2 + std::cmp::min(hyp_mtg, 40) as i64);
+        let inc = limits.inc[us.0 as usize];
+        let time = limits.time[us.0 as usize];
+        let overhead = 2 + std::cmp::min(hyp_mtg, 40) as i64;
 
+        let mut hyp_my_time = time + inc * (hyp_mtg - 1) as i64 - move_overhead * overhead;
         hyp_my_time = std::cmp::max(hyp_my_time, 0);
 
         let t1 = min_think_time + remaining(hyp_my_time, hyp_mtg, ply, slow_mover, OptimumTime);

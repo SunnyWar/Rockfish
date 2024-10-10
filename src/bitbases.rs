@@ -12,7 +12,6 @@ use std::sync::Once;
 static mut KPK_BITBASE: Option<&[u32; MAX_INDEX / 32]> = None;
 static KPK_BITBASE_INIT: Once = Once::new();
 
-
 // A KPK bitbase index is an integer in [0, IndexMax] range
 //
 // Information is mapped in a way that minimizes the number of iterations:
