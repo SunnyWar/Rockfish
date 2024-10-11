@@ -29,10 +29,10 @@ fn contempt() -> Score {
 //const CENTER_FILES: Bitboard = FILEC_BB | FILED_BB | FILEE_BB | FILEF_BB;
 //const KING_SIDE: Bitboard = FILEE_BB | FILEF_BB | FILEG_BB | FILEH_BB;
 
-const CENTER: Bitboard = Bitboard(0x0000001818000000);
-const QUEEN_SIDE: Bitboard = Bitboard(0x0f0f0f0f0f0f0f0f);
-const CENTER_FILES: Bitboard = Bitboard(0x3c3c3c3c3c3c3c3c);
-const KING_SIDE: Bitboard = Bitboard(0xf0f0f0f0f0f0f0f0);
+const CENTER: Bitboard = Bitboard(0x0000_0018_1800_0000);
+const QUEEN_SIDE: Bitboard = Bitboard(0x0f0f_0f0f_0f0f_0f0f);
+const CENTER_FILES: Bitboard = Bitboard(0x3c3c_3c3c_3c3c_3c3c);
+const KING_SIDE: Bitboard = Bitboard(0xf0f0_f0f0_f0f0_f0f0);
 
 const KING_FLANK: [Bitboard; 8] = [
     QUEEN_SIDE,

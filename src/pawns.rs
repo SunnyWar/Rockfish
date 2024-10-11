@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+use std::convert::TryInto;
 
 use crate::bitboard::{
     adjacent_files_bb, backmost_sq, distance_ring_bb, file_bb, forward_file_bb, forward_ranks_bb,
@@ -187,7 +188,7 @@ impl Entry {
     // shelter_storm() calculates shelter and storm penalties for the file
     // the king is on, as well as the two closest files.
 
-    fn shelter_storm<Us: ColorTrait>(&self, pos: &Position, ksq: Square) -> Value {
+    fn shelter_storm<Us: ColorTrait>(pos: &Position, ksq: Square) -> Value {
         let us = Us::COLOR;
         let them = if us == WHITE { BLACK } else { WHITE };
         let shelter_mask = if us == WHITE {
@@ -262,20 +263,20 @@ impl Entry {
             min_king_pawn_distance += 1;
         }
 
-        let mut bonus = self.shelter_storm::<Us>(pos, ksq);
+        let mut bonus = Entry::shelter_storm::<Us>(pos, ksq);
 
         // If we can castle use the bonus after the castling if it is bigger
         if pos.has_castling_right(us | CastlingSide::KING) {
             bonus = std::cmp::max(
                 bonus,
-                self.shelter_storm::<Us>(pos, Square::G1.relative(us)),
+                Entry::shelter_storm::<Us>(pos, Square::G1.relative(us)),
             );
         }
 
         if pos.has_castling_right(us | CastlingSide::QUEEN) {
             bonus = std::cmp::max(
                 bonus,
-                self.shelter_storm::<Us>(pos, Square::C1.relative(us)),
+                Entry::shelter_storm::<Us>(pos, Square::C1.relative(us)),
             );
         }
 
@@ -290,18 +291,24 @@ pub fn init() {
 
     (0..2).for_each(|opposed| {
         (0..2).for_each(|phalanx| {
+            let delta_fn = |r_usize: usize, next_r_usize: usize| {
+                if phalanx != 0 {
+                    (SEED[next_r_usize] - SEED[r_usize]) / 2
+                } else {
+                    0
+                }
+            };
             (0..3).for_each(|support| {
+                let support_usize: usize = support.try_into().unwrap();
                 (1..7).for_each(|r| {
-                    let delta = if phalanx != 0 {
-                        (SEED[(r + 1) as usize] - SEED[r as usize]) / 2
-                    } else {
-                        0
-                    };
-                    let v = 17 * support + ((SEED[r as usize] + delta) >> opposed);
+                    let r_usize: usize = r.try_into().unwrap();
+                    let next_r_usize: usize = (r + 1).try_into().unwrap();
+                    let delta = delta_fn(r_usize, next_r_usize);
+                    let v = 17 * support + ((SEED[r_usize] + delta) >> opposed);
                     let score = Score::make(v, v * (r - 2) / 4);
 
                     unsafe {
-                        CONNECTED[opposed][phalanx][support as usize][r as usize] = score;
+                        CONNECTED[opposed][phalanx][support_usize][r_usize] = score;
                     }
                 });
             });
@@ -335,21 +342,9 @@ pub fn probe(pos: &Position) -> &mut Entry {
 
 fn evaluate<Us: ColorTrait>(pos: &Position, e: &mut Entry) -> Score {
     let us = Us::COLOR;
-    let them = match us {
-        WHITE => BLACK,
-        _ => WHITE,
-    };
-    let up = match us {
-        WHITE => NORTH,
-        _ => SOUTH,
-    };
-    let right = match us {
-        WHITE => NORTH_EAST,
-        _ => SOUTH_WEST,
-    };
-    let left = match us {
-        WHITE => NORTH_WEST,
-        _ => SOUTH_EAST,
+    let (them, up, right, left) = match us {
+        WHITE => (BLACK, NORTH, NORTH_EAST, NORTH_WEST),
+        _ => (WHITE, SOUTH, SOUTH_WEST, SOUTH_EAST),
     };
 
     let mut score = Score::ZERO;
@@ -386,12 +381,10 @@ fn evaluate<Us: ColorTrait>(pos: &Position, e: &mut Entry) -> Score {
         let phalanx = neighbours & s.rank_bb();
         let supported = neighbours & (s - up).rank_bb();
 
-        let backward;
-
         // A pawn is backward if it is behind all pawns of the same color on
         // the adjacent files and cannot be safely advanced.
-        if neighbours == 0 || lever != 0 || s.relative_rank(us) >= RANK_5 {
-            backward = false;
+        let backward = if neighbours == 0 || lever != 0 || s.relative_rank(us) >= RANK_5 {
+            false
         } else {
             // Find the backmost rank with neighbours or stoppers
             let b = backmost_sq(us, neighbours | stoppers).rank_bb();
@@ -400,9 +393,9 @@ fn evaluate<Us: ColorTrait>(pos: &Position, e: &mut Entry) -> Score {
             // rank: either there is a stopper in the way on this rank or
             // there is a stopper on an adjacent file which controls the way
             // to that rank.
-            backward = (b | (b & adjacent_files_bb(f)).shift(up)) & stoppers != 0;
-            debug_assert!(!(backward && forward_ranks_bb(them, s + up) & neighbours != 0));
-        }
+            (b | (b & adjacent_files_bb(f)).shift(up)) & stoppers != 0
+        };
+        debug_assert!(!(backward && forward_ranks_bb(them, s + up) & neighbours != 0));
 
         // Passed pawns will be properly scored in evaluation because we need
         // full attack info to evaluate them. Include also not passed pawns

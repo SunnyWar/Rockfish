@@ -358,34 +358,7 @@ pub fn thread_search(pos: &mut Position, _th: &threads::ThreadCtrl) {
 
     let mut time_reduction = 1.0f64;
 
-    // only need to clear 0..7, but for now we do extra work
-    for _ in 0..(MAX_PLY + 7) as usize {
-        stack.push(Stack {
-            pv: Vec::new(),
-            cont_history: pos.cont_history.get(NO_PIECE, Square(0)),
-            ply: 0,
-            current_move: Move::NONE,
-            excluded_move: Move::NONE,
-            killers: [Move::NONE; 2],
-            static_eval: Value::ZERO,
-            stat_score: 0,
-            move_count: 0,
-        });
-    }
-
-    pos.calls_cnt = 0;
-    pos.nmp_ply = 0;
-    pos.nmp_odd = 0;
-
-    let mut alpha = -Value::INFINITE;
-    let mut delta = -Value::INFINITE;
-    let mut best_value = -Value::INFINITE;
-    let mut beta = Value::INFINITE;
-
-    if pos.is_main {
-        pos.failed_low = false;
-        pos.best_move_changes = 0.0;
-    }
+    let (mut alpha, mut delta, mut best_value, mut beta) = clear_search(&mut stack, pos);
 
     let us = pos.side_to_move();
 
@@ -645,6 +618,38 @@ pub fn thread_search(pos: &mut Position, _th: &threads::ThreadCtrl) {
     }
 
     pos.previous_time_reduction = time_reduction;
+}
+
+fn clear_search(stack: &mut Vec<Stack>, pos: &mut Position) -> (Value, Value, Value, Value) {
+    // only need to clear 0..7, but for now we do extra work
+    for _ in 0..(MAX_PLY + 7) as usize {
+        stack.push(Stack {
+            pv: Vec::new(),
+            cont_history: pos.cont_history.get(NO_PIECE, Square(0)),
+            ply: 0,
+            current_move: Move::NONE,
+            excluded_move: Move::NONE,
+            killers: [Move::NONE; 2],
+            static_eval: Value::ZERO,
+            stat_score: 0,
+            move_count: 0,
+        });
+    }
+
+    pos.calls_cnt = 0;
+    pos.nmp_ply = 0;
+    pos.nmp_odd = 0;
+
+    let mut alpha = -Value::INFINITE;
+    let mut delta = -Value::INFINITE;
+    let mut best_value = -Value::INFINITE;
+    let mut beta = Value::INFINITE;
+
+    if pos.is_main {
+        pos.failed_low = false;
+        pos.best_move_changes = 0.0;
+    }
+    (alpha, delta, best_value, beta)
 }
 
 // search() is the main search function for both PV and non-PV nodes
