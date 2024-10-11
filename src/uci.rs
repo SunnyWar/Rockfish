@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use crate::benchmark::*;
+use crate::benchmark::setup_bench;
 use crate::misc;
-use crate::movegen::*;
-use crate::position::*;
+use crate::movegen::{Legal, MoveList};
+use crate::position::Position;
 use crate::search;
 use crate::threads;
-use crate::types::*;
+use crate::types::{
+    Move, PawnValueEg, Square, Value, BLACK, CASTLING, FILE_C, FILE_G, MAX_PLY, PROMOTION, WHITE,
+};
 use crate::ucioption;
 use threads::PosData;
 

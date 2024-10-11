@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use crate::bitboard::*;
-use crate::types::*;
+use crate::bitboard::ALL_SQUARES;
+use crate::types::{piece_value, Piece, Score, Square, EG, FILE_H, MG};
 
 macro_rules! S {
     ($x:expr, $y:expr) => {

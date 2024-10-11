@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 use crate::material;
-use crate::movegen::*;
+use crate::movegen::{Legal, MoveList};
 use crate::pawns;
 use crate::position::Position;
-use crate::search::*;
+use crate::search::{mainthread_search, thread_search, LimitsType, RootMove, RootMoves, LIMITS};
 use crate::tb;
-use crate::types::*;
+use crate::types::{Depth, Move, Value};
 use crate::ucioption;
 
 use std::cell::Cell;
-use std::sync::atomic::*;
-use std::sync::mpsc::*;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::mpsc::{channel, Sender};
 use std::sync::{Arc, Condvar, Mutex, RwLock};
 use std::thread;
 

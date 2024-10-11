@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 use crate::search;
-use crate::types::*;
+use crate::types::Color;
 use crate::ucioption;
 
 static mut START_TIME: Option<std::time::Instant> = None;
