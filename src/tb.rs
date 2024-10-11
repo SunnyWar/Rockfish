@@ -1650,7 +1650,7 @@ fn probe_ab(pos: &mut Position, mut alpha: i32, beta: i32, success: &mut i32) ->
         generate::<Evasions>(pos, &mut list, 0)
     };
 
-    for &m in list[0..end].iter() {
+    for &m in &list[0..end] {
         if !pos.capture(m.m) || !pos.legal(m.m) {
             continue;
         }
