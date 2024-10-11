@@ -92,7 +92,7 @@ fn go(pos: &mut Position, pos_data: &Arc<RwLock<PosData>>, args: &str) {
     while let Some(token) = iter.next() {
         match token {
             "searchmoves" => {
-                while let Some(token) = iter.next() {
+                for token in iter.by_ref() {
                     searchmoves.push(to_move(pos, token));
                 }
             }
@@ -127,7 +127,7 @@ fn bench(pos: &mut Position, pos_data: &Arc<RwLock<PosData>>, args: &str) {
 
     let mut cnt = 1;
     let mut nodes = 0;
-    for cmd in list.iter() {
+    for cmd in &list {
         let cmd_slice: &str = &cmd;
         let (token, args) = if let Some(idx) = cmd_slice.find(char::is_whitespace) {
             cmd_slice.split_at(idx)

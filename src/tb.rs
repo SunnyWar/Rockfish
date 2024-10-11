@@ -1768,14 +1768,14 @@ pub fn probe_wdl(pos: &mut Position, success: &mut i32) -> i32 {
     // Now handle the stalemate case.
     if best_ep > -3 && v == 0 {
         // Check for stalemate in the position without ep captures.
-        for &m in list[0..end].iter() {
+        for &m in &list[0..end] {
             if m.m.move_type() != ENPASSANT && pos.legal(m.m) {
                 return v;
             }
         }
         if pos.checkers() == 0 {
             end = generate::<Quiets>(pos, &mut list, 0);
-            for &m in list[0..end].iter() {
+            for &m in &list[0..end] {
                 if m.m.move_type() != ENPASSANT && pos.legal(m.m) {
                     return v;
                 }
@@ -1806,7 +1806,7 @@ fn probe_dtm_loss(pos: &mut Position, success: &mut i32) -> Value {
         generate::<Evasions>(pos, &mut list, 0)
     };
 
-    for &m in list[0..end].iter() {
+    for &m in &list[0..end] {
         if !pos.capture(m.m) || !pos.legal(m.m) {
             continue;
         }
@@ -1852,7 +1852,7 @@ fn probe_dtm_win(pos: &mut Position, success: &mut i32) -> Value {
     };
 
     // Perform a 1-ply search
-    for &m in list[0..end].iter() {
+    for &m in &list[0..end] {
         if !pos.legal(m.m) {
             continue;
         }
@@ -1860,11 +1860,11 @@ fn probe_dtm_win(pos: &mut Position, success: &mut i32) -> Value {
         let gives_check = pos.gives_check(m.m);
         pos.do_move(m.m, gives_check);
 
-        let wdl = if pos.ep_square() != Square::NONE {
-            probe_wdl(pos, success)
-        } else {
-            probe_ab(pos, -1, 0, success)
+        let wdl = match pos.ep_square() {
+            Square::NONE => probe_ab(pos, -1, 0, success),
+            _ => probe_wdl(pos, success),
         };
+
         let v = if wdl < 0 && *success != 0 {
             -probe_dtm_loss(pos, success) - 1
         } else {
@@ -1952,7 +1952,7 @@ pub fn probe_dtz(pos: &mut Position, success: &mut i32) -> i32 {
             generate::<Evasions>(pos, &mut list, 0)
         };
 
-        for &m in list[0..end].iter() {
+        for &m in &list[0..end] {
             if pos.moved_piece(m.m).piece_type() != PAWN || pos.capture(m.m) || !pos.legal(m.m) {
                 continue;
             }
@@ -1997,7 +1997,7 @@ pub fn probe_dtz(pos: &mut Position, success: &mut i32) -> i32 {
         };
     }
 
-    for &m in list[..end].iter() {
+    for &m in &list[..end] {
         // We can skip pawn moves and captures.
         // If wdl > 0, we already caught them. If wdl < 0, the initial
         // value of best already takes account of them.
@@ -2015,10 +2015,8 @@ pub fn probe_dtz(pos: &mut Position, success: &mut i32) -> i32 {
             if v > 0 && v + 1 < best {
                 best = v + 1;
             }
-        } else {
-            if v - 1 < best {
-                best = v - 1;
-            }
+        } else if v - 1 < best {
+            best = v - 1;
         }
     }
 
