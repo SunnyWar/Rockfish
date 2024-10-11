@@ -1,9 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use crate::bitboard::*;
-use crate::endgame::*;
+use crate::bitboard::more_than_one;
+use crate::endgame::{
+    evaluate_kxk, scale_kbpsk, scale_kpkp, scale_kpsk, scale_kqkrps, EvalFn, ScaleFn, EVAL_FNS,
+    SCALE_FNS,
+};
 use crate::position::Position;
-use crate::types::*;
+use crate::types::{
+    BishopValueMg, Color, Key, Phase, QueenValueMg, RookValueMg, ScaleFactor, Score, Value, BISHOP,
+    BLACK, ENDGAME_LIMIT, KNIGHT, MIDGAME_LIMIT, PAWN, PHASE_MIDGAME, QUEEN, ROOK, WHITE,
+};
 
 pub struct Entry {
     key: Key,

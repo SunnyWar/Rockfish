@@ -1,8 +1,8 @@
 [package]
-name = "rustfish"
+name = "rockfish"
 version = "0.1.0"
 edition = "2021"
-authors = ["Syzygy", "StrongNoodle"]
+authors = ["Syzygy", "SunnyWar"]
 
 [profile.release] 
 debug = true

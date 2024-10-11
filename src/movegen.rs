@@ -1,8 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use crate::bitboard::*;
+use crate::bitboard::{
+    attacks_bb, between_bb, file_bb, line_bb, lsb, more_than_one, pseudo_attacks, Bitboard,
+    RANK1_BB, RANK2_BB, RANK3_BB, RANK6_BB, RANK7_BB, RANK8_BB,
+};
 use crate::position::Position;
-use crate::types::*;
+use crate::types::{
+    relative_rank, relative_square, Bishop, Black, Bool, CastlingRightTrait, Color, ColorTrait,
+    Direction, False, Knight, Move, PieceTypeTrait, Queen, Rook, Square, True, White, BISHOP,
+    BLACK_OO, CASTLING, EAST, ENPASSANT, KING, KNIGHT, MAX_MOVES, NORTH, NORTH_EAST, NORTH_WEST,
+    PAWN, QUEEN, RANK_6, ROOK, SOUTH, SOUTH_EAST, SOUTH_WEST, WEST, WHITE, WHITE_OO,
+};
 
 const CAPTURES: i32 = 0;
 const QUIETS: i32 = 1;

@@ -1,8 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use crate::bitboard::*;
+use crate::bitboard::{
+    adjacent_files_bb, backmost_sq, distance_ring_bb, file_bb, forward_file_bb, forward_ranks_bb,
+    frontmost_sq, more_than_one, passed_pawn_mask, pawn_attack_span, pawn_attacks, popcount,
+    Bitboard, DARK_SQUARES,
+};
 use crate::position::Position;
-use crate::types::*;
+use crate::types::{
+    Black, CastlingRight, CastlingSide, Color, ColorTrait, File, Key, Piece, Score, Square, Value,
+    White, BLACK, FILE_B, FILE_G, FILE_H, NORTH, NORTH_EAST, NORTH_WEST, PAWN, RANK_1, RANK_5,
+    SOUTH, SOUTH_EAST, SOUTH_WEST, WHITE,
+};
 
 macro_rules! V {
     ($x:expr) => {
@@ -107,6 +115,11 @@ pub struct Entry {
 }
 
 impl Entry {
+    const BLOCKED_BY_KING: usize = 0;
+    const UNOPPOSED: usize = 1;
+    const BLOCKED_BY_PAWN: usize = 2;
+    const UNBLOCKED: usize = 3;
+
     pub fn new() -> Entry {
         Entry {
             key: Key(0),
@@ -158,7 +171,7 @@ impl Entry {
     }
 
     pub fn pawns_on_same_color_squares(&self, c: Color, s: Square) -> i32 {
-        self.pawns_on_squares[c.0 as usize][((DARK_SQUARES & s) != 0) as usize]
+        self.pawns_on_squares[c.0 as usize][usize::from((DARK_SQUARES & s) != 0)]
     }
 
     pub fn king_safety<Us: ColorTrait>(&mut self, pos: &Position, ksq: Square) -> Score {
@@ -188,12 +201,7 @@ impl Entry {
             bitboard!(A6, C6, F6, H6)
         };
 
-        const BLOCKED_BY_KING: usize = 0;
-        const UNOPPOSED: usize = 1;
-        const BLOCKED_BY_PAWN: usize = 2;
-        const UNBLOCKED: usize = 3;
-
-        let center = std::cmp::max(FILE_B, std::cmp::min(FILE_G, ksq.file()));
+        let center = ksq.file().clamp(FILE_B, FILE_G);
         let b = pos.pieces_p(PAWN)
             & (forward_ranks_bb(us, ksq) | ksq.rank_bb())
             & (adjacent_files_bb(center) | file_bb(center));
@@ -217,15 +225,15 @@ impl Entry {
             };
 
             let d = std::cmp::min(f, FILE_H - f);
-            safety -= SHELTER_WEAKNESS[(f == ksq.file()) as usize][d as usize][rk_us as usize]
+            safety -= SHELTER_WEAKNESS[usize::from(f == ksq.file())][d as usize][rk_us as usize]
                 + STORM_DANGER[if f == ksq.file() && rk_them == ksq.relative_rank(us) + 1 {
-                    BLOCKED_BY_KING
+                    Self::BLOCKED_BY_KING
                 } else if rk_us == RANK_1 {
-                    UNOPPOSED
+                    Self::UNOPPOSED
                 } else if rk_them == rk_us + 1 {
-                    BLOCKED_BY_PAWN
+                    Self::BLOCKED_BY_PAWN
                 } else {
-                    UNBLOCKED
+                    Self::UNBLOCKED
                 }][d as usize][rk_them as usize];
         }
 
@@ -416,15 +424,15 @@ fn evaluate<Us: ColorTrait>(pos: &Position, e: &mut Entry) -> Score {
         // Score this pawn
         if supported | phalanx != 0 {
             score += unsafe {
-                CONNECTED[(opposed != 0) as usize][(phalanx != 0) as usize]
+                CONNECTED[usize::from(opposed != 0)][usize::from(phalanx != 0)]
                     [popcount(supported) as usize][s.relative_rank(us) as usize]
             };
         } else if neighbours == 0 {
             score -= ISOLATED;
-            e.weak_unopposed[us.0 as usize] += (opposed == 0) as i32;
+            e.weak_unopposed[us.0 as usize] += i32::from(opposed == 0);
         } else if backward {
             score -= BACKWARD;
-            e.weak_unopposed[us.0 as usize] += (opposed == 0) as i32;
+            e.weak_unopposed[us.0 as usize] += i32::from(opposed == 0);
         }
 
         if doubled != 0 && supported == 0 {

@@ -127,7 +127,7 @@ pub fn setup_bench(pos: &Position, args: &str) -> Vec<String> {
     list.push(format!("setoption name Hash value {}", tt_size));
 
     for fen in fens {
-        if fen.find("setoption") != None {
+        if fen.contains("setoption") {
             list.push(fen);
         } else {
             list.push(format!("position fen {}", fen));

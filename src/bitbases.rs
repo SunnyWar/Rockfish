@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use crate::bitboard::*;
-use crate::types::*;
+use crate::bitboard::{pawn_attacks, pseudo_attacks, Distance};
+use crate::types::{Color, Square, BLACK, FILE_D, KING, NORTH, RANK_2, RANK_7, WHITE};
 
 // There are 24 possible pawn squares: the first 4 files and ranks from 2 to 7
 const MAX_INDEX: usize = 2 * 24 * 64 * 64;
@@ -44,43 +44,44 @@ impl KPKPosition {
         let ksq = [Square(idx & 0x3f), Square((idx >> 6) & 0x3f)];
         let us = Color((idx >> 12) & 0x01);
         let psq = Square::make((idx >> 13) & 0x03, RANK_7 - ((idx >> 15) & 0x07));
-        let result;
 
-        // Check if two pieces are on the same square or if a king can be
-        // captured
-        if Square::distance(ksq[WHITE.0 as usize], ksq[BLACK.0 as usize]) <= 1
-            || ksq[WHITE.0 as usize] == psq
-            || ksq[BLACK.0 as usize] == psq
-            || (us == WHITE && pawn_attacks(WHITE, psq) & ksq[BLACK.0 as usize] != 0)
-        {
-            result = INVALID;
-        }
-        // Immediate win if a pawn can be promoted without getting captured
-        else if us == WHITE
-            && psq.rank() == RANK_7
-            && ksq[us.0 as usize] != psq + NORTH
-            && (Square::distance(ksq[(!us).0 as usize], psq + NORTH) > 1
-                || pseudo_attacks(KING, ksq[us.0 as usize]) & (psq + NORTH) != 0)
-        {
-            result = WIN;
-        }
-        // Immediate draw if it is a stalemate or a king captures undefended
-        // pawn
-        else if us == BLACK
-            && ((pseudo_attacks(KING, ksq[us.0 as usize])
-                & !(pseudo_attacks(KING, ksq[(!us).0 as usize]) | pawn_attacks(!us, psq)))
-                == 0
-                || pseudo_attacks(KING, ksq[us.0 as usize])
-                    & psq
-                    & !pseudo_attacks(KING, ksq[(!us).0 as usize])
-                    != 0)
-        {
-            result = DRAW;
-        }
-        // Position will be classified later
-        else {
-            result = UNKNOWN;
-        }
+        let white_king = ksq[WHITE.0 as usize];
+        let black_king = ksq[BLACK.0 as usize];
+        let white_pawn_attacks = pawn_attacks(WHITE, psq);
+        let black_pawn_attacks = pawn_attacks(BLACK, psq);
+
+        let result = match (
+            Square::distance(white_king, black_king) <= 1, // Check if the kings are adjacent
+            white_king == psq, // Check if the white king is on the pawn's square
+            black_king == psq, // Check if the black king is on the pawn's square
+            us,
+            white_pawn_attacks & black_king != 0, // Check if the white pawn is attacking the black king
+            psq.rank() == RANK_7,                 // Check if the pawn can be promoted
+            white_king != psq + NORTH, // Ensure the white king is not blocking the pawn's promotion
+            Square::distance(black_king, psq + NORTH) > 1, // Check if the black king is at least 2 squares away from the pawn's promotion square
+            pseudo_attacks(KING, white_king) & (psq + NORTH) != 0, // Check if the white king can defend the promotion square
+            pseudo_attacks(KING, black_king)
+                & !(pseudo_attacks(KING, white_king) | black_pawn_attacks)
+                == 0, // Check if the black king is stalemated or if white is attacking
+            pseudo_attacks(KING, black_king) & psq & !pseudo_attacks(KING, white_king) != 0, // Check if the black king can capture the pawn
+        ) {
+            // If the kings are adjacent, or a king is on the pawn's square, or the white pawn is attacking the black king
+            (true, _, _, _, _, _, _, _, _, _, _)
+            | (_, true, _, _, _, _, _, _, _, _, _)
+            | (_, _, true, _, _, _, _, _, _, _, _)
+            | (_, _, _, WHITE, true, _, _, _, _, _, _) => INVALID, // Result is invalid
+
+            // Immediate win if a pawn can be promoted without getting captured
+            (_, _, _, WHITE, _, true, true, true, true, _, _) => WIN, // Result is win
+
+            // Immediate draw if it is a stalemate or a king captures undefended pawn
+            (_, _, _, BLACK, _, _, _, _, _, true, _) | (_, _, _, BLACK, _, _, _, _, _, _, true) => {
+                DRAW
+            } // Result is draw
+
+            // Position will be classified later
+            _ => UNKNOWN, // Result is unknown
+        };
 
         KPKPosition {
             us,
@@ -90,7 +91,7 @@ impl KPKPosition {
         }
     }
 
-    fn classify(&self, db: &Vec<KPKPosition>) -> u8 {
+    fn classify(&self, db: &[KPKPosition]) -> u8 {
         // White to move: if one move leads to a position classified as WIN,
         // the result of the current position is WIN; if all moves lead to
         // positions classified as DRAW, the current position is classified
@@ -111,44 +112,44 @@ impl KPKPosition {
         let mut r = INVALID;
 
         for s in pseudo_attacks(KING, self.ksq[us.0 as usize]) {
-            r |= if us == WHITE {
-                db[index(them, self.ksq[them.0 as usize], s, psq)].result
-            } else {
-                db[index(them, s, self.ksq[them.0 as usize], psq)].result
+            r |= match us {
+                WHITE => db[index(them, self.ksq[them.0 as usize], s, psq)].result,
+                _ => db[index(them, s, self.ksq[them.0 as usize], psq)].result,
             };
         }
 
         if us == WHITE {
-            if psq.rank() < RANK_7 {
-                r |= db[index(
-                    them,
-                    self.ksq[them.0 as usize],
-                    self.ksq[us.0 as usize],
-                    psq + NORTH,
-                )]
-                .result;
-            }
-
-            if psq.rank() == RANK_2
-                && psq + NORTH != self.ksq[us.0 as usize]
-                && psq + NORTH != self.ksq[them.0 as usize]
-            {
-                r |= db[index(
-                    them,
-                    self.ksq[them.0 as usize],
-                    self.ksq[us.0 as usize],
-                    psq + 2 * NORTH,
-                )]
-                .result;
+            match psq.rank() {
+                rank if rank < RANK_7 => {
+                    r |= db[index(
+                        them,
+                        self.ksq[them.0 as usize],
+                        self.ksq[us.0 as usize],
+                        psq + NORTH,
+                    )]
+                    .result;
+                }
+                RANK_2 => {
+                    if psq + NORTH != self.ksq[us.0 as usize]
+                        && psq + NORTH != self.ksq[them.0 as usize]
+                    {
+                        r |= db[index(
+                            them,
+                            self.ksq[them.0 as usize],
+                            self.ksq[us.0 as usize],
+                            psq + 2 * NORTH,
+                        )]
+                        .result;
+                    }
+                }
+                _ => {}
             }
         }
 
-        if r & good != 0 {
-            good
-        } else if r & UNKNOWN != 0 {
-            UNKNOWN
-        } else {
-            bad
+        match (r & good != 0, r & UNKNOWN != 0) {
+            (true, _) => good,
+            (false, true) => UNKNOWN,
+            _ => bad,
         }
     }
 }

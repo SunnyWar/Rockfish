@@ -1,16 +1,20 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use crate::bitboard::*;
+use crate::bitboard::popcount;
 use crate::evaluate;
 use crate::evaluate::evaluate;
-use crate::movegen::*;
-use crate::movepick::*;
-use crate::position::*;
+use crate::movegen::{Legal, MoveList};
+use crate::movepick::{MovePicker, MovePickerPC, MovePickerQ, PieceToHistory};
+use crate::position::Position;
 use crate::tb;
 use crate::threads;
 use crate::timeman;
 use crate::tt;
-use crate::types::*;
+use crate::types::{
+    mate_in, mated_in, piece_value, Bool, Bound, Depth, False, Key, Move, PawnValueEg, PawnValueMg,
+    Piece, Score, Square, True, Value, ANY_CASTLING, BLACK, EG, ENPASSANT, MAX_MATE_PLY, MAX_PLY,
+    NORMAL, NO_PIECE, ONE_PLY, WHITE,
+};
 use crate::uci;
 use crate::ucioption;
 
