@@ -750,3 +750,14 @@ pub fn attacks_bb(pt: PieceType, s: Square, occupied: Bitboard) -> Bitboard {
         _ => pseudo_attacks(pt, s),
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_example() {
+        assert_eq!(2 + 2, 4);
+    }
+}

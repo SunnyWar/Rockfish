@@ -1070,3 +1070,13 @@ pub fn evaluate(pos: &Position) -> Value {
 
     TEMPO + if pos.side_to_move() == WHITE { v } else { -v }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_example() {
+        assert_eq!(2 + 2, 4);
+    }
+}

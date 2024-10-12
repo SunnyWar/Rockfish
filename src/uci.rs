@@ -331,3 +331,13 @@ pub fn to_move(pos: &Position, s: &str) -> Move {
 
     Move::NONE
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_example() {
+        assert_eq!(2 + 2, 4);
+    }
+}

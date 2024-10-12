@@ -216,3 +216,13 @@ pub fn hashfull() -> i32 {
 
     cnt
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_example() {
+        assert_eq!(2 + 2, 4);
+    }
+}

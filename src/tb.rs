@@ -2746,3 +2746,13 @@ fn decompress_pairs(d: &PairsData, idx: usize) -> i32 {
 
     s1(&d.sym_pat[sym]) as i32
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_example() {
+        assert_eq!(2 + 2, 4);
+    }
+}

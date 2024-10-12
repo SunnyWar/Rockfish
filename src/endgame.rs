@@ -992,3 +992,13 @@ pub fn scale_kpkp(pos: &Position, strong_side: Color) -> ScaleFactor {
         ScaleFactor::DRAW
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_example() {
+        assert_eq!(2 + 2, 4);
+    }
+}

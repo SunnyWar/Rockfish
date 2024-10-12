@@ -137,3 +137,13 @@ pub fn setup_bench(pos: &Position, args: &str) -> Vec<String> {
 
     list
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_example() {
+        assert_eq!(2 + 2, 4);
+    }
+}

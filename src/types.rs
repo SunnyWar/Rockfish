@@ -993,3 +993,13 @@ impl Bool for True {
 impl Bool for False {
     const BOOL: bool = false;
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_example() {
+        assert_eq!(2 + 2, 4);
+    }
+}

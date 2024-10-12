@@ -202,3 +202,13 @@ pub fn probe(wksq: Square, wpsq: Square, bksq: Square, us: Color) -> bool {
     let idx = index(us, bksq, wksq, wpsq);
     unsafe { KPK_BITBASE.unwrap()[idx / 32] & (1 << (idx & 0x1f)) != 0 }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_example() {
+        assert_eq!(2 + 2, 4);
+    }
+}

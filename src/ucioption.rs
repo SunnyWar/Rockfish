@@ -229,3 +229,13 @@ pub fn get_string(key: &str) -> String {
     std::mem::forget(opts);
     val
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_example() {
+        assert_eq!(2 + 2, 4);
+    }
+}
