@@ -1011,135 +1011,144 @@ impl Bool for False {
 mod tests {
     use super::*;
 
-    #[test]
-    fn test_key_bitxor() {
-        let key1 = Key(0x1234);
-        let key2 = Key(0x5678);
-        let expected = Key(0x1234 ^ 0x5678);
-        assert_eq!(key1 ^ key2, expected);
+    mod key_tests {
+        use super::*;
+
+        #[test]
+        fn test_bitxor() {
+            let key1 = Key(0x1234);
+            let key2 = Key(0x5678);
+            let expected = Key(0x1234 ^ 0x5678);
+            assert_eq!(key1 ^ key2, expected);
+        }
+
+        #[test]
+        fn test_bitxor_assign() {
+            let mut key1 = Key(0x1234);
+            let key2 = Key(0x5678);
+            key1 ^= key2;
+            let expected = Key(0x1234 ^ 0x5678);
+            assert_eq!(key1, expected);
+        }
+
+        #[test]
+        fn test_display() {
+            let key = Key(0x1234);
+            assert_eq!(format!("{key}"), "1234");
+        }
     }
 
-    #[test]
-    fn test_key_bitxor_assign() {
-        let mut key1 = Key(0x1234);
-        let key2 = Key(0x5678);
-        key1 ^= key2;
-        let expected = Key(0x1234 ^ 0x5678);
-        assert_eq!(key1, expected);
+    mod color_tests {
+        use super::*;
+
+        #[test]
+        fn test_not() {
+            assert_eq!(!WHITE, BLACK);
+            assert_eq!(!BLACK, WHITE);
+        }
+
+        #[test]
+        fn test_bitxor() {
+            assert_eq!(WHITE ^ true, BLACK);
+            assert_eq!(BLACK ^ true, WHITE);
+            assert_eq!(WHITE ^ false, WHITE);
+            assert_eq!(BLACK ^ false, BLACK);
+        }
+
+        #[test]
+        fn test_into_iterator() {
+            let color = WHITE;
+            let mut iter = color.into_iter();
+            assert_eq!(iter.next(), Some(WHITE));
+            assert_eq!(iter.next(), Some(Color(1)));
+            assert_eq!(iter.next(), Some(Color(2)));
+        }
+
+        #[test]
+        fn test_trait() {
+            assert_eq!(White::COLOR, WHITE);
+            assert_eq!(Black::COLOR, BLACK);
+        }
     }
 
-    #[test]
-    fn test_key_display() {
-        let key = Key(0x1234);
-        assert_eq!(format!("{key}"), "1234");
+    mod white_black_tests {
+        use super::*;
+
+        #[test]
+        fn test_color() {
+            assert_eq!(White::COLOR, WHITE);
+            assert_eq!(Black::COLOR, BLACK);
+        }
+
+        #[test]
+        fn test_castling_sides() {
+            type W = crate::types::White;
+            assert_eq!(<W as crate::types::ColorTrait>::KingSide::CR, WHITE_OO);
+            assert_eq!(<W as crate::types::ColorTrait>::QueenSide::CR, WHITE_OOO);
+
+            type B = crate::types::Black;
+            assert_eq!(<B as crate::types::ColorTrait>::KingSide::CR, BLACK_OO);
+            assert_eq!(<B as crate::types::ColorTrait>::QueenSide::CR, BLACK_OOO);
+        }
     }
 
-    #[test]
-    fn test_color_not() {
-        assert_eq!(!WHITE, BLACK);
-        assert_eq!(!BLACK, WHITE);
-    }
+    mod castling_right_tests {
+        use super::*;
 
-    #[test]
-    fn test_color_bitxor() {
-        assert_eq!(WHITE ^ true, BLACK);
-        assert_eq!(BLACK ^ true, WHITE);
-        assert_eq!(WHITE ^ false, WHITE);
-        assert_eq!(BLACK ^ false, BLACK);
-    }
+        #[test]
+        fn test_values() {
+            assert_eq!(NO_CASTLING, CastlingRight(0));
+            assert_eq!(WHITE_OO, CastlingRight(1));
+            assert_eq!(WHITE_OOO, CastlingRight(2));
+            assert_eq!(BLACK_OO, CastlingRight(4));
+            assert_eq!(BLACK_OOO, CastlingRight(8));
+            assert_eq!(ANY_CASTLING, CastlingRight(15));
+        }
 
-    #[test]
-    fn test_color_into_iterator() {
-        let color = WHITE;
-        let mut iter = color.into_iter();
-        assert_eq!(iter.next(), Some(WHITE));
-        assert_eq!(iter.next(), Some(Color(1)));
-        assert_eq!(iter.next(), Some(Color(2)));
-    }
+        #[test]
+        fn test_trait() {
+            assert_eq!(WhiteOO::CR, WHITE_OO);
+            assert_eq!(WhiteOOO::CR, WHITE_OOO);
+            assert_eq!(BlackOO::CR, BLACK_OO);
+            assert_eq!(BlackOOO::CR, BLACK_OOO);
+        }
 
-    #[test]
-    fn test_color_trait() {
-        assert_eq!(White::COLOR, WHITE);
-        assert_eq!(Black::COLOR, BLACK);
-    }
+        #[test]
+        fn test_make() {
+            use crate::types::CastlingSide::{KING, QUEEN};
 
-    #[test]
-    fn test_white_color() {
-        assert_eq!(White::COLOR, WHITE);
-    }
+            assert_eq!(CastlingRight::make(WHITE, KING), WHITE_OO);
+            assert_eq!(CastlingRight::make(WHITE, QUEEN), WHITE_OOO);
+            assert_eq!(CastlingRight::make(BLACK, KING), BLACK_OO);
+            assert_eq!(CastlingRight::make(BLACK, QUEEN), BLACK_OOO);
+        }
 
-    #[test]
-    fn test_black_color() {
-        assert_eq!(Black::COLOR, BLACK);
-    }
+        #[test]
+        fn test_bit_ops() {
+            assert_eq!(WHITE | crate::types::CastlingSide::KING, WHITE_OO);
+            assert_eq!(BLACK | crate::types::CastlingSide::QUEEN, BLACK_OOO);
 
-    #[test]
-    fn test_white_castling_sides() {
-        type W = crate::types::White;
-        assert_eq!(<W as crate::types::ColorTrait>::KingSide::CR, WHITE_OO);
-        assert_eq!(<W as crate::types::ColorTrait>::QueenSide::CR, WHITE_OOO);
-    }
+            let cr1 = WHITE_OO;
+            let cr2 = BLACK_OO;
+            let mut combined = cr1 | cr2;
+            assert_eq!(combined, CastlingRight(5));
 
-    #[test]
-    fn test_black_castling_sides() {
-        type B = crate::types::Black;
-        assert_eq!(<B as crate::types::ColorTrait>::KingSide::CR, BLACK_OO);
-        assert_eq!(<B as crate::types::ColorTrait>::QueenSide::CR, BLACK_OOO);
-    }
+            combined &= WHITE_OO;
+            assert_eq!(combined, WHITE_OO);
 
-    #[test]
-    fn test_castling_rights() {
-        assert_eq!(NO_CASTLING, CastlingRight(0));
-        assert_eq!(WHITE_OO, CastlingRight(1));
-        assert_eq!(WHITE_OOO, CastlingRight(2));
-        assert_eq!(BLACK_OO, CastlingRight(4));
-        assert_eq!(BLACK_OOO, CastlingRight(8));
-        assert_eq!(ANY_CASTLING, CastlingRight(15));
-    }
+            combined |= BLACK_OOO;
+            assert_eq!(combined, CastlingRight(9));
+        }
 
-    #[test]
-    fn test_castling_right_trait() {
-        assert_eq!(WhiteOO::CR, WHITE_OO);
-        assert_eq!(WhiteOOO::CR, WHITE_OOO);
-        assert_eq!(BlackOO::CR, BLACK_OO);
-        assert_eq!(BlackOOO::CR, BLACK_OOO);
-    }
+        #[test]
+        fn test_not() {
+            assert_eq!(!NO_CASTLING, CastlingRight(!0));
+        }
 
-    #[test]
-    fn test_castlingright_make() {
-        use crate::types::CastlingSide::{KING, QUEEN};
-
-        assert_eq!(CastlingRight::make(WHITE, KING), WHITE_OO);
-        assert_eq!(CastlingRight::make(WHITE, QUEEN), WHITE_OOO);
-        assert_eq!(CastlingRight::make(BLACK, KING), BLACK_OO);
-        assert_eq!(CastlingRight::make(BLACK, QUEEN), BLACK_OOO);
-    }
-
-    #[test]
-    fn test_castlingright_bit_ops() {
-        assert_eq!(WHITE | crate::types::CastlingSide::KING, WHITE_OO);
-        assert_eq!(BLACK | crate::types::CastlingSide::QUEEN, BLACK_OOO);
-
-        let cr1 = WHITE_OO;
-        let cr2 = BLACK_OO;
-        let mut combined = cr1 | cr2;
-        assert_eq!(combined, CastlingRight(5));
-
-        combined &= WHITE_OO;
-        assert_eq!(combined, WHITE_OO);
-
-        combined |= BLACK_OOO;
-        assert_eq!(combined, CastlingRight(9));
-    }
-
-    #[test]
-    fn test_castlingright_not() {
-        assert_eq!(!NO_CASTLING, CastlingRight(!0));
-    }
-
-    #[test]
-    fn test_castlingright_partial_eq() {
-        assert!(CastlingRight(0) == 0);
-        assert!(CastlingRight(1) != 0);
+        #[test]
+        fn test_partial_eq() {
+            assert!(CastlingRight(0) == 0);
+            assert!(CastlingRight(1) != 0);
+        }
     }
 }
