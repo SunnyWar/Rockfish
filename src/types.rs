@@ -136,7 +136,7 @@ impl CastlingRightTrait for BlackOOO {
 
 impl CastlingRight {
     pub fn make(c: Color, cs: CastlingSide) -> CastlingRight {
-        use crate::types::CastlingSide::*;
+        use crate::types::CastlingSide::KING;
         match (c, cs) {
             (WHITE, KING) => WHITE_OO,
             (WHITE, _) => WHITE_OOO,
@@ -201,7 +201,7 @@ pub const PHASE_MIDGAME: Phase = 128;
 pub const MG: usize = 0;
 pub const EG: usize = 1;
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ScaleFactor(pub i32);
 
 impl ScaleFactor {
@@ -547,7 +547,6 @@ pub fn relative_square(c: Color, s: Square) -> Square {
 
 impl std::ops::Not for Square {
     type Output = Self;
-    #[inline(always)]
     fn not(self) -> Self {
         Square(self.0 ^ Square::A8.0)
     }
@@ -555,7 +554,6 @@ impl std::ops::Not for Square {
 
 impl std::ops::BitXor<bool> for Square {
     type Output = Self;
-    #[inline(always)]
     fn bitxor(self, rhs: bool) -> Self {
         Square(self.0 ^ if rhs { 0x38 } else { 0 })
     }
@@ -614,7 +612,6 @@ impl<'a> Iterator for SquareList<'a> {
     }
 }
 
-#[inline(always)]
 pub fn opposite_colors(s1: Square, s2: Square) -> bool {
     let s = s1.0 ^ s2.0;
     (((s >> 3) ^ s) & 1) != 0
@@ -1149,6 +1146,42 @@ mod tests {
         fn test_partial_eq() {
             assert!(CastlingRight(0) == 0);
             assert!(CastlingRight(1) != 0);
+        }
+    }
+
+    mod scale_factor_tests {
+        use super::*;
+
+        #[test]
+        fn test_scalefactor_constants() {
+            assert_eq!(ScaleFactor::DRAW, ScaleFactor(0));
+            assert_eq!(ScaleFactor::ONEPAWN, ScaleFactor(48));
+            assert_eq!(ScaleFactor::NORMAL, ScaleFactor(64));
+            assert_eq!(ScaleFactor::MAX, ScaleFactor(128));
+            assert_eq!(ScaleFactor::NONE, ScaleFactor(255));
+        }
+
+        #[test]
+        fn test_scalefactor_clone() {
+            let sf = ScaleFactor::NORMAL;
+            let cloned = sf.clone();
+            assert_eq!(sf, cloned);
+        }
+
+        #[test]
+        fn test_scalefactor_copy() {
+            let sf = ScaleFactor::MAX;
+            let copied = sf;
+            assert_eq!(sf, copied);
+        }
+
+        #[test]
+        fn test_scalefactor_partial_eq() {
+            let sf1 = ScaleFactor::ONEPAWN;
+            let sf2 = ScaleFactor::ONEPAWN;
+            let sf3 = ScaleFactor::DRAW;
+            assert_eq!(sf1, sf2);
+            assert_ne!(sf1, sf3);
         }
     }
 }
