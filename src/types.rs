@@ -86,7 +86,7 @@ pub enum CastlingSide {
     QUEEN,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CastlingRight(pub u32);
 
 pub const NO_CASTLING: CastlingRight = CastlingRight(0);
@@ -1047,5 +1047,29 @@ mod tests {
     fn test_color_trait() {
         assert_eq!(White::COLOR, WHITE);
         assert_eq!(Black::COLOR, BLACK);
+    }
+
+    #[test]
+    fn test_white_color() {
+        assert_eq!(White::COLOR, WHITE);
+    }
+
+    #[test]
+    fn test_black_color() {
+        assert_eq!(Black::COLOR, BLACK);
+    }
+
+    #[test]
+    fn test_white_castling_sides() {
+        type W = crate::types::White;
+        assert_eq!(<W as crate::types::ColorTrait>::KingSide::CR, WHITE_OO);
+        assert_eq!(<W as crate::types::ColorTrait>::QueenSide::CR, WHITE_OOO);
+    }
+
+    #[test]
+    fn test_black_castling_sides() {
+        type B = crate::types::Black;
+        assert_eq!(<B as crate::types::ColorTrait>::KingSide::CR, BLACK_OO);
+        assert_eq!(<B as crate::types::ColorTrait>::QueenSide::CR, BLACK_OOO);
     }
 }
