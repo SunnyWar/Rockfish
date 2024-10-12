@@ -28,7 +28,7 @@ pub const MAX_MOVES: usize = 256;
 pub const MAX_PLY: i32 = 128;
 pub const MAX_MATE_PLY: i32 = 128;
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Color(pub u32);
 
 pub const WHITE: Color = Color(0);
@@ -999,7 +999,30 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_example() {
-        assert_eq!(2 + 2, 4);
+    fn test_color_not() {
+        assert_eq!(!WHITE, BLACK);
+        assert_eq!(!BLACK, WHITE);
+    }
+
+    #[test]
+    fn test_color_bitxor() {
+        assert_eq!(WHITE ^ true, BLACK);
+        assert_eq!(BLACK ^ true, WHITE);
+        assert_eq!(WHITE ^ false, WHITE);
+        assert_eq!(BLACK ^ false, BLACK);
+    }
+
+    #[test]
+    fn test_color_iterator() {
+        let mut color = WHITE;
+        assert_eq!(color.next(), Some(WHITE));
+        assert_eq!(color.next(), Some(Color(1)));
+        assert_eq!(color.next(), Some(Color(2)));
+    }
+
+    #[test]
+    fn test_color_trait() {
+        assert_eq!(White::COLOR, WHITE);
+        assert_eq!(Black::COLOR, BLACK);
     }
 }
