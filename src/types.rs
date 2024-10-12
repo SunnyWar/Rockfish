@@ -1086,4 +1086,60 @@ mod tests {
         assert_eq!(<B as crate::types::ColorTrait>::KingSide::CR, BLACK_OO);
         assert_eq!(<B as crate::types::ColorTrait>::QueenSide::CR, BLACK_OOO);
     }
+
+    #[test]
+    fn test_castling_rights() {
+        assert_eq!(NO_CASTLING, CastlingRight(0));
+        assert_eq!(WHITE_OO, CastlingRight(1));
+        assert_eq!(WHITE_OOO, CastlingRight(2));
+        assert_eq!(BLACK_OO, CastlingRight(4));
+        assert_eq!(BLACK_OOO, CastlingRight(8));
+        assert_eq!(ANY_CASTLING, CastlingRight(15));
+    }
+
+    #[test]
+    fn test_castling_right_trait() {
+        assert_eq!(WhiteOO::CR, WHITE_OO);
+        assert_eq!(WhiteOOO::CR, WHITE_OOO);
+        assert_eq!(BlackOO::CR, BLACK_OO);
+        assert_eq!(BlackOOO::CR, BLACK_OOO);
+    }
+
+    #[test]
+    fn test_castlingright_make() {
+        use crate::types::CastlingSide::{KING, QUEEN};
+
+        assert_eq!(CastlingRight::make(WHITE, KING), WHITE_OO);
+        assert_eq!(CastlingRight::make(WHITE, QUEEN), WHITE_OOO);
+        assert_eq!(CastlingRight::make(BLACK, KING), BLACK_OO);
+        assert_eq!(CastlingRight::make(BLACK, QUEEN), BLACK_OOO);
+    }
+
+    #[test]
+    fn test_castlingright_bit_ops() {
+        assert_eq!(WHITE | crate::types::CastlingSide::KING, WHITE_OO);
+        assert_eq!(BLACK | crate::types::CastlingSide::QUEEN, BLACK_OOO);
+
+        let cr1 = WHITE_OO;
+        let cr2 = BLACK_OO;
+        let mut combined = cr1 | cr2;
+        assert_eq!(combined, CastlingRight(5));
+
+        combined &= WHITE_OO;
+        assert_eq!(combined, WHITE_OO);
+
+        combined |= BLACK_OOO;
+        assert_eq!(combined, CastlingRight(9));
+    }
+
+    #[test]
+    fn test_castlingright_not() {
+        assert_eq!(!NO_CASTLING, CastlingRight(!0));
+    }
+
+    #[test]
+    fn test_castlingright_partial_eq() {
+        assert!(CastlingRight(0) == 0);
+        assert!(CastlingRight(1) != 0);
+    }
 }
