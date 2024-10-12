@@ -640,10 +640,10 @@ fn clear_search(stack: &mut Vec<Stack>, pos: &mut Position) -> (Value, Value, Va
     pos.nmp_ply = 0;
     pos.nmp_odd = 0;
 
-    let mut alpha = -Value::INFINITE;
-    let mut delta = -Value::INFINITE;
-    let mut best_value = -Value::INFINITE;
-    let mut beta = Value::INFINITE;
+    let alpha = -Value::INFINITE;
+    let delta = -Value::INFINITE;
+    let best_value = -Value::INFINITE;
+    let beta = Value::INFINITE;
 
     if pos.is_main {
         pos.failed_low = false;
