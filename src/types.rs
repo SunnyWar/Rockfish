@@ -2,7 +2,7 @@
 
 #![allow(dead_code)]
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Key(pub u64);
 
 impl std::ops::BitXor<Key> for Key {
@@ -997,6 +997,29 @@ impl Bool for False {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_key_bitxor() {
+        let key1 = Key(0x1234);
+        let key2 = Key(0x5678);
+        let expected = Key(0x1234 ^ 0x5678);
+        assert_eq!(key1 ^ key2, expected);
+    }
+
+    #[test]
+    fn test_key_bitxor_assign() {
+        let mut key1 = Key(0x1234);
+        let key2 = Key(0x5678);
+        key1 ^= key2;
+        let expected = Key(0x1234 ^ 0x5678);
+        assert_eq!(key1, expected);
+    }
+
+    #[test]
+    fn test_key_display() {
+        let key = Key(0x1234);
+        assert_eq!(format!("{key}"), "1234");
+    }
 
     #[test]
     fn test_color_not() {
