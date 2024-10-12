@@ -28,7 +28,7 @@ use std::sync::Arc;
 
 pub mod zobrist {
     use crate::misc;
-    use crate::types::*;
+    use crate::types::{CastlingRight, File, Key, Piece, Square};
 
     static mut PSQ: [[Key; 64]; 16] = [[Key(0); 64]; 16];
     static mut ENPASSANT: [Key; 8] = [Key(0); 8];
@@ -64,7 +64,7 @@ pub mod zobrist {
     // compute hash keys.
 
     pub fn init() {
-        let mut rng = misc::Prng::new(1070372);
+        let mut rng = misc::Prng::new(1_070_372);
 
         unsafe {
             (1..15).for_each(|i| {
@@ -767,10 +767,9 @@ impl Position {
             }
         }
 
-        ss.push_str(if self.side_to_move == WHITE {
-            " w "
-        } else {
-            " b "
+        ss.push_str(match self.side_to_move {
+            WHITE => " w ",
+            _ => " b ",
         });
 
         self.castle_helper(&mut ss, WHITE_OO, 'K');
@@ -782,12 +781,13 @@ impl Position {
             ss.push('-');
         }
 
-        if self.ep_square() == Square::NONE {
-            ss.push_str(" - ");
-        } else {
-            ss.push(' ');
-            ss.push_str(&uci::square(self.ep_square()));
-            ss.push(' ');
+        match self.ep_square() {
+            Square::NONE => ss.push_str(" - "),
+            square => {
+                ss.push(' ');
+                ss.push_str(&uci::square(square));
+                ss.push(' ');
+            }
         }
 
         ss.push_str(&self.rule50_count().to_string());
@@ -805,13 +805,14 @@ impl Position {
         if !self.chess960 {
             ss.push(c);
         } else {
-            let f = self.castling_rook_square(cr).file();
-            let r = self.castling_rook_square(cr).rank();
+            let castling_rook_square = self.castling_rook_square(cr);
+            let f = castling_rook_square.file();
+            let r = castling_rook_square.rank();
             let mut c = 65 + f;
             if r == RANK_8 {
                 c += 32;
             }
-            ss.push((c as u8) as char);
+            ss.push(char::from(c as u8));
         }
     }
 
