@@ -48,12 +48,25 @@ impl std::ops::BitXor<bool> for Color {
     }
 }
 
-impl Iterator for Color {
+impl IntoIterator for Color {
     type Item = Self;
+    type IntoIter = ColorIntoIterator;
+
+    fn into_iter(self) -> Self::IntoIter {
+        ColorIntoIterator { color: self }
+    }
+}
+
+pub struct ColorIntoIterator {
+    color: Color,
+}
+
+impl Iterator for ColorIntoIterator {
+    type Item = Color;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let sq = self.0;
-        self.0 += 1;
+        let sq = self.color.0;
+        self.color.0 += 1;
         Some(Color(sq))
     }
 }
@@ -1036,11 +1049,12 @@ mod tests {
     }
 
     #[test]
-    fn test_color_iterator() {
-        let mut color = WHITE;
-        assert_eq!(color.next(), Some(WHITE));
-        assert_eq!(color.next(), Some(Color(1)));
-        assert_eq!(color.next(), Some(Color(2)));
+    fn test_color_into_iterator() {
+        let color = WHITE;
+        let mut iter = color.into_iter();
+        assert_eq!(iter.next(), Some(WHITE));
+        assert_eq!(iter.next(), Some(Color(1)));
+        assert_eq!(iter.next(), Some(Color(2)));
     }
 
     #[test]
