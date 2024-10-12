@@ -8,7 +8,7 @@ use crate::position::zobrist::material;
 use crate::position::Position;
 use crate::search::RootMoves;
 use crate::types::{
-    Color, Depth, Key, Move, PawnValueEg, Piece, PieceType, PieceTypeTrait, Square, Value,
+    Color, Depth, Key, Move, PawnValueEg, Piece, PieceType, Square, Value,
     ANY_CASTLING, BISHOP, BLACK, B_PAWN, ENPASSANT, FILE_A, FILE_B, FILE_C, FILE_D, KING, KNIGHT,
     MAX_MATE_PLY, NO_PIECE, ONE_PLY, PAWN, PROMOTION, QUEEN, ROOK, WHITE, W_PAWN,
 };
@@ -1090,7 +1090,7 @@ pub fn init(path: String) {
 
         P.iter().enumerate().for_each(|(i, item1)| {
             P.iter().skip(i).enumerate().for_each(|(j, item2)| {
-                P.iter().skip(j).enumerate().for_each(|(k, item3)| {
+                P.iter().skip(j).enumerate().for_each(|(_k, item3)| {
                     P.iter().for_each(|item4| {
                         init_tb(&format!("K{}{}{}vK{}", item1, item2, item3, item4));
                     });
@@ -1110,7 +1110,7 @@ pub fn init(path: String) {
 
         P.iter().enumerate().for_each(|(i, item1)| {
             P.iter().skip(i).enumerate().for_each(|(j, item2)| {
-                P.iter().skip(j).enumerate().for_each(|(k, item3)| {
+                P.iter().skip(j).enumerate().for_each(|(_k, item3)| {
                     P.iter().enumerate().for_each(|(l, item4)| {
                         P.iter().skip(l).for_each(|item5| {
                             init_tb(&format!("K{}{}{}vK{}{}", item1, item2, item3, item4, item5));
@@ -1123,7 +1123,7 @@ pub fn init(path: String) {
         P.iter().enumerate().for_each(|(i, item1)| {
             P.iter().skip(i).enumerate().for_each(|(j, item2)| {
                 P.iter().skip(j).enumerate().for_each(|(k, item3)| {
-                    P.iter().skip(k).enumerate().for_each(|(l, item4)| {
+                    P.iter().skip(k).enumerate().for_each(|(_l, item4)| {
                         P.iter().for_each(|item5| {
                             init_tb(&format!("K{}{}{}{}vK{}", item1, item2, item3, item4, item5));
                         });
