@@ -212,7 +212,7 @@ impl ScaleFactor {
     pub const NONE: ScaleFactor = ScaleFactor(255);
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Bound(pub u32);
 
 impl Bound {
@@ -1182,6 +1182,40 @@ mod tests {
             let sf3 = ScaleFactor::DRAW;
             assert_eq!(sf1, sf2);
             assert_ne!(sf1, sf3);
+        }
+    }
+
+    mod bound_tests {
+        use super::*;
+
+        #[test]
+        fn test_bound_constants() {
+            assert_eq!(Bound::NONE, Bound(0));
+            assert_eq!(Bound::UPPER, Bound(1));
+            assert_eq!(Bound::LOWER, Bound(2));
+            assert_eq!(Bound::EXACT, Bound(3));
+        }
+
+        #[test]
+        fn test_bitand() {
+            assert_eq!(Bound::UPPER & Bound::LOWER, Bound(0));
+            assert_eq!(Bound::UPPER & Bound::UPPER, Bound(1));
+            assert_eq!(Bound::LOWER & Bound::LOWER, Bound(2));
+            assert_eq!(Bound::EXACT & Bound::LOWER, Bound(2));
+        }
+
+        #[test]
+        fn test_bitor() {
+            assert_eq!(Bound::UPPER | Bound::LOWER, Bound(3));
+            assert_eq!(Bound::UPPER | Bound::UPPER, Bound(1));
+            assert_eq!(Bound::LOWER | Bound::LOWER, Bound(2));
+            assert_eq!(Bound::NONE | Bound::EXACT, Bound(3));
+        }
+
+        #[test]
+        fn test_partial_eq() {
+            assert!(Bound::NONE == 0);
+            assert!(Bound::UPPER != 0);
         }
     }
 }
