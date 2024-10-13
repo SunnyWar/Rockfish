@@ -437,7 +437,7 @@ impl Depth {
 pub type File = u32;
 pub type Rank = u32;
 
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Square(pub u32);
 
 pub const FILE_A: File = 0;
@@ -1404,6 +1404,88 @@ mod tests {
             let d1 = Depth(8);
             let d2 = Depth(2);
             assert_eq!(d1 / d2, 4);
+        }
+    }
+
+    mod square_tests {
+        use super::*;
+
+        #[test]
+        fn test_square_constants() {
+            assert_eq!(Square::A1, Square(0));
+            assert_eq!(Square::H8, Square(63));
+            assert_eq!(Square::NONE, Square(64));
+        }
+
+        #[test]
+        fn test_file() {
+            assert_eq!(Square::A1.file(), FILE_A);
+            assert_eq!(Square::H1.file(), FILE_H);
+            assert_eq!(Square::A8.file(), FILE_A);
+            assert_eq!(Square::H8.file(), FILE_H);
+        }
+
+        #[test]
+        fn test_rank() {
+            assert_eq!(Square::A1.rank(), RANK_1);
+            assert_eq!(Square::A8.rank(), RANK_8);
+            assert_eq!(Square::H1.rank(), RANK_1);
+            assert_eq!(Square::H8.rank(), RANK_8);
+        }
+
+        #[test]
+        fn test_relative() {
+            assert_eq!(Square::A1.relative(WHITE), Square::A1);
+            assert_eq!(Square::A1.relative(BLACK), Square::A8);
+            assert_eq!(Square::H1.relative(WHITE), Square::H1);
+            assert_eq!(Square::H1.relative(BLACK), Square::H8);
+        }
+
+        #[test]
+        fn test_relative_rank() {
+            assert_eq!(Square::A1.relative_rank(WHITE), RANK_1);
+            assert_eq!(Square::A1.relative_rank(BLACK), RANK_8);
+            assert_eq!(Square::H1.relative_rank(WHITE), RANK_1);
+            assert_eq!(Square::H1.relative_rank(BLACK), RANK_8);
+        }
+
+        #[test]
+        fn test_is_ok() {
+            assert!(Square::A1.is_ok());
+            assert!(Square::H8.is_ok());
+            assert!(!Square::NONE.is_ok());
+        }
+
+        #[test]
+        fn test_make() {
+            assert_eq!(Square::make(FILE_A, RANK_1), Square::A1);
+            assert_eq!(Square::make(FILE_H, RANK_8), Square::H8);
+        }
+
+        #[test]
+        fn test_relative_square() {
+            assert_eq!(relative_square(WHITE, Square::A1), Square::A1);
+            assert_eq!(relative_square(BLACK, Square::A1), Square::A8);
+        }
+
+        #[test]
+        fn test_not() {
+            assert_eq!(!Square::A1, Square(56));
+            assert_eq!(!Square::H8, Square(7));
+        }
+
+        #[test]
+        fn test_bitxor() {
+            assert_eq!(Square::A1 ^ true, Square(56));
+            assert_eq!(Square::H8 ^ true, Square(7));
+        }
+
+        #[test]
+        fn test_iterator() {
+            let mut square = Square::A1;
+            assert_eq!(square.next(), Some(Square::A1));
+            assert_eq!(square.next(), Some(Square::B1));
+            assert_eq!(square.next(), Some(Square::C1));
         }
     }
 }
