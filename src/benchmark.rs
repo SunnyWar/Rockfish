@@ -87,7 +87,7 @@ pub fn setup_bench(pos: &Position, args: &str) -> Vec<String> {
     let fen_file = iter.next().unwrap_or("default");
     let limit_type = iter.next().unwrap_or("depth");
 
-    let go = format!("go {} {}", limit_type, limit);
+    let go = format!("go {limit_type} {limit}");
 
     let mut fens: Vec<String> = Vec::new();
 
@@ -123,14 +123,14 @@ pub fn setup_bench(pos: &Position, args: &str) -> Vec<String> {
 
     let mut list: Vec<String> = Vec::new();
     list.push(String::from("ucinewgame"));
-    list.push(format!("setoption name Threads value {}", threads));
-    list.push(format!("setoption name Hash value {}", tt_size));
+    list.push(format!("setoption name Threads value {threads}"));
+    list.push(format!("setoption name Hash value {tt_size}"));
 
     for fen in fens {
         if fen.contains("setoption") {
             list.push(fen);
         } else {
-            list.push(format!("position fen {}", fen));
+            list.push(format!("position fen {fen}"));
             list.push(go.clone());
         }
     }

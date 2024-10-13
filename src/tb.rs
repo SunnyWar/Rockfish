@@ -1046,25 +1046,25 @@ pub fn init(path: String) {
     }
 
     P.iter().for_each(|item| {
-        init_tb(&format!("K{}vK", item));
+        init_tb(&format!("K{item}vK"));
     });
 
     P.iter().enumerate().for_each(|(i, item1)| {
         P.iter().skip(i).for_each(|item2| {
-            init_tb(&format!("K{}vK{}", item1, item2));
+            init_tb(&format!("K{item1}vK{item2}"));
         });
     });
 
     P.iter().enumerate().for_each(|(i, item1)| {
         P.iter().skip(i).for_each(|item2| {
-            init_tb(&format!("K{}{}vK", item1, item2));
+            init_tb(&format!("K{item1}{item2}vK"));
         });
     });
 
     P.iter().enumerate().for_each(|(i, item1)| {
         P.iter().skip(i).for_each(|item2| {
             P.iter().for_each(|item3| {
-                init_tb(&format!("K{}{}vK{}", item1, item2, item3));
+                init_tb(&format!("K{item1}{item2}vK{item3}"));
             });
         });
     });
@@ -1072,7 +1072,7 @@ pub fn init(path: String) {
     P.iter().enumerate().for_each(|(i, item1)| {
         P.iter().skip(i).enumerate().for_each(|(j, item2)| {
             P.iter().skip(i + j).for_each(|item3| {
-                init_tb(&format!("K{}{}{}vK", item1, item2, item3));
+                init_tb(&format!("K{item1}{item2}{item3}vK"));
             });
         });
     });
@@ -1082,7 +1082,7 @@ pub fn init(path: String) {
             P.iter().skip(i).enumerate().for_each(|(j, item2)| {
                 P.iter().skip(i).enumerate().for_each(|(k, item3)| {
                     P.iter().skip(if i == k { j } else { k }).for_each(|item4| {
-                        init_tb(&format!("K{}{}vK{}{}", item1, item2, item3, item4));
+                        init_tb(&format!("K{item1}{item2}vK{item3}{item4}"));
                     });
                 });
             });
@@ -1092,7 +1092,7 @@ pub fn init(path: String) {
             P.iter().skip(i).enumerate().for_each(|(j, item2)| {
                 P.iter().skip(j).enumerate().for_each(|(_k, item3)| {
                     P.iter().for_each(|item4| {
-                        init_tb(&format!("K{}{}{}vK{}", item1, item2, item3, item4));
+                        init_tb(&format!("K{item1}{item2}{item3}vK{item4}"));
                     });
                 });
             });
@@ -1102,7 +1102,7 @@ pub fn init(path: String) {
             P.iter().skip(i).enumerate().for_each(|(j, item2)| {
                 P.iter().skip(j).enumerate().for_each(|(k, item3)| {
                     P.iter().skip(k).for_each(|item4| {
-                        init_tb(&format!("K{}{}{}{}vK", item1, item2, item3, item4));
+                        init_tb(&format!("K{item1}{item2}{item3}{item4}vK"));
                     });
                 });
             });
@@ -1113,7 +1113,7 @@ pub fn init(path: String) {
                 P.iter().skip(j).enumerate().for_each(|(_k, item3)| {
                     P.iter().enumerate().for_each(|(l, item4)| {
                         P.iter().skip(l).for_each(|item5| {
-                            init_tb(&format!("K{}{}{}vK{}{}", item1, item2, item3, item4, item5));
+                            init_tb(&format!("K{item1}{item2}{item3}vK{item4}{item5}"));
                         });
                     });
                 });
@@ -1125,7 +1125,7 @@ pub fn init(path: String) {
                 P.iter().skip(j).enumerate().for_each(|(k, item3)| {
                     P.iter().skip(k).enumerate().for_each(|(_l, item4)| {
                         P.iter().for_each(|item5| {
-                            init_tb(&format!("K{}{}{}{}vK{}", item1, item2, item3, item4, item5));
+                            init_tb(&format!("K{item1}{item2}{item3}{item4}vK{item5}"));
                         });
                     });
                 });
@@ -1137,7 +1137,7 @@ pub fn init(path: String) {
                 P.iter().skip(j).enumerate().for_each(|(k, item3)| {
                     P.iter().skip(k).enumerate().for_each(|(l, item4)| {
                         P.iter().skip(l).for_each(|item5| {
-                            init_tb(&format!("K{}{}{}{}{}vK", item1, item2, item3, item4, item5));
+                            init_tb(&format!("K{item1}{item2}{item3}{item4}{item5}vK"));
                         });
                     });
                 });
@@ -1265,11 +1265,11 @@ struct PairsData {
     base: Vec<u64>,
 }
 
-fn s1(w: &[u8; 3]) -> usize {
+fn s1(w: [u8; 3]) -> usize {
     (w[0] as usize) | ((w[1] as usize & 0x0f) << 8)
 }
 
-fn s2(w: &[u8; 3]) -> usize {
+fn s2(w: [u8; 3]) -> usize {
     ((w[2] as usize) << 4) | ((w[1] as usize) >> 4)
 }
 
@@ -1278,7 +1278,7 @@ fn calc_sym_len(sym_len: &mut Vec<u8>, sym_pat: &[[u8; 3]], s: usize, tmp: &mut 
         return;
     }
 
-    let w = &sym_pat[s];
+    let w = sym_pat[s];
     let s2 = s2(w);
     if s2 == 0x0fff {
         sym_len[s] = 0;
@@ -1710,7 +1710,7 @@ pub fn probe_wdl(pos: &mut Position, success: &mut i32) -> i32 {
     let mut best_cap = -3;
     let mut best_ep = -3;
 
-    for &m in list[0..end].iter() {
+    for &m in &list[0..end] {
         if !pos.capture(m.m) || !pos.legal(m.m) {
             continue;
         }
@@ -2734,7 +2734,7 @@ fn decompress_pairs(d: &PairsData, idx: usize) -> i32 {
     }
 
     while d.sym_len[sym] != 0 {
-        let w = &d.sym_pat[sym];
+        let w = d.sym_pat[sym];
         let s1 = s1(w);
         if lit_idx < d.sym_len[s1] as isize + 1 {
             sym = s1;
@@ -2744,7 +2744,7 @@ fn decompress_pairs(d: &PairsData, idx: usize) -> i32 {
         }
     }
 
-    s1(&d.sym_pat[sym]) as i32
+    s1(d.sym_pat[sym]) as i32
 }
 
 #[cfg(test)]

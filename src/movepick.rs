@@ -417,7 +417,7 @@ impl MovePickerQ {
             list: [ExtMove {
                 m: Move::NONE,
                 value: 0,
-            }; MAX_MOVES as usize],
+            }; MAX_MOVES],
         }
     }
 

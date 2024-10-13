@@ -152,12 +152,12 @@ pub fn print() {
             "\noption name {} type {}",
             opt.key,
             match opt.val {
-                OptVal::StringOpt { def, .. } => format!("string default {}", def),
+                OptVal::StringOpt { def, .. } => format!("string default {def}"),
                 OptVal::Spin { def, min, max, .. } =>
-                    format!("spin default {} min {} max {}", def, min, max),
-                OptVal::Check { def, .. } => format!("check default {}", def),
+                    format!("spin default {def} min {min} max {max}"),
+                OptVal::Check { def, .. } => format!("check default {def}"),
                 OptVal::Button => "button".to_string(),
-                OptVal::Combo { def, .. } => format!("combo default {}", def),
+                OptVal::Combo { def, .. } => format!("combo default {def}"),
             }
         );
     }
