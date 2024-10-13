@@ -9,11 +9,12 @@ use crate::material;
 use crate::pawns;
 use crate::position::Position;
 use crate::types::{
-    pawn_push, scale_factor::ScaleFactor, Bishop, BishopValueEg, BishopValueMg, Black, ColorTrait,
-    Knight, KnightValueMg, Piece, PieceTypeTrait, Queen, Rook, RookValueMg, Score, Square, Value,
-    White, ALL_PIECES, BISHOP, BLACK, EAST, EG, FILE_A, FILE_E, KING, KNIGHT, MG, NORTH,
-    NORTH_EAST, NORTH_WEST, PAWN, PHASE_MIDGAME, QUEEN, QUEEN_DIAGONAL, RANK_1, RANK_5, RANK_7,
-    ROOK, SOUTH, SOUTH_EAST, SOUTH_WEST, WEST, WHITE,
+    direction::pawn_push, direction::EAST, direction::NORTH, direction::NORTH_EAST,
+    direction::NORTH_WEST, direction::SOUTH, direction::SOUTH_EAST, direction::SOUTH_WEST,
+    direction::WEST, scale_factor::ScaleFactor, Bishop, BishopValueEg, BishopValueMg, Black,
+    ColorTrait, Knight, KnightValueMg, Piece, PieceTypeTrait, Queen, Rook, RookValueMg, Score,
+    Square, Value, White, ALL_PIECES, BISHOP, BLACK, EG, FILE_A, FILE_E, KING, KNIGHT, MG, PAWN,
+    PHASE_MIDGAME, QUEEN, QUEEN_DIAGONAL, RANK_1, RANK_5, RANK_7, ROOK, WHITE,
 };
 
 pub const TEMPO: Value = Value(20);

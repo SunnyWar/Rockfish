@@ -8,9 +8,10 @@ use crate::bitboard::{
 };
 use crate::position::Position;
 use crate::types::{
-    key::Key, Black, CastlingRight, CastlingSide, Color, ColorTrait, File, Piece, Score, Square,
-    Value, White, BLACK, FILE_B, FILE_G, FILE_H, NORTH, NORTH_EAST, NORTH_WEST, PAWN, RANK_1,
-    RANK_5, SOUTH, SOUTH_EAST, SOUTH_WEST, WHITE,
+    direction::NORTH, direction::NORTH_EAST, direction::NORTH_WEST, direction::SOUTH,
+    direction::SOUTH_EAST, direction::SOUTH_WEST, key::Key, Black, CastlingRight, CastlingSide,
+    Color, ColorTrait, File, Piece, Score, Square, Value, White, BLACK, FILE_B, FILE_G, FILE_H,
+    PAWN, RANK_1, RANK_5, WHITE,
 };
 
 macro_rules! V {

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 use crate::bitboard::{pawn_attacks, pseudo_attacks, Distance};
-use crate::types::{Color, Square, BLACK, FILE_D, KING, NORTH, RANK_2, RANK_7, WHITE};
+use crate::types::{direction::NORTH, Color, Square, BLACK, FILE_D, KING, RANK_2, RANK_7, WHITE};
 
 // There are 24 possible pawn squares: the first 4 files and ranks from 2 to 7
 const MAX_INDEX: usize = 2 * 24 * 64 * 64;

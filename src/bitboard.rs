@@ -3,9 +3,10 @@
 #![allow(dead_code)]
 
 use crate::types::{
-    Color, Direction, File, PieceType, Rank, Square, BISHOP, BLACK, EAST, FILE_A, FILE_H, KING,
-    KNIGHT, NORTH, NORTH_EAST, NORTH_WEST, PAWN, QUEEN, ROOK, SOUTH, SOUTH_EAST, SOUTH_WEST, WEST,
-    WHITE,
+    direction::Direction, direction::EAST, direction::NORTH, direction::NORTH_EAST,
+    direction::NORTH_WEST, direction::SOUTH, direction::SOUTH_EAST, direction::SOUTH_WEST,
+    direction::WEST, Color, File, PieceType, Rank, Square, BISHOP, BLACK, FILE_A, FILE_H, KING,
+    KNIGHT, PAWN, QUEEN, ROOK, WHITE,
 };
 use crate::uci;
 

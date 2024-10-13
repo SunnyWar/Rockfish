@@ -6,10 +6,12 @@ use crate::bitboard::{
 };
 use crate::position::Position;
 use crate::types::{
-    relative_rank, relative_square, Bishop, Black, Bool, CastlingRightTrait, Color, ColorTrait,
-    Direction, False, Knight, Move, PieceTypeTrait, Queen, Rook, Square, True, White, BISHOP,
-    BLACK_OO, CASTLING, EAST, ENPASSANT, KING, KNIGHT, MAX_MOVES, NORTH, NORTH_EAST, NORTH_WEST,
-    PAWN, QUEEN, RANK_6, ROOK, SOUTH, SOUTH_EAST, SOUTH_WEST, WEST, WHITE, WHITE_OO,
+    direction::Direction, direction::EAST, direction::NORTH, direction::NORTH_EAST,
+    direction::NORTH_WEST, direction::SOUTH, direction::SOUTH_EAST, direction::SOUTH_WEST,
+    direction::WEST, relative_rank, relative_square, Bishop, Black, Bool, CastlingRightTrait,
+    Color, ColorTrait, False, Knight, Move, PieceTypeTrait, Queen, Rook, Square, True, White,
+    BISHOP, BLACK_OO, CASTLING, ENPASSANT, KING, KNIGHT, MAX_MOVES, PAWN, QUEEN, RANK_6, ROOK,
+    WHITE, WHITE_OO,
 };
 
 const CAPTURES: i32 = 0;

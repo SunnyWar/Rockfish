@@ -15,13 +15,13 @@ use crate::search;
 use crate::tb;
 use crate::threads::ThreadCtrl;
 use crate::types::{
-    depth::Depth, key::Key, opposite_colors, pawn_push, piece_value, relative_rank,
-    relative_square, BishopValueMg, Bool, CastlingRight, CastlingSide, Color, False, KnightValueMg,
-    Move, PawnValueMg, Piece, PieceType, QueenValueMg, RookValueMg, Score, Square, SquareList,
-    True, Value, ALL_PIECES, ANY_CASTLING, BISHOP, BLACK, BLACK_OO, BLACK_OOO, B_BISHOP, B_KING,
-    CASTLING, EAST, ENPASSANT, KING, KNIGHT, MG, NORMAL, NO_PIECE, PAWN, PROMOTION, QUEEN, RANK_1,
-    RANK_2, RANK_4, RANK_6, RANK_8, ROOK, SOUTH, WEST, WHITE, WHITE_OO, WHITE_OOO, W_BISHOP,
-    W_KING,
+    depth::Depth, direction::pawn_push, direction::EAST, direction::SOUTH, direction::WEST,
+    key::Key, opposite_colors, piece_value, relative_rank, relative_square, BishopValueMg, Bool,
+    CastlingRight, CastlingSide, Color, False, KnightValueMg, Move, PawnValueMg, Piece, PieceType,
+    QueenValueMg, RookValueMg, Score, Square, SquareList, True, Value, ALL_PIECES, ANY_CASTLING,
+    BISHOP, BLACK, BLACK_OO, BLACK_OOO, B_BISHOP, B_KING, CASTLING, ENPASSANT, KING, KNIGHT, MG,
+    NORMAL, NO_PIECE, PAWN, PROMOTION, QUEEN, RANK_1, RANK_2, RANK_4, RANK_6, RANK_8, ROOK, WHITE,
+    WHITE_OO, WHITE_OOO, W_BISHOP, W_KING,
 };
 use crate::uci;
 
