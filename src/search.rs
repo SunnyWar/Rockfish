@@ -349,7 +349,7 @@ pub fn mainthread_search(pos: &mut Position, th: &threads::ThreadCtrl) {
 // repeatedly with increasing depth until the allocated thinking time has
 // been consumed, the user stops the search, or the maximum search depth
 // is reached.
-
+#[allow(clippy::too_many_lines)]
 pub fn thread_search(pos: &mut Position, _th: &threads::ThreadCtrl) {
     let mut stack: Vec<Stack> = Vec::with_capacity((MAX_PLY + 7) as usize);
 
@@ -654,7 +654,7 @@ fn clear_search(stack: &mut Vec<Stack>, pos: &mut Position) -> (Value, Value, Va
 }
 
 // search() is the main search function for both PV and non-PV nodes
-
+#[allow(clippy::too_many_lines)]
 fn search<NT: NodeType>(
     pos: &mut Position,
     ss: &mut [Stack],
@@ -808,30 +808,26 @@ fn search<NT: NodeType>(
             if found != 0 {
                 pos.tb_hits += 1;
 
-                let draw_score = if tb::use_rule_50() { 1 } else { 0 };
+                let draw_score = i32::from(tb::use_rule_50());
 
-                let value = if wdl < -draw_score {
-                    -Value::MATE + MAX_MATE_PLY + 1 + ss[5].ply
-                } else if wdl > draw_score {
-                    Value::MATE - MAX_MATE_PLY - 1 - ss[5].ply
-                } else {
-                    Value::DRAW + 2 * wdl * draw_score
+                let value = match wdl {
+                    x if x < -draw_score => -Value::MATE + MAX_MATE_PLY + 1 + ss[5].ply,
+                    x if x > draw_score => Value::MATE - MAX_MATE_PLY - 1 - ss[5].ply,
+                    _ => Value::DRAW + 2 * wdl * draw_score,
                 };
 
-                let b = if wdl < -draw_score {
-                    Bound::UPPER
-                } else if wdl > draw_score {
-                    Bound::LOWER
-                } else {
-                    Bound::EXACT
+                let b = match wdl {
+                    x if x < -draw_score => Bound::UPPER,
+                    x if x > draw_score => Bound::LOWER,
+                    _ => Bound::EXACT,
                 };
 
                 if b == Bound::EXACT
-                    || (if b == Bound::LOWER {
-                        value >= beta
-                    } else {
-                        value <= alpha
-                    })
+                    || match b {
+                        Bound::LOWER if value >= beta => true,
+                        _ if value <= alpha => true,
+                        _ => false,
+                    }
                 {
                     tte.save(
                         pos_key,
@@ -848,7 +844,10 @@ fn search<NT: NodeType>(
                 if pieces_cnt <= tb::cardinality_dtm() {
                     let mut mate = tb::probe_dtm(pos, wdl, &mut found);
                     if found != 0 {
-                        mate += if wdl > 0 { -ss[5].ply } else { ss[5].ply };
+                        mate += match wdl {
+                            x if x > 0 => -ss[5].ply,
+                            _ => ss[5].ply,
+                        };
                         tte.save(
                             pos_key,
                             value_to_tt(mate, ss[5].ply),
@@ -863,13 +862,16 @@ fn search<NT: NodeType>(
                 }
 
                 if pv_node {
-                    if b == Bound::LOWER {
-                        best_value = value;
-                        if best_value > alpha {
-                            alpha = best_value;
+                    match b {
+                        Bound::LOWER => {
+                            best_value = value;
+                            if best_value > alpha {
+                                alpha = best_value;
+                            }
                         }
-                    } else {
-                        max_value = value;
+                        _ => {
+                            max_value = value;
+                        }
                     }
                 }
             }
@@ -1153,12 +1155,15 @@ fn search<NT: NodeType>(
         let capture_or_promotion = pos.capture_or_promotion(m);
         let moved_piece = pos.moved_piece(m);
 
-        let gives_check = if m.move_type() == NORMAL
-            && pos.blockers_for_king(!pos.side_to_move()) & pos.pieces_c(pos.side_to_move()) == 0
-        {
-            pos.check_squares(moved_piece.piece_type()) & m.to() != 0
-        } else {
-            pos.gives_check(m)
+        let gives_check = match m.move_type() {
+            NORMAL
+                if pos.blockers_for_king(!pos.side_to_move())
+                    & pos.pieces_c(pos.side_to_move())
+                    == 0 =>
+            {
+                pos.check_squares(moved_piece.piece_type()) & m.to() != 0
+            }
+            _ => pos.gives_check(m),
         };
 
         let move_count_pruning =
@@ -1171,18 +1176,24 @@ fn search<NT: NodeType>(
         // that is singular and should be extended. To verify this, we do a
         // reduced search on all moves but the tt_move and if the result is
         // lower than tt_value minus a margin, we will extend the tt_move.
-        if singular_extension_node && m == tt_move && pos.legal(m) {
-            let rbeta = std::cmp::max(tt_value - 2 * depth / ONE_PLY, -Value::MATE);
-            let d = (depth / (2 * ONE_PLY)) * ONE_PLY;
-            ss[5].excluded_move = m;
-            let value = search::<NonPv>(pos, ss, rbeta - 1, rbeta, d, cut_node, true);
-            ss[5].excluded_move = Move::NONE;
-
-            if value < rbeta {
+        match (
+            singular_extension_node && m == tt_move && pos.legal(m),
+            gives_check && !move_count_pruning && pos.see_ge(m, Value::ZERO),
+        ) {
+            (true, _) => {
+                let rbeta = std::cmp::max(tt_value - 2 * depth / ONE_PLY, -Value::MATE);
+                let d = (depth / (2 * ONE_PLY)) * ONE_PLY;
+                ss[5].excluded_move = m;
+                let value = search::<NonPv>(pos, ss, rbeta - 1, rbeta, d, cut_node, true);
+                ss[5].excluded_move = Move::NONE;
+                if value < rbeta {
+                    extension = ONE_PLY;
+                }
+            }
+            (_, true) => {
                 extension = ONE_PLY;
             }
-        } else if gives_check && !move_count_pruning && pos.see_ge(m, Value::ZERO) {
-            extension = ONE_PLY;
+            _ => {}
         }
 
         // Calculate new depth for this move
@@ -1306,10 +1317,15 @@ fn search<NT: NodeType>(
 
                 // Decrease/increase reduction by comparing opponent's stat
                 // score
-                if ss[5].stat_score >= 0 && ss[4].stat_score < 0 {
-                    r -= ONE_PLY;
-                } else if ss[4].stat_score >= 0 && ss[5].stat_score < 0 {
-                    r += ONE_PLY;
+                match (
+                    ss[5].stat_score >= 0,
+                    ss[4].stat_score < 0,
+                    ss[4].stat_score >= 0,
+                    ss[5].stat_score < 0,
+                ) {
+                    (true, true, _, _) => r -= ONE_PLY,
+                    (_, _, true, true) => r += ONE_PLY,
+                    _ => {}
                 }
 
                 // Decrease/increase reduction for moves with a good/bad
@@ -1429,12 +1445,16 @@ fn search<NT: NodeType>(
             }
         }
 
-        if !capture_or_promotion && m != best_move && quiet_count < 64 {
-            quiets_searched[quiet_count] = m;
-            quiet_count += 1;
-        } else if capture_or_promotion && m != best_move && capture_count < 32 {
-            captures_searched[capture_count] = m;
-            capture_count += 1;
+        match (capture_or_promotion, m != best_move) {
+            (false, true) if quiet_count < 64 => {
+                quiets_searched[quiet_count] = m;
+                quiet_count += 1;
+            }
+            (true, true) if capture_count < 32 => {
+                captures_searched[capture_count] = m;
+                capture_count += 1;
+            }
+            _ => {}
         }
     }
 
@@ -1453,21 +1473,21 @@ fn search<NT: NodeType>(
         }
     } else if best_move != Move::NONE {
         // Quiet best move: update move sorting heuristics
-        if !pos.capture_or_promotion(best_move) {
+        if pos.capture_or_promotion(best_move) {
+            update_capture_stats(
+                pos,
+                best_move,
+                &captures_searched,
+                capture_count,
+                stat_bonus(depth),
+            );
+        } else {
             update_stats(
                 pos,
                 ss,
                 best_move,
                 &quiets_searched,
                 quiet_count,
-                stat_bonus(depth),
-            );
-        } else {
-            update_capture_stats(
-                pos,
-                best_move,
-                &captures_searched,
-                capture_count,
                 stat_bonus(depth),
             );
         }
@@ -1518,7 +1538,7 @@ fn search<NT: NodeType>(
 
 // qsearch() is the quiescence search function, which is called by the main
 // search function with depth zero or recursively with depth less than ONE_PLY.
-
+#[allow(clippy::too_many_lines)]
 fn qsearch<NT: NodeType, InCheck: Bool>(
     pos: &mut Position,
     ss: &mut [Stack],
@@ -1781,64 +1801,47 @@ fn qsearch<NT: NodeType, InCheck: Bool>(
 // value_to_tt() adjusts a mate score from "plies to mate from the root" to
 // "plies to mate from the current position". Non-mate scores are unchanged.
 // The function is called before storing a value in the transposition table.
-
 fn value_to_tt(v: Value, ply: i32) -> Value {
     debug_assert!(v != Value::NONE);
-
-    if v >= Value::MATE_IN_MAX_PLY {
-        v + ply
-    } else if v <= Value::MATED_IN_MAX_PLY {
-        v - ply
-    } else {
-        v
+    match v {
+        x if x >= Value::MATE_IN_MAX_PLY => v + ply,
+        x if x <= Value::MATED_IN_MAX_PLY => v - ply,
+        _ => v,
     }
 }
 
 // value_from_tt() is the inverse of value_to_tt(). It adjusts a mate score
 // from the transposition table (which refers to the plies to mate/be mated
 // from current position) to "plies to mate/be mated from the root".
-
 fn value_from_tt(v: Value, ply: i32) -> Value {
-    if v == Value::NONE {
-        Value::NONE
-    } else if v >= Value::MATE_IN_MAX_PLY {
-        v - ply
-    } else if v <= Value::MATED_IN_MAX_PLY {
-        v + ply
-    } else {
-        v
+    match v {
+        x if x == Value::NONE => Value::NONE,
+        x if x >= Value::MATE_IN_MAX_PLY => v - ply,
+        x if x <= Value::MATED_IN_MAX_PLY => v + ply,
+        _ => v,
     }
 }
 
 // update_pv() adds current move and appends child pv
-
 fn update_pv(ss: &mut [Stack], m: Move) {
     ss[5].pv.truncate(0);
     ss[5].pv.push(m);
-    for i in 0..ss[6].pv.len() {
-        let m = ss[6].pv[i];
-        ss[5].pv.push(m);
-    }
+    let slice_to_extend: Vec<_> = ss[6].pv.clone();
+    ss[5].pv.extend(slice_to_extend);
 }
 
 // update_continuation_histories() updates histories of the move pairs formed
 // by moves at ply -1, -2 and -4 with current move.
-
 fn update_continuation_histories(ss: &[Stack], pc: Piece, to: Square, bonus: i32) {
-    if ss[3].current_move.is_ok() {
-        ss[3].cont_history.update(pc, to, bonus);
-    }
-    if ss[2].current_move.is_ok() {
-        ss[2].cont_history.update(pc, to, bonus);
-    }
-    if ss[0].current_move.is_ok() {
-        ss[0].cont_history.update(pc, to, bonus);
+    for &index in &[3, 2, 0] {
+        if ss[index].current_move.is_ok() {
+            ss[index].cont_history.update(pc, to, bonus);
+        }
     }
 }
 
 // update_capture_stats() updates move sorting heuristics when a new capture
 // best move is found.
-
 fn update_capture_stats(
     pos: &Position,
     m: Move,
@@ -1852,16 +1855,15 @@ fn update_capture_stats(
     capture_history.update(moved_piece, m.to(), captured, bonus);
 
     // Decrease all the other played capture moves
-    for i in 0..capture_cnt {
-        let moved_piece = pos.moved_piece(captures[i]);
-        let captured = pos.piece_on(captures[i].to()).piece_type();
-        capture_history.update(moved_piece, captures[i].to(), captured, -bonus);
+    for &capture in captures.iter().take(capture_cnt) {
+        let moved_piece = pos.moved_piece(capture);
+        let captured = pos.piece_on(capture.to()).piece_type();
+        capture_history.update(moved_piece, capture.to(), captured, -bonus);
     }
 }
 
 // update_stats() updates move sorting heuristics when a new quiet best move
 // is found
-
 fn update_stats(
     pos: &Position,
     ss: &mut [Stack],
@@ -1885,9 +1887,9 @@ fn update_stats(
     }
 
     // Decrease all the other played quiet moves
-    for i in 0..quiets_cnt {
-        pos.main_history.update(c, quiets[i], -bonus);
-        update_continuation_histories(&ss[1..], pos.moved_piece(quiets[i]), quiets[i].to(), -bonus);
+    for &quiet in quiets.iter().take(quiets_cnt) {
+        pos.main_history.update(c, quiet, -bonus);
+        update_continuation_histories(&ss[1..], pos.moved_piece(quiet), quiet.to(), -bonus);
     }
 }
 
@@ -1899,7 +1901,6 @@ fn update_counters(pos: &Position) {
 
 // check_time() is used to print debug info and, more importantly, to detect
 // when we are out of available time and have to stop the search.
-
 fn check_time() {
     // An engine may not stop pondering until told so by the GUI
     if threads::ponder() {
@@ -1908,11 +1909,13 @@ fn check_time() {
 
     let elapsed = timeman::elapsed();
 
-    if (limits().use_time_management() && elapsed > timeman::maximum() - 10)
-        || (limits().movetime != 0 && elapsed >= limits().movetime)
-        || (limits().nodes != 0 && threads::nodes_searched() >= limits().nodes)
-    {
-        threads::set_stop(true);
+    match (
+        limits().use_time_management() && elapsed > timeman::maximum() - 10,
+        limits().movetime != 0 && elapsed >= limits().movetime,
+        limits().nodes != 0 && threads::nodes_searched() >= limits().nodes,
+    ) {
+        (true, _, _) | (_, true, _) | (_, _, true) => threads::set_stop(true),
+        _ => {}
     }
 }
 
@@ -1996,22 +1999,19 @@ fn print_pv(pos: &mut Position, depth: Depth, alpha: Value, beta: Value) {
 // exiting the search, for instance in case we stop the search during a fail
 // high at root. We try hard to have a ponder move to return to the GUI,
 // otherwise in case of 'ponder on' we have nothing to think on.
-
 fn extract_ponder_from_tt(pos: &mut Position) -> bool {
     debug_assert!(pos.root_moves[0].pv.len() == 1);
 
     let m1 = pos.root_moves[0].pv[0];
-
     if m1 == Move::NONE {
         return false;
     }
 
     let gives_check = pos.gives_check(m1);
     pos.do_move(m1, gives_check);
-    let (tte, tt_hit) = tt::probe(pos.key());
 
-    if tt_hit {
-        let m2 = tte.mov(); // Local copy to be SMP safe.
+    if let (tte, true) = tt::probe(pos.key()) {
+        let m2 = tte.mov(); // Local copy to be SMP safe
         if MoveList::new::<Legal>(pos).contains(m2) {
             pos.root_moves[0].pv.push(m2);
         }
