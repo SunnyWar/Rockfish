@@ -1,6 +1,6 @@
-use super::{Color, Square};
+use super::{Color, Square, WHITE};
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Direction(pub i32);
 
 impl std::ops::Neg for Direction {
@@ -64,5 +64,75 @@ pub fn pawn_push(c: Color) -> Direction {
     match c {
         WHITE => NORTH,
         _ => SOUTH,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::u32;
+
+    use super::*;
+    use crate::types::{BLACK, WHITE};
+
+    #[test]
+    fn test_neg() {
+        assert_eq!(-NORTH, SOUTH);
+        assert_eq!(-EAST, WEST);
+        assert_eq!(-SOUTH, NORTH);
+        assert_eq!(-WEST, EAST);
+        assert_eq!(-NORTH_EAST, SOUTH_WEST);
+        assert_eq!(-NORTH_WEST, SOUTH_EAST);
+        assert_eq!(-SOUTH_EAST, NORTH_WEST);
+        assert_eq!(-SOUTH_WEST, NORTH_EAST);
+    }
+
+    #[test]
+    fn test_add() {
+        assert_eq!(NORTH + EAST, Direction(9));
+        assert_eq!(SOUTH + WEST, Direction(-9));
+    }
+
+    #[test]
+    fn test_mul() {
+        assert_eq!(2 * NORTH, Direction(16));
+        assert_eq!(3 * EAST, Direction(3));
+    }
+
+    #[test]
+    fn test_add_for_square() {
+        let sq = Square(0);
+        assert_eq!(sq + NORTH, Square(8));
+        assert_eq!(sq + EAST, Square(1));
+    }
+
+    #[test]
+    fn test_sub_for_square() {
+        let sq = Square(8);
+        assert_eq!(sq - NORTH, Square(0));
+        assert_eq!(sq - EAST, Square(7));
+    }
+
+    #[test]
+    fn test_add_assign_for_square() {
+        let mut sq = Square(0);
+        sq += NORTH;
+        assert_eq!(sq, Square(8));
+        sq += EAST;
+        assert_eq!(sq, Square(9));
+    }
+
+    #[test]
+    fn test_sub_assign_for_square() {
+        let mut sq = Square(8);
+        sq -= NORTH;
+        assert_eq!(sq, Square(0));
+        sq -= EAST;
+        assert_eq!(sq, Square(u32::MAX)); // Using valid value within the range
+    }
+
+    #[test]
+    fn test_pawn_push() {
+        assert_eq!(pawn_push(WHITE), NORTH);
+        assert_eq!(pawn_push(BLACK), SOUTH);
     }
 }
