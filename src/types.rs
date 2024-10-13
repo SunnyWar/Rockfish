@@ -327,11 +327,25 @@ impl Piece {
     }
 }
 
-impl Iterator for Piece {
+impl IntoIterator for Piece {
     type Item = Self;
+    type IntoIter = PieceIntoIterator;
+
+    fn into_iter(self) -> Self::IntoIter {
+        PieceIntoIterator { piece: self }
+    }
+}
+
+pub struct PieceIntoIterator {
+    piece: Piece,
+}
+
+impl Iterator for PieceIntoIterator {
+    type Item = Piece;
+
     fn next(&mut self) -> Option<Self::Item> {
-        let pc = self.0;
-        self.0 += 1;
+        let pc = self.piece.0;
+        self.piece.0 += 1;
         Some(Piece(pc))
     }
 }
@@ -1309,13 +1323,14 @@ mod tests {
         }
 
         #[test]
-        fn test_iterator() {
-            let mut piece = W_PAWN;
-            assert_eq!(piece.next(), Some(W_PAWN));
-            assert_eq!(piece.next(), Some(W_KNIGHT));
-            assert_eq!(piece.next(), Some(W_BISHOP));
+        fn test_piece_into_iterator() {
+            let piece = W_PAWN;
+            let mut iter = piece.into_iter();
+            assert_eq!(iter.next(), Some(W_PAWN));
+            assert_eq!(iter.next(), Some(W_KNIGHT));
+            assert_eq!(iter.next(), Some(W_BISHOP));
         }
-
+        
         #[test]
         fn test_not() {
             assert_eq!(!W_PAWN, B_PAWN);
