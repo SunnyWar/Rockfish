@@ -219,7 +219,6 @@ pub fn hashfull() -> i32 {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_example() {

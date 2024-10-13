@@ -334,7 +334,6 @@ pub fn to_move(pos: &Position, s: &str) -> Move {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_example() {

@@ -753,7 +753,6 @@ pub fn attacks_bb(pt: PieceType, s: Square, occupied: Bitboard) -> Bitboard {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_example() {

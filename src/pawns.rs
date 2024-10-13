@@ -438,7 +438,6 @@ fn evaluate<Us: ColorTrait>(pos: &Position, e: &mut Entry) -> Score {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_example() {

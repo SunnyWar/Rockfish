@@ -205,7 +205,6 @@ pub fn probe(wksq: Square, wpsq: Square, bksq: Square, us: Color) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_example() {

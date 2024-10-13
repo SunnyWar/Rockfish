@@ -284,7 +284,6 @@ pub fn probe(pos: &Position) -> &'static mut Entry {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_example() {

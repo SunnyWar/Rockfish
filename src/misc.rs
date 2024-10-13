@@ -46,7 +46,6 @@ pub fn engine_info(to_uci: bool) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_example() {

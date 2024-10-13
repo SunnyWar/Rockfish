@@ -140,7 +140,6 @@ pub fn setup_bench(pos: &Position, args: &str) -> Vec<String> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_example() {

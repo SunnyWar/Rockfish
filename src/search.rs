@@ -2030,7 +2030,6 @@ fn extract_ponder_from_tt(pos: &mut Position) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_example() {

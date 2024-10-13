@@ -2749,7 +2749,6 @@ fn decompress_pairs(d: &PairsData, idx: usize) -> i32 {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_example() {

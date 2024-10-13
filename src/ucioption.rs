@@ -232,7 +232,6 @@ pub fn get_string(key: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_example() {

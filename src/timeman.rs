@@ -133,7 +133,6 @@ pub fn init(limits: &mut search::LimitsType, us: Color, ply: i32) {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_example() {

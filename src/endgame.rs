@@ -995,7 +995,6 @@ pub fn scale_kpkp(pos: &Position, strong_side: Color) -> ScaleFactor {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_example() {
