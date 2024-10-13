@@ -6,7 +6,7 @@ use crate::pawns;
 use crate::position::Position;
 use crate::search::{mainthread_search, thread_search, LimitsType, RootMove, RootMoves, LIMITS};
 use crate::tb;
-use crate::types::{Depth, Move, Value};
+use crate::types::{depth::Depth, Move, Value};
 use crate::ucioption;
 
 use std::cell::Cell;

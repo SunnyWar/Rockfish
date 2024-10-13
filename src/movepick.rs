@@ -4,7 +4,8 @@ use crate::movegen::{generate, Captures, Evasions, ExtMove, QuietChecks, Quiets}
 use crate::position::Position;
 use crate::search;
 use crate::types::{
-    piece_value, Color, Depth, Move, Piece, PieceType, Square, Value, MAX_MOVES, MG, ONE_PLY,
+    depth::Depth, depth::ONE_PLY, piece_value, Color, Move, Piece, PieceType, Square, Value,
+    MAX_MOVES, MG,
 };
 
 use std::cell::Cell;

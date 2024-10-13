@@ -8,9 +8,9 @@ use crate::position::zobrist::material;
 use crate::position::Position;
 use crate::search::RootMoves;
 use crate::types::{
-    key::Key, Color, Depth, Move, PawnValueEg, Piece, PieceType, Square, Value, ANY_CASTLING,
-    BISHOP, BLACK, B_PAWN, ENPASSANT, FILE_A, FILE_B, FILE_C, FILE_D, KING, KNIGHT, MAX_MATE_PLY,
-    NO_PIECE, ONE_PLY, PAWN, PROMOTION, QUEEN, ROOK, WHITE, W_PAWN,
+    depth::Depth, depth::ONE_PLY, key::Key, Color, Move, PawnValueEg, Piece, PieceType, Square,
+    Value, ANY_CASTLING, BISHOP, BLACK, B_PAWN, ENPASSANT, FILE_A, FILE_B, FILE_C, FILE_D, KING,
+    KNIGHT, MAX_MATE_PLY, NO_PIECE, PAWN, PROMOTION, QUEEN, ROOK, WHITE, W_PAWN,
 };
 use crate::ucioption;
 
