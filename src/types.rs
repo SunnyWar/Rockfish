@@ -364,7 +364,7 @@ impl std::ops::BitXor<bool> for Piece {
     }
 }
 
-#[derive(Clone, Copy, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialOrd, Ord, PartialEq, Eq)]
 pub struct Depth(pub i32);
 
 impl std::ops::Add<Depth> for Depth {
@@ -1330,7 +1330,7 @@ mod tests {
             assert_eq!(iter.next(), Some(W_KNIGHT));
             assert_eq!(iter.next(), Some(W_BISHOP));
         }
-        
+
         #[test]
         fn test_not() {
             assert_eq!(!W_PAWN, B_PAWN);
@@ -1343,6 +1343,67 @@ mod tests {
             assert_eq!(B_PAWN ^ true, W_PAWN);
             assert_eq!(W_PAWN ^ false, W_PAWN);
             assert_eq!(B_PAWN ^ false, B_PAWN);
+        }
+    }
+
+    mod depth_tests {
+        use super::*;
+
+        #[test]
+        fn test_depth_constants() {
+            assert_eq!(ONE_PLY, Depth(1));
+            assert_eq!(DEPTH_ZERO, Depth(0));
+            assert_eq!(DEPTH_QS_NO_CHECKS, Depth(-1));
+            assert_eq!(DEPTH_QS_RECAPTURES, Depth(-5));
+            assert_eq!(DEPTH_NONE, Depth(-6));
+            // DEPTH_MAX can't be tested here because MAX_PLY is undefined in this snippet
+        }
+
+        #[test]
+        fn test_add() {
+            let d1 = Depth(3);
+            let d2 = Depth(4);
+            assert_eq!(d1 + d2, Depth(7));
+        }
+
+        #[test]
+        fn test_sub() {
+            let d1 = Depth(7);
+            let d2 = Depth(4);
+            assert_eq!(d1 - d2, Depth(3));
+        }
+
+        #[test]
+        fn test_add_assign() {
+            let mut d = Depth(3);
+            d += Depth(4);
+            assert_eq!(d, Depth(7));
+        }
+
+        #[test]
+        fn test_sub_assign() {
+            let mut d = Depth(7);
+            d -= Depth(4);
+            assert_eq!(d, Depth(3));
+        }
+
+        #[test]
+        fn test_mul_i32() {
+            let d = Depth(3);
+            assert_eq!(d * 2, Depth(6));
+        }
+
+        #[test]
+        fn test_mul_depth() {
+            let d = Depth(3);
+            assert_eq!(2 * d, Depth(6));
+        }
+
+        #[test]
+        fn test_div() {
+            let d1 = Depth(8);
+            let d2 = Depth(2);
+            assert_eq!(d1 / d2, 4);
         }
     }
 }
