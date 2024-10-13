@@ -10,7 +10,7 @@ use crate::pawns;
 use crate::position::Position;
 use crate::types::{
     pawn_push, Bishop, BishopValueEg, BishopValueMg, Black, ColorTrait, Knight, KnightValueMg,
-    Piece, PieceTypeTrait, Queen, Rook, RookValueMg, ScaleFactor, Score, Square, Value, White,
+    Piece, PieceTypeTrait, Queen, Rook, RookValueMg, scale_factor::ScaleFactor, Score, Square, Value, White,
     ALL_PIECES, BISHOP, BLACK, EAST, EG, FILE_A, FILE_E, KING, KNIGHT, MG, NORTH, NORTH_EAST,
     NORTH_WEST, PAWN, PHASE_MIDGAME, QUEEN, QUEEN_DIAGONAL, RANK_1, RANK_5, RANK_7, ROOK, SOUTH,
     SOUTH_EAST, SOUTH_WEST, WEST, WHITE,
