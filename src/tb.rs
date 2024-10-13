@@ -37,7 +37,7 @@ pub fn read_options() {
     unsafe {
         USE_RULE_50 = ucioption::get_bool("Syzygy50MoveRule");
         PROBE_DEPTH = ucioption::get_i32("SyzygyProbeDepth") * ONE_PLY;
-        CARDINALITY = ucioption::get_i32("SyzygyProbeLimit") as u32;
+        CARDINALITY = ucioption::get_u32("SyzygyProbeLimit");
         if CARDINALITY > MAX_CARDINALITY {
             CARDINALITY = MAX_CARDINALITY;
             PROBE_DEPTH = Depth::ZERO;

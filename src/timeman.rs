@@ -86,9 +86,9 @@ fn remaining(my_time: i64, movestogo: i32, ply: i32, slow_mover: i64, time_type:
 //  inc >  0 && movestogo != 0 means: x moves in y minutes + z increment
 
 pub fn init(limits: &mut search::LimitsType, us: Color, ply: i32) {
-    let min_think_time = i64::from(ucioption::get_i32("Minimum Thinking Time"));
-    let move_overhead = i64::from(ucioption::get_i32("Move Overhead"));
-    let slow_mover = i64::from(ucioption::get_i32("Slow Mover"));
+    let min_think_time = i64::from(ucioption::get_u32("Minimum Thinking Time"));
+    let move_overhead = i64::from(ucioption::get_u32("Move Overhead"));
+    let slow_mover = i64::from(ucioption::get_u32("Slow Mover"));
 
     unsafe {
         START_TIME = limits.start_time;

@@ -200,6 +200,20 @@ pub fn get_i32(key: &str) -> i32 {
     val
 }
 
+pub fn get_u32(key: &str) -> u32 {
+    // Assuming OPTIONS is some global variable.
+    // Ensure OPTIONS is safely accessible.
+    let opts = unsafe { &*OPTIONS }; // Use reference without transferring ownership
+
+    if let Some(opt) = opts.iter().find(|o| o.key == key) {
+        if let OptVal::Spin { cur, .. } = opt.val {
+            return cur as u32;
+        }
+    }
+
+    0 // Default return value if no match found
+}
+
 pub fn get_bool(key: &str) -> bool {
     let opts = unsafe { Box::from_raw(OPTIONS) };
     let val = {

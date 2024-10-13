@@ -323,7 +323,7 @@ pub fn mainthread_search(pos: &mut Position, th: &threads::ThreadCtrl) {
             && (result.depth >= pos.completed_depth || result.score >= Value::MATE_IN_MAX_PLY)
         {
             pos.root_moves[0].score = result.score;
-            pos.root_moves[0].pv = result.pv.clone();
+            pos.root_moves[0].pv.clone_from(&result.pv);
         }
     }
 
@@ -362,7 +362,7 @@ pub fn thread_search(pos: &mut Position, _th: &threads::ThreadCtrl) {
 
     let us = pos.side_to_move();
 
-    let mut multi_pv = ucioption::get_i32("MultiPV") as usize;
+    let mut multi_pv = ucioption::get_u32("MultiPV") as usize;
     multi_pv = std::cmp::min(multi_pv, pos.root_moves.len());
 
     let mut base_ct = ucioption::get_i32("Contempt") * PawnValueEg.0 / 100;
@@ -1923,7 +1923,7 @@ fn check_time() {
 fn print_pv(pos: &mut Position, depth: Depth, alpha: Value, beta: Value) {
     let elapsed = timeman::elapsed() + 1;
     let pv_idx = pos.pv_idx;
-    let multi_pv = std::cmp::min(ucioption::get_i32("MultiPV") as usize, pos.root_moves.len());
+    let multi_pv = std::cmp::min(ucioption::get_u32("MultiPV") as usize, pos.root_moves.len());
     let nodes_searched = threads::nodes_searched();
     let tb_hits = threads::tb_hits();
 
