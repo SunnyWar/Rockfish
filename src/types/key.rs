@@ -20,8 +20,9 @@ impl std::fmt::Display for Key {
     }
 }
 
+#[cfg(test)]
 mod key_tests {
-    use super::*;
+    use crate::types::key::Key;
 
     #[test]
     fn test_bitxor() {
