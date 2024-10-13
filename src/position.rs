@@ -16,7 +16,7 @@ use crate::tb;
 use crate::threads::ThreadCtrl;
 use crate::types::{
     opposite_colors, pawn_push, piece_value, relative_rank, relative_square, BishopValueMg, Bool,
-    CastlingRight, CastlingSide, Color, Depth, False, Key, KnightValueMg, Move, PawnValueMg, Piece,
+    CastlingRight, CastlingSide, Color, Depth, False, key::Key, KnightValueMg, Move, PawnValueMg, Piece,
     PieceType, QueenValueMg, RookValueMg, Score, Square, SquareList, True, Value, ALL_PIECES,
     ANY_CASTLING, BISHOP, BLACK, BLACK_OO, BLACK_OOO, B_BISHOP, B_KING, CASTLING, EAST, ENPASSANT,
     KING, KNIGHT, MG, NORMAL, NO_PIECE, PAWN, PROMOTION, QUEEN, RANK_1, RANK_2, RANK_4, RANK_6,
@@ -28,7 +28,7 @@ use std::sync::Arc;
 
 pub mod zobrist {
     use crate::misc;
-    use crate::types::{CastlingRight, File, Key, Piece, Square};
+    use crate::types::{CastlingRight, File, key::Key, Piece, Square};
 
     static mut PSQ: [[Key; 64]; 16] = [[Key(0); 64]; 16];
     static mut ENPASSANT: [Key; 8] = [Key(0); 8];

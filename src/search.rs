@@ -11,7 +11,7 @@ use crate::threads;
 use crate::timeman;
 use crate::tt;
 use crate::types::{
-    mate_in, mated_in, piece_value, Bool, Bound, Depth, False, Key, Move, PawnValueEg, PawnValueMg,
+    mate_in, mated_in, piece_value, Bool, Bound, Depth, False, key::Key, Move, PawnValueEg, PawnValueMg,
     Piece, Score, Square, True, Value, ANY_CASTLING, BLACK, EG, ENPASSANT, MAX_MATE_PLY, MAX_PLY,
     NORMAL, NO_PIECE, ONE_PLY, WHITE,
 };

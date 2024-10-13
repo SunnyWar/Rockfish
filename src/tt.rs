@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use crate::types::{Bound, Depth, Key, Move, Value, ONE_PLY};
+use crate::types::{Bound, Depth, key::Key, Move, Value, ONE_PLY};
 
 // TTEntry struct is the 10 bytes transposition-table entry, defined as below:
 //

@@ -9,10 +9,10 @@ use crate::movegen::{Legal, MoveList};
 use crate::position::zobrist;
 use crate::position::Position;
 use crate::types::{
-    opposite_colors, pawn_push, BishopValueMg, Color, Key, KnightValueMg, PawnValueEg, Piece,
+    opposite_colors, pawn_push, BishopValueMg, Color, KnightValueMg, PawnValueEg, Piece,
     QueenValueEg, QueenValueMg, RookValueEg, RookValueMg, ScaleFactor, Square, Value, BISHOP,
     BLACK, FILE_A, FILE_B, FILE_D, FILE_E, FILE_G, FILE_H, KING, KNIGHT, NORTH, PAWN, QUEEN,
-    RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8, ROOK, SOUTH, WHITE,
+    RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8, ROOK, SOUTH, WHITE, key::Key
 };
 
 pub type EvalFn = fn(&Position, Color) -> Value;

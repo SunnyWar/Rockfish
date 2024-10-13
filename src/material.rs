@@ -7,7 +7,7 @@ use crate::endgame::{
 };
 use crate::position::Position;
 use crate::types::{
-    BishopValueMg, Color, Key, Phase, QueenValueMg, RookValueMg, ScaleFactor, Score, Value, BISHOP,
+    BishopValueMg, Color, key::Key, Phase, QueenValueMg, RookValueMg, ScaleFactor, Score, Value, BISHOP,
     BLACK, ENDGAME_LIMIT, KNIGHT, MIDGAME_LIMIT, PAWN, PHASE_MIDGAME, QUEEN, ROOK, WHITE,
 };
 
