@@ -15,12 +15,13 @@ use crate::search;
 use crate::tb;
 use crate::threads::ThreadCtrl;
 use crate::types::{
-    opposite_colors, pawn_push, piece_value, relative_rank, relative_square, BishopValueMg, Bool,
-    CastlingRight, CastlingSide, Color, Depth, False, key::Key, KnightValueMg, Move, PawnValueMg, Piece,
-    PieceType, QueenValueMg, RookValueMg, Score, Square, SquareList, True, Value, ALL_PIECES,
-    ANY_CASTLING, BISHOP, BLACK, BLACK_OO, BLACK_OOO, B_BISHOP, B_KING, CASTLING, EAST, ENPASSANT,
-    KING, KNIGHT, MG, NORMAL, NO_PIECE, PAWN, PROMOTION, QUEEN, RANK_1, RANK_2, RANK_4, RANK_6,
-    RANK_8, ROOK, SOUTH, WEST, WHITE, WHITE_OO, WHITE_OOO, W_BISHOP, W_KING,
+    key::Key, opposite_colors, pawn_push, piece_value, relative_rank, relative_square,
+    BishopValueMg, Bool, CastlingRight, CastlingSide, Color, Depth, False, KnightValueMg, Move,
+    PawnValueMg, Piece, PieceType, QueenValueMg, RookValueMg, Score, Square, SquareList, True,
+    Value, ALL_PIECES, ANY_CASTLING, BISHOP, BLACK, BLACK_OO, BLACK_OOO, B_BISHOP, B_KING,
+    CASTLING, EAST, ENPASSANT, KING, KNIGHT, MG, NORMAL, NO_PIECE, PAWN, PROMOTION, QUEEN, RANK_1,
+    RANK_2, RANK_4, RANK_6, RANK_8, ROOK, SOUTH, WEST, WHITE, WHITE_OO, WHITE_OOO, W_BISHOP,
+    W_KING,
 };
 use crate::uci;
 
@@ -28,7 +29,7 @@ use std::sync::Arc;
 
 pub mod zobrist {
     use crate::misc;
-    use crate::types::{CastlingRight, File, key::Key, Piece, Square};
+    use crate::types::{key::Key, CastlingRight, File, Piece, Square};
 
     static mut PSQ: [[Key; 64]; 16] = [[Key(0); 64]; 16];
     static mut ENPASSANT: [Key; 8] = [Key(0); 8];

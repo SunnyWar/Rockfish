@@ -45,5 +45,3 @@ mod scale_factor_tests {
         assert_ne!(sf1, sf3);
     }
 }
-
-

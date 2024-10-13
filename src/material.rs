@@ -7,8 +7,9 @@ use crate::endgame::{
 };
 use crate::position::Position;
 use crate::types::{
-    BishopValueMg, Color, key::Key, Phase, QueenValueMg, RookValueMg, scale_factor::ScaleFactor, Score, Value, BISHOP,
-    BLACK, ENDGAME_LIMIT, KNIGHT, MIDGAME_LIMIT, PAWN, PHASE_MIDGAME, QUEEN, ROOK, WHITE,
+    key::Key, scale_factor::ScaleFactor, BishopValueMg, Color, Phase, QueenValueMg, RookValueMg,
+    Score, Value, BISHOP, BLACK, ENDGAME_LIMIT, KNIGHT, MIDGAME_LIMIT, PAWN, PHASE_MIDGAME, QUEEN,
+    ROOK, WHITE,
 };
 
 pub struct Entry {

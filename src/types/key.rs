@@ -47,5 +47,3 @@ mod key_tests {
         assert_eq!(format!("{key}"), "1234");
     }
 }
-
-
