@@ -95,9 +95,9 @@ impl EncInfo {
 const WDL_TO_MAP: [u32; 5] = [1, 3, 0, 2, 0];
 const PA_FLAGS: [u8; 5] = [8, 0, 0, 0, 4];
 
-const WDL_MAGIC: u32 = 0x5d23e871;
-const DTM_MAGIC: u32 = 0x88ac504b;
-const DTZ_MAGIC: u32 = 0xa50c66d7;
+const WDL_MAGIC: u32 = 0x5d23_e871;
+const DTM_MAGIC: u32 = 0x88ac_504b;
+const DTZ_MAGIC: u32 = 0xa50c_66d7;
 
 const WDL_SUFFIX: &str = ".rtbw";
 const DTM_SUFFIX: &str = ".rtbm";
@@ -288,12 +288,12 @@ impl TbTable for DtmPiece {
     }
     type MapType = u16;
     fn set_map(&mut self, map: &'static [Self::MapType]) {
-        self.map = map
+        self.map = map;
     }
     fn map(&self, _t: usize, bside: usize, mut res: i32, won: bool) -> i32 {
         if !self.loss_only {
-            let idx = self.map_idx[bside][won as usize];
-            res = u16::from_le(self.map[idx as usize + res as usize]) as i32;
+            let idx = self.map_idx[bside][usize::from(won)];
+            res = i32::from(u16::from_le(self.map[idx as usize + res as usize]));
         }
         res
     }
@@ -346,12 +346,12 @@ impl TbTable for DtzPiece {
     }
     type MapType = u8;
     fn set_map(&mut self, map: &'static [Self::MapType]) {
-        self.map = map
+        self.map = map;
     }
     fn map(&self, _t: usize, _b: usize, mut res: i32, wdl: i32) -> i32 {
         if self.flags & 2 != 0 {
             let idx = self.map_idx[WDL_TO_MAP[(wdl + 2) as usize] as usize];
-            res = self.map[idx as usize + res as usize] as i32;
+            res = i32::from(self.map[idx as usize + res as usize]);
         }
         if self.flags & PA_FLAGS[(wdl + 2) as usize] == 0 || wdl & 1 != 0 {
             res *= 2;
@@ -398,9 +398,9 @@ where
 {
     fn table_mut(&self) -> &mut T {
         match T::Type::TYPE {
-            Wdl::TYPE => unsafe { &mut *(self.wdl.get() as *mut T) },
-            Dtm::TYPE => unsafe { &mut *(self.dtm.get() as *mut T) },
-            Dtz::TYPE => unsafe { &mut *(self.dtz.get() as *mut T) },
+            Wdl::TYPE => unsafe { &mut *self.wdl.get().cast::<T>() },
+            Dtm::TYPE => unsafe { &mut *self.dtm.get().cast::<T>() },
+            Dtz::TYPE => unsafe { &mut *self.dtz.get().cast::<T>() },
             _ => panic!("Non-existing table type"),
         }
     }
@@ -529,12 +529,12 @@ impl TbTable for DtmPawn {
     }
     type MapType = u16;
     fn set_map(&mut self, map: &'static [Self::MapType]) {
-        self.map = map
+        self.map = map;
     }
     fn map(&self, t: usize, bside: usize, mut res: i32, won: bool) -> i32 {
         if !self.loss_only {
-            let idx = self.map_idx[t][bside][won as usize];
-            res = u16::from_le(self.map[idx as usize + res as usize]) as i32;
+            let idx = self.map_idx[t][bside][usize::from(won)];
+            res = i32::from(u16::from_le(self.map[idx as usize + res as usize]));
         }
         res
     }
@@ -589,12 +589,12 @@ impl TbTable for DtzPawn {
     }
     type MapType = u8;
     fn set_map(&mut self, map: &'static [Self::MapType]) {
-        self.map = map
+        self.map = map;
     }
     fn map(&self, t: usize, _b: usize, mut res: i32, wdl: i32) -> i32 {
         if self.flags[t] & 2 != 0 {
             let idx = self.map_idx[t][WDL_TO_MAP[(wdl + 2) as usize] as usize];
-            res = self.map[idx as usize + res as usize] as i32;
+            res = i32::from(self.map[idx as usize + res as usize]);
         }
         if self.flags[t] & PA_FLAGS[(wdl + 2) as usize] == 0 || wdl & 1 != 0 {
             res *= 2;
@@ -626,9 +626,9 @@ where
 {
     fn table_mut(&self) -> &mut T {
         match T::Type::TYPE {
-            Wdl::TYPE => unsafe { &mut *(self.wdl.get() as *mut T) },
-            Dtm::TYPE => unsafe { &mut *(self.dtm.get() as *mut T) },
-            Dtz::TYPE => unsafe { &mut *(self.dtz.get() as *mut T) },
+            Wdl::TYPE => unsafe { &mut *self.wdl.get().cast::<T>() },
+            Dtm::TYPE => unsafe { &mut *self.dtm.get().cast::<T>() },
+            Dtz::TYPE => unsafe { &mut *self.dtz.get().cast::<T>() },
             _ => panic!("Non-existing table type"),
         }
     }
@@ -717,11 +717,11 @@ fn calc_key_from_pieces(pieces: &[u8]) -> Key {
     let mut key = Key(0);
     let mut cnt = [0; 16];
 
-    pieces.iter().for_each(|&k| {
-        let pc = Piece(k as u32);
+    for &k in pieces {
+        let pc = Piece(u32::from(k));
         key ^= material(pc, cnt[k as usize]);
         cnt[k as usize] += 1;
-    });
+    }
 
     key
 }
@@ -826,7 +826,7 @@ where
 
     fn index(&self, idx: usize) -> &'static T {
         unsafe {
-            let elt_ref: &'static T = &*self.v.offset(idx as isize);
+            let elt_ref: &'static T = &*self.v.add(idx);
             elt_ref
         }
     }
@@ -994,8 +994,8 @@ pub fn init_tb(name: &str) {
     unsafe {
         TB_MAP = Box::into_raw(map);
         NUM_WDL += 1;
-        NUM_DTM += has_dtm as u32;
-        NUM_DTZ += has_dtz as u32;
+        NUM_DTM += u32::from(has_dtm);
+        NUM_DTZ += u32::from(has_dtz);
     }
 }
 
@@ -1023,7 +1023,7 @@ pub fn init(path: String) {
             INITIALIZED = true;
         }
 
-        if PATH != None {
+        if PATH.is_some() {
             PATH = None;
             std::mem::drop(Box::from_raw(TB_MAP));
             TB_MAP = Box::into_raw(Box::new(HashMap::new()));
@@ -1045,9 +1045,9 @@ pub fn init(path: String) {
         PATH = Some(path);
     }
 
-    P.iter().for_each(|item| {
+    for item in &P {
         init_tb(&format!("K{item}vK"));
-    });
+    }
 
     P.iter().enumerate().for_each(|(i, item1)| {
         P.iter().skip(i).for_each(|item2| {
@@ -1063,9 +1063,9 @@ pub fn init(path: String) {
 
     P.iter().enumerate().for_each(|(i, item1)| {
         P.iter().skip(i).for_each(|item2| {
-            P.iter().for_each(|item3| {
+            for item3 in &P {
                 init_tb(&format!("K{item1}{item2}vK{item3}"));
-            });
+            }
         });
     });
 
@@ -1090,10 +1090,10 @@ pub fn init(path: String) {
 
         P.iter().enumerate().for_each(|(i, item1)| {
             P.iter().skip(i).enumerate().for_each(|(j, item2)| {
-                P.iter().skip(j).enumerate().for_each(|(_k, item3)| {
-                    P.iter().for_each(|item4| {
+                P.iter().skip(j).for_each(|item3| {
+                    for item4 in &P {
                         init_tb(&format!("K{item1}{item2}{item3}vK{item4}"));
-                    });
+                    }
                 });
             });
         });
@@ -1110,7 +1110,7 @@ pub fn init(path: String) {
 
         P.iter().enumerate().for_each(|(i, item1)| {
             P.iter().skip(i).enumerate().for_each(|(j, item2)| {
-                P.iter().skip(j).enumerate().for_each(|(_k, item3)| {
+                P.iter().skip(j).for_each(|item3| {
                     P.iter().enumerate().for_each(|(l, item4)| {
                         P.iter().skip(l).for_each(|item5| {
                             init_tb(&format!("K{item1}{item2}{item3}vK{item4}{item5}"));
@@ -1123,10 +1123,10 @@ pub fn init(path: String) {
         P.iter().enumerate().for_each(|(i, item1)| {
             P.iter().skip(i).enumerate().for_each(|(j, item2)| {
                 P.iter().skip(j).enumerate().for_each(|(k, item3)| {
-                    P.iter().skip(k).enumerate().for_each(|(_l, item4)| {
-                        P.iter().for_each(|item5| {
+                    P.iter().skip(k).for_each(|item4| {
+                        for item5 in &P {
                             init_tb(&format!("K{item1}{item2}{item3}{item4}vK{item5}"));
-                        });
+                        }
                     });
                 });
             });
@@ -1229,7 +1229,7 @@ fn set_norm<T: Encoding>(ei: &mut EncInfo, e: &T::Entry) {
 }
 
 fn setup_pieces<T: Encoding>(ei: &mut EncInfo, e: &T::Entry, tb: &[u8], s: u32, t: usize) -> usize {
-    let j = 1 + (e.pawns(1) > 0) as usize;
+    let j = 1 + usize::from(e.pawns(1) > 0);
 
     for i in 0..(e.num() as usize) {
         ei.pieces[i] = (tb[i + j] >> s) & 0x0f;
@@ -1312,15 +1312,15 @@ fn setup_pairs(
             block_size: 0,
             idx_bits: 0,
             min_len: 0,
-            const_val: if is_wdl { data[1] as u16 } else { 0 },
+            const_val: if is_wdl { u16::from(data[1]) } else { 0 },
             base: Vec::new(),
         });
     }
 
-    let block_size = data[1] as u32;
-    let idx_bits = data[2] as u32;
+    let block_size = u32::from(data[1]);
+    let idx_bits = u32::from(data[2]);
     let real_num_blocks = u32::from_le(cast_slice(&data[4..], 1)[0]);
-    let num_blocks = real_num_blocks + data[3] as u32;
+    let num_blocks = real_num_blocks + u32::from(data[3]);
     let max_len = data[8];
     let min_len = data[9];
     let h = (max_len - min_len + 1) as usize;
@@ -1343,8 +1343,8 @@ fn setup_pairs(
     let offset = cast_slice::<u16>(&data[10..], h);
     let mut base = vec![0u64; h];
     for i in (0..h - 1).rev() {
-        let b1 = u16::from_le(offset[i]) as u64;
-        let b2 = u16::from_le(offset[i + 1]) as u64;
+        let b1 = u64::from(u16::from_le(offset[i]));
+        let b2 = u64::from(u16::from_le(offset[i + 1]));
         base[i] = (base[i + 1] + b1 - b2) / 2;
     }
     for i in 0..h {
@@ -1375,22 +1375,22 @@ fn align_slice(data: &[u8], align: usize) -> &[u8] {
 fn slice<'a, T>(data: &mut &'a [u8], size: usize) -> &'a [T] {
     let ptr = data.as_ptr();
     *data = &data[size * std::mem::size_of::<T>()..];
-    unsafe { slice::from_raw_parts(ptr as *const T, size) }
+    unsafe { slice::from_raw_parts(ptr.cast::<T>(), size) }
 }
 
 fn cast_slice<T>(data: &[u8], size: usize) -> &[T] {
     assert!(data.len() >= size * std::mem::size_of::<T>());
 
-    unsafe { slice::from_raw_parts(data.as_ptr() as *const T, size) }
+    unsafe { slice::from_raw_parts(data.as_ptr().cast::<T>(), size) }
 }
 
 fn read_magic(mmap: &Option<Box<Mmap>>) -> u32 {
-    let data: &[u8] = &*mmap.as_ref().unwrap();
+    let data: &[u8] = mmap.as_ref().unwrap();
     u32::from_le(cast_slice(data, 1)[0])
 }
 
 fn mmap_to_slice(mmap: &Option<Box<Mmap>>) -> &'static [u8] {
-    let data: &[u8] = &*mmap.as_ref().unwrap();
+    let data: &[u8] = mmap.as_ref().unwrap();
     unsafe { slice::from_raw_parts(data.as_ptr(), data.len()) }
 }
 
@@ -1420,7 +1420,7 @@ fn init_table<T: TbTable>(e: &T::Entry, name: &str) -> bool {
         if split {
             tb_size[t][1] = setup_pieces::<T::Enc>(tb.ei_mut(t, 1), e, data, 4, t);
         }
-        data = &data[e.num() as usize + 1 + (e.pawns(1) > 0) as usize..];
+        data = &data[e.num() as usize + 1 + usize::from(e.pawns(1) > 0)..];
     }
     data = align_slice(data, 2);
 
@@ -1470,7 +1470,7 @@ fn init_table<T: TbTable>(e: &T::Entry, name: &str) -> bool {
             if tb.flags(t) & 2 != 0 {
                 for i in 0..4 {
                     tb.set_map_idx(t, 0, i, 1 + idx);
-                    idx += 1 + data[idx as usize] as u16;
+                    idx += 1 + u16::from(data[idx as usize]);
                 }
             }
         }
@@ -1512,14 +1512,14 @@ fn init_table<T: TbTable>(e: &T::Entry, name: &str) -> bool {
 
 fn fill_squares(
     pos: &Position,
-    pc: &[u8; TB_PIECES],
+    pc: [u8; TB_PIECES],
     num: usize,
     flip: bool,
     p: &mut [Square; TB_PIECES],
 ) {
     let mut i = 0;
     loop {
-        let piece = Piece(pc[i] as u32);
+        let piece = Piece(u32::from(pc[i]));
         let b = pos.pieces_cp(piece.color() ^ flip, piece.piece_type());
         for sq in b {
             p[i] = sq;
@@ -1561,12 +1561,12 @@ fn probe_helper<T: TbTable>(
     } else {
         pos.side_to_move() != WHITE
     };
-    let bside = (!e.symmetric()
-        && (((key != e.key()) != tb.switched()) == (pos.side_to_move() == WHITE)))
-        as usize;
+    let bside = usize::from(
+        !e.symmetric() && (((key != e.key()) != tb.switched()) == (pos.side_to_move() == WHITE)),
+    );
 
     let t = if T::Enc::ENC != PieceEnc::ENC {
-        let color = Piece(tb.ei(0, 0).pieces[0] as u32).color();
+        let color = Piece(u32::from(tb.ei(0, 0).pieces[0])).color();
         let b = pos.pieces_cp(color ^ flip, PAWN);
         leading_pawn_table::<T::Enc>(b, flip) as usize
     } else {
@@ -1574,15 +1574,15 @@ fn probe_helper<T: TbTable>(
     };
 
     let mut p: [Square; TB_PIECES] = [Square(0); TB_PIECES];
-    fill_squares(pos, &tb.ei(t, bside).pieces, e.num() as usize, flip, &mut p);
+    fill_squares(pos, tb.ei(t, bside).pieces, e.num() as usize, flip, &mut p);
     if T::Enc::ENC != PieceEnc::ENC && flip {
         for i in 0..e.num() as usize {
             p[i] = !p[i];
         }
     }
-    let idx = encode::<T::Enc>(&mut p, &tb.ei(t, bside), e);
+    let idx = encode::<T::Enc>(&mut p, tb.ei(t, bside), e);
 
-    let res = decompress_pairs(&tb.ei(t, bside).precomp.as_ref().unwrap(), idx);
+    let res = decompress_pairs(tb.ei(t, bside).precomp.as_ref().unwrap(), idx);
 
     tb.map(t, bside, res, s)
 }
@@ -1761,7 +1761,7 @@ pub fn probe_wdl(pos: &mut Position, success: &mut i32) -> i32 {
     if best_cap >= v {
         // No need to test for the stalemate case here: either there are
         // non-ep captures, or best_cap == best_ep >= v anyway.
-        *success = 1 + (best_cap > 0) as i32;
+        *success = 1 + i32::from(best_cap > 0);
         return best_cap;
     }
 
@@ -2082,7 +2082,7 @@ fn root_probe_dtz(pos: &mut Position, root_moves: &mut RootMoves) -> bool {
         // off by one (see the comments before probe_dtz()).
         let r = match v {
             v if v > 0 => match (v + cnt50 <= 99, !rep) {
-                (true, true) | (true, false) => 1000,
+                (true, true | false) => 1000,
                 _ => 1000 - (v + cnt50),
             },
             v if v < 0 => match -v * 2 + cnt50 < 100 {
@@ -2434,7 +2434,7 @@ fn triangle(s: Square) -> usize {
 }
 
 fn flip_diag(s: Square) -> Square {
-    Square(FLIP_DIAG[s.0 as usize] as u32)
+    Square(u32::from(FLIP_DIAG[s.0 as usize]))
 }
 
 fn lower(s: Square) -> usize {
@@ -2446,7 +2446,7 @@ fn diag(s: Square) -> usize {
 }
 
 fn skip(s1: Square, s2: Square) -> usize {
-    (s1.0 > s2.0) as usize
+    usize::from(s1.0 > s2.0)
 }
 
 fn flap<T: Encoding>(s: Square) -> usize {
@@ -2688,7 +2688,7 @@ fn encode<T: Encoding>(p: &mut [Square; TB_PIECES], ei: &EncInfo, entry: &T::Ent
 
 fn decompress_pairs(d: &PairsData, idx: usize) -> i32 {
     if d.idx_bits == 0 {
-        return d.const_val as i32;
+        return i32::from(d.const_val);
     }
 
     let main_idx = idx >> d.idx_bits;
@@ -2706,9 +2706,9 @@ fn decompress_pairs(d: &PairsData, idx: usize) -> i32 {
         block += 1;
     }
 
-    let mut ptr = &d.data[block << d.block_size] as *const u8 as *const u32;
+    let mut ptr = std::ptr::from_ref::<u8>(&d.data[block << d.block_size]).cast::<u32>();
 
-    let mut code = unsafe { u64::from_be(*(ptr as *const u64)) };
+    let mut code = unsafe { u64::from_be(*ptr.cast::<u64>()) };
     ptr = unsafe { ptr.offset(2) };
     let mut bit_cnt = 0;
     let mut sym;
@@ -2728,7 +2728,7 @@ fn decompress_pairs(d: &PairsData, idx: usize) -> i32 {
         bit_cnt += l2;
         if bit_cnt >= 32 {
             bit_cnt -= 32;
-            code |= (unsafe { u32::from_be(*ptr) } as u64) << bit_cnt;
+            code |= u64::from(unsafe { u32::from_be(*ptr) }) << bit_cnt;
             ptr = unsafe { ptr.offset(1) };
         }
     }

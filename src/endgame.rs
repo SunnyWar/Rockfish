@@ -329,7 +329,7 @@ fn evaluate_krkp(pos: &Position, strong_side: Color) -> Value {
     }
     // If the weaker side's king is too far from the pawn and the rook,
     // it is a win.
-    else if Square::distance(bksq, psq) >= 3 + (pos.side_to_move() == weak_side) as u32
+    else if Square::distance(bksq, psq) >= 3 + u32::from(pos.side_to_move() == weak_side)
         && Square::distance(bksq, rsq) >= 3
     {
         result = RookValueEg - Square::distance(wksq, psq) as i32;
@@ -339,7 +339,7 @@ fn evaluate_krkp(pos: &Position, strong_side: Color) -> Value {
     else if bksq.rank() <= RANK_3
         && Square::distance(bksq, psq) == 1
         && wksq.rank() >= RANK_4
-        && Square::distance(wksq, psq) > 2 + (pos.side_to_move() == strong_side) as u32
+        && Square::distance(wksq, psq) > 2 + u32::from(pos.side_to_move() == strong_side)
     {
         result = Value(80) - 8 * Square::distance(wksq, psq) as i32;
     } else {
@@ -569,7 +569,7 @@ fn scale_krpkr(pos: &Position, strong_side: Color) -> ScaleFactor {
     let f = wpsq.file();
     let r = wpsq.rank();
     let queening_sq = Square::make(f, RANK_8);
-    let tempo = (pos.side_to_move() == strong_side) as u32;
+    let tempo = u32::from(pos.side_to_move() == strong_side);
 
     // If the pawn is not too far advanced and the defending king defends
     // the queeining square, use the third-rank defence.
@@ -864,9 +864,9 @@ fn scale_kbppkb(pos: &Position, strong_side: Color) -> ScaleFactor {
                 && ksq.relative_rank(strong_side) >= block_sq1.relative_rank(strong_side)
                 && opposite_colors(ksq, wbsq)
             {
-                return ScaleFactor::DRAW;
+                ScaleFactor::DRAW
             } else {
-                return ScaleFactor::NONE;
+                ScaleFactor::NONE
             }
         }
 
@@ -881,7 +881,7 @@ fn scale_kbppkb(pos: &Position, strong_side: Color) -> ScaleFactor {
                     || pos.attacks_from(BISHOP, block_sq2) & pos.pieces_cp(weak_side, BISHOP) != 0
                     || u32::distance(r1, r2) >= 2)
             {
-                return ScaleFactor::DRAW;
+                ScaleFactor::DRAW
             } else if ksq == block_sq2
                 && opposite_colors(ksq, wbsq)
                 && (bbsq == block_sq1

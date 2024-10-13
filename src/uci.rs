@@ -35,7 +35,7 @@ fn position(pos: &mut Position, pos_data: &mut PosData, args: &str) {
     if &args[0..8] == "startpos" {
         fen = START_FEN;
     } else if &args[0..3] == "fen" {
-        fen = (&args[3..moves]).trim();
+        fen = args[3..moves].trim();
     } else {
         return;
     }
@@ -75,7 +75,7 @@ fn setoption(args: &str) {
         ucioption::set(name, value);
     } else {
         let name = args.trim();
-        ucioption::set(name, &"");
+        ucioption::set(name, "");
     }
 }
 
@@ -121,14 +121,14 @@ fn go(pos: &mut Position, pos_data: &Arc<RwLock<PosData>>, args: &str) {
 
 fn bench(pos: &mut Position, pos_data: &Arc<RwLock<PosData>>, args: &str) {
     let list = setup_bench(pos, args);
-    let num = list.iter().filter(|&s| s.find("go ") != None).count();
+    let num = list.iter().filter(|&s| s.contains("go ")).count();
 
     let now = Instant::now();
 
     let mut cnt = 1;
     let mut nodes = 0;
     for cmd in &list {
-        let cmd_slice: &str = &cmd;
+        let cmd_slice: &str = cmd;
         let (token, args) = if let Some(idx) = cmd_slice.find(char::is_whitespace) {
             cmd_slice.split_at(idx)
         } else {
@@ -136,7 +136,7 @@ fn bench(pos: &mut Position, pos_data: &Arc<RwLock<PosData>>, args: &str) {
         };
         let args = args.trim();
         if token == "go" {
-            eprintln!("\nPosition: {}/{}", cnt, num);
+            eprintln!("\nPosition: {cnt}/{num}");
             cnt += 1;
             go(pos, pos_data, args);
             threads::wait_for_main();
@@ -151,7 +151,7 @@ fn bench(pos: &mut Position, pos_data: &Arc<RwLock<PosData>>, args: &str) {
     }
 
     let duration = now.elapsed();
-    let elapsed = duration.as_secs() * 1000 + (duration.subsec_nanos() as u64) / 10000000 + 1;
+    let elapsed = duration.as_secs() * 1000 + u64::from(duration.subsec_nanos()) / 10_000_000 + 1;
 
     eprintln!(
         "\n===========================\
@@ -234,7 +234,7 @@ pub fn cmd_loop() {
             // Additional custom non-UCI commands
             "bench" => bench(&mut pos, &pos_data, args),
             "d" => pos.print(),
-            _ => println!("Unknown command: {} {}", cmd, args),
+            _ => println!("Unknown command: {cmd} {args}"),
         }
         if env::args().len() > 1 || token == "quit" {
             // Command-line args are one-shot
@@ -321,8 +321,6 @@ pub fn move_str(m: Move, chess960: bool) -> String {
 // (g1f3, a7a8q) to the corresponding legal Move, if any.
 
 pub fn to_move(pos: &Position, s: &str) -> Move {
-    if s.len() == 5 {}
-
     for m in MoveList::new::<Legal>(pos) {
         if s == move_str(m, pos.is_chess960()) {
             return m;

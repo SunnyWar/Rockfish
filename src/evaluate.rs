@@ -473,14 +473,14 @@ fn evaluate_pieces<Us: ColorTrait, Pt: PieceTypeTrait>(pos: &Position, ei: &mut 
             // Bonus for outpost squares
             let mut bb = outpost_ranks & !ei.pe.pawn_attacks_span(them);
             if bb & s != 0 {
-                score += OUTPOST[(pt == BISHOP) as usize]
-                    [(ei.attacked_by[us.0 as usize][PAWN.0 as usize] & s != 0) as usize]
+                score += OUTPOST[usize::from(pt == BISHOP)]
+                    [usize::from(ei.attacked_by[us.0 as usize][PAWN.0 as usize] & s != 0)]
                     * 2;
             } else {
                 bb &= b & !pos.pieces_c(us);
                 if bb != 0 {
-                    score += OUTPOST[(pt == BISHOP) as usize]
-                        [((ei.attacked_by[us.0 as usize][PAWN.0 as usize] & bb) != 0) as usize];
+                    score += OUTPOST[usize::from(pt == BISHOP)]
+                        [usize::from((ei.attacked_by[us.0 as usize][PAWN.0 as usize] & bb) != 0)];
                 }
             }
 
@@ -529,7 +529,7 @@ fn evaluate_pieces<Us: ColorTrait, Pt: PieceTypeTrait>(pos: &Position, ei: &mut 
 
             // Bonus when on an open or semi-open file
             if ei.pe.semiopen_file(us, s.file()) != 0 {
-                score += ROOK_ON_FILE[(ei.pe.semiopen_file(them, s.file()) != 0) as usize];
+                score += ROOK_ON_FILE[usize::from(ei.pe.semiopen_file(them, s.file()) != 0)];
             }
             // Penalty when trapped by the king, even more if the king cannot
             // castle
@@ -538,7 +538,7 @@ fn evaluate_pieces<Us: ColorTrait, Pt: PieceTypeTrait>(pos: &Position, ei: &mut 
 
                 if (kf < FILE_E) == (s.file() < kf) {
                     score -= (TRAPPED_ROOK - Score::make((mob as i32) * 22, 0))
-                        * (1 + ((!pos.can_castle(us)) as i32));
+                        * (1 + i32::from(!pos.can_castle(us)));
                 }
             }
         }
@@ -637,7 +637,7 @@ fn evaluate_king<Us: ColorTrait>(pos: &Position, ei: &mut EvalInfo) -> Score {
             + 102 * ei.king_adjacent_zone_attacks_count[them.0 as usize]
             + 191 * popcount(ei.king_ring[us.0 as usize] & weak) as i32
             + 143 * popcount(pinned | unsafe_checks) as i32
-            - 848 * (pos.count(them, QUEEN) == 0) as i32
+            - 848 * i32::from(pos.count(them, QUEEN) == 0)
             - 9 * score.mg().0 / 8
             + 40;
 
@@ -740,7 +740,7 @@ fn evaluate_threats<Us: ColorTrait>(pos: &Position, ei: &EvalInfo) -> Score {
 
         let b = weak & ei.attacked_by[us.0 as usize][KING.0 as usize];
         if b != 0 {
-            score += THREAT_BY_KING[more_than_one(b) as usize];
+            score += THREAT_BY_KING[usize::from(more_than_one(b))];
         }
     }
 
@@ -952,12 +952,12 @@ fn evaluate_initiative(pos: &Position, ei: &EvalInfo, eg: Value) -> Score {
     // Compute the initiative bonus for the attacking side
     let initiative = 8 * (ei.pe.pawn_asymmetry() + king_distance - 17)
         + 12 * (pos.count(WHITE, PAWN) + pos.count(BLACK, PAWN))
-        + 16 * (both_flanks as i32);
+        + 16 * i32::from(both_flanks);
 
     // Now apply the bonus: note that we find the attacking side by extracting
     // the sign of the endgame value and that we carefully cap the bonus so
     // that the endgame score will never change sign after the bonus.
-    let v = ((eg.0 > 0) as i32 - (eg.0 < 0) as i32) * std::cmp::max(initiative, -eg.0.abs());
+    let v = (i32::from(eg.0 > 0) - i32::from(eg.0 < 0)) * std::cmp::max(initiative, -eg.0.abs());
 
     Score::make(0, v)
 }

@@ -475,10 +475,7 @@ impl Position {
             let mut s2 = 1;
             let wdl = tb::probe_wdl(self, &mut s1);
             let dtz = tb::probe_dtz(self, &mut s2);
-            println!(
-                "Tablebases WDL: {} ({})\nTablebases DTZ: {} ({})",
-                wdl, s1, dtz, s2
-            );
+            println!("Tablebases WDL: {wdl} ({s1})\nTablebases DTZ: {dtz} ({s2})");
             if s1 != 0 {
                 let dtm = tb::probe_dtm(self, wdl, &mut s1);
                 println!("Tablebases DTM: {} ({})", uci::value(dtm), s1);
@@ -1513,7 +1510,7 @@ impl Position {
             // root.
             if self.states[k].key == self.st().key {
                 cnt += 1;
-                if cnt + ((ply > i) as i32) == 2 {
+                if cnt + i32::from(ply > i) == 2 {
                     return true;
                 }
             }
@@ -1616,9 +1613,10 @@ impl Position {
 
         for p1 in 1..6 {
             for p2 in 1..6 {
-                if p1 != p2 && self.pieces_p(PieceType(p1)) & self.pieces_p(PieceType(p2)) != 0 {
-                    panic!("pos_is_ok: Bitboards");
-                }
+                assert!(
+                    !(p1 != p2 && self.pieces_p(PieceType(p1)) & self.pieces_p(PieceType(p2)) != 0),
+                    "pos_is_ok: Bitboards"
+                );
             }
         }
 
@@ -1630,14 +1628,14 @@ impl Position {
             if self.piece_count[pc.0 as usize]
                 != popcount(self.pieces_cp(pc.color(), pc.piece_type())) as i32
             {
-                panic!("pos_is_ok: Pieces {}", p);
+                panic!("pos_is_ok: Pieces {p}");
             }
 
             for i in 0..self.piece_count[pc.0 as usize] {
                 if self.board[self.piece_list[pc.0 as usize][i as usize].0 as usize] != pc
                     || self.index[self.piece_list[pc.0 as usize][i as usize].0 as usize] != i
                 {
-                    panic!("pos_is_ok: Index {}, {}", p, i);
+                    panic!("pos_is_ok: Index {p}, {i}");
                 }
             }
         }

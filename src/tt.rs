@@ -23,23 +23,23 @@ pub struct TTEntry {
 
 impl TTEntry {
     pub fn mov(&self) -> Move {
-        Move(self.move16 as u32)
+        Move(u32::from(self.move16))
     }
 
     pub fn value(&self) -> Value {
-        Value(self.value16 as i32)
+        Value(i32::from(self.value16))
     }
 
     pub fn eval(&self) -> Value {
-        Value(self.eval16 as i32)
+        Value(i32::from(self.eval16))
     }
 
     pub fn depth(&self) -> Depth {
-        Depth(self.depth8 as i32)
+        Depth(i32::from(self.depth8))
     }
 
     pub fn bound(&self) -> Bound {
-        Bound((self.gen_bound8 & 3) as u32)
+        Bound(u32::from(self.gen_bound8 & 3))
     }
 
     pub fn save(&mut self, k: Key, v: Value, b: Bound, d: Depth, m: Move, ev: Value, g: u8) {
@@ -96,7 +96,7 @@ pub fn generation() -> u8 {
 fn cluster(key: Key) -> &'static mut Cluster {
     unsafe {
         let p: *mut Cluster =
-            TABLE.offset((((key.0 as u32 as u64) * (CLUSTER_COUNT as u64)) >> 32) as isize);
+            TABLE.offset(((u64::from(key.0 as u32) * (CLUSTER_COUNT as u64)) >> 32) as isize);
         let c: &'static mut Cluster = &mut *p;
         c
     }
@@ -145,7 +145,7 @@ pub fn clear() {
     let tt_slice = unsafe { std::slice::from_raw_parts_mut(TABLE, CLUSTER_COUNT) };
 
     for cluster in tt_slice.iter_mut() {
-        for tte in cluster.entry.iter_mut() {
+        for tte in &mut cluster.entry {
             tte.key16 = 0;
             tte.move16 = 0;
             tte.value16 = 0;
@@ -186,10 +186,10 @@ pub fn probe(key: Key) -> (&'static mut TTEntry, bool) {
         // nature we add 259 (256 is the modulus plus 3 to keep the lowest
         // two bound bits from affecting the result) to calculate the entry
         // age correctly even after generation8 overflows into the next cycle.
-        if (cl.entry[r].depth8 as i32)
-            - ((259 + (generation() as i32) - (cl.entry[r].gen_bound8 as i32)) & 0xfc) * 2
-            > (cl.entry[i].depth8 as i32)
-                - ((259 + (generation() as i32) - (cl.entry[i].gen_bound8 as i32)) & 0xfc) * 2
+        if i32::from(cl.entry[r].depth8)
+            - ((259 + i32::from(generation()) - i32::from(cl.entry[r].gen_bound8)) & 0xfc) * 2
+            > i32::from(cl.entry[i].depth8)
+                - ((259 + i32::from(generation()) - i32::from(cl.entry[i].gen_bound8)) & 0xfc) * 2
         {
             r = i;
         }
@@ -206,8 +206,8 @@ pub fn hashfull() -> i32 {
 
     let mut cnt = 0;
 
-    for cluster in tt_slice.iter() {
-        for tte in cluster.entry.iter() {
+    for cluster in tt_slice {
+        for tte in &cluster.entry {
             if tte.gen_bound8 & 0xfc == generation() {
                 cnt += 1;
             }

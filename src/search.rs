@@ -177,14 +177,14 @@ static mut REDUCTIONS: [[[[i32; 64]; 64]; 2]; 2] = [[[[0; 64]; 64]; 2]; 2];
 
 fn reduction<PvNode: NodeType>(i: bool, d: Depth, mn: i32) -> Depth {
     unsafe {
-        REDUCTIONS[PvNode::NT][i as usize][std::cmp::min(d / ONE_PLY, 63) as usize]
+        REDUCTIONS[PvNode::NT][usize::from(i)][std::cmp::min(d / ONE_PLY, 63) as usize]
             [std::cmp::min(mn, 63) as usize]
             * ONE_PLY
     }
 }
 
 fn futility_move_counts(i: bool, d: Depth) -> i32 {
-    unsafe { FUTILITY_MOVE_COUNTS[i as usize][(d / ONE_PLY) as usize] }
+    unsafe { FUTILITY_MOVE_COUNTS[usize::from(i)][(d / ONE_PLY) as usize] }
 }
 
 // History and stats update bonus, based on depth
@@ -270,7 +270,7 @@ pub fn clear() {
 pub fn mainthread_search(pos: &mut Position, th: &threads::ThreadCtrl) {
     if limits().perft != 0 {
         let nodes = perft::<True>(pos, (limits().perft as i32) * ONE_PLY);
-        println!("\nNodes searched: {}", nodes);
+        println!("\nNodes searched: {nodes}");
         return;
     }
 
@@ -423,7 +423,7 @@ pub fn thread_search(pos: &mut Position, _th: &threads::ThreadCtrl) {
         // Save the last iteration's scores before first PV line is searched
         // and all the move scores except the (new) PV are set to
         // -Value::INFINITE.
-        for ref mut rm in pos.root_moves.iter_mut() {
+        for ref mut rm in &mut pos.root_moves {
             rm.previous_score = rm.score;
         }
 
@@ -538,7 +538,7 @@ pub fn thread_search(pos: &mut Position, _th: &threads::ThreadCtrl) {
             }
 
             // Sort the PV lines searched so far and update the GUI
-            pos.root_moves[pv_first..pos.pv_idx + 1].sort();
+            pos.root_moves[pv_first..=pos.pv_idx].sort();
 
             if pos.is_main
                 && (threads::stop() || pos.pv_idx + 1 == multi_pv || timeman::elapsed() > 3000)
@@ -571,42 +571,43 @@ pub fn thread_search(pos: &mut Position, _th: &threads::ThreadCtrl) {
         }
 
         // Do we have time for the next iteration? Can we stop searching now?
-        if limits().use_time_management() {
-            if !threads::stop() && !threads::stop_on_ponderhit() {
-                // Stop the search if only one legal move is available or
-                // if all of the available time has been used.
-                let f = [pos.failed_low as i32, (best_value - pos.previous_score).0];
-                let improving_factor =
-                    std::cmp::max(246, std::cmp::min(832, 306 + 119 * f[0] - 6 * f[1]));
+        if limits().use_time_management() && !threads::stop() && !threads::stop_on_ponderhit() {
+            // Stop the search if only one legal move is available or
+            // if all of the available time has been used.
+            let f = [
+                i32::from(pos.failed_low),
+                (best_value - pos.previous_score).0,
+            ];
+            let improving_factor =
+                std::cmp::max(246, std::cmp::min(832, 306 + 119 * f[0] - 6 * f[1]));
 
-                let mut unstable_pv_factor = 1. + pos.best_move_changes;
+            let mut unstable_pv_factor = 1. + pos.best_move_changes;
 
-                // if the best_move is stable over several iterations, reduce
-                // time for this move, the longer the move has been stable,
-                // the more. Use part of the gained time from a previous
-                // stable move for the current move.
-                time_reduction = 1.;
-                for i in 3..6 {
-                    if last_best_move_depth * i < pos.completed_depth {
-                        time_reduction *= 1.25;
-                    }
-                    unstable_pv_factor *= pos.previous_time_reduction.powf(0.528) / time_reduction;
+            // if the best_move is stable over several iterations, reduce
+            // time for this move, the longer the move has been stable,
+            // the more. Use part of the gained time from a previous
+            // stable move for the current move.
+            time_reduction = 1.;
+            for i in 3..6 {
+                if last_best_move_depth * i < pos.completed_depth {
+                    time_reduction *= 1.25;
+                }
+                unstable_pv_factor *= pos.previous_time_reduction.powf(0.528) / time_reduction;
 
-                    if pos.root_moves.len() == 1
-                        || (timeman::elapsed() as f64)
-                            > (timeman::optimum() as f64)
-                                * unstable_pv_factor
-                                * (improving_factor as f64)
-                                / 581.0
-                    {
-                        // If we are allowed to ponder do not stop the search
-                        // now but keep pondering until the GUI sends
-                        // "ponderhit" or "stop".
-                        if threads::ponder() {
-                            threads::set_stop_on_ponderhit(true);
-                        } else {
-                            threads::set_stop(true);
-                        }
+                if pos.root_moves.len() == 1
+                    || (timeman::elapsed() as f64)
+                        > (timeman::optimum() as f64)
+                            * unstable_pv_factor
+                            * f64::from(improving_factor)
+                            / 581.0
+                {
+                    // If we are allowed to ponder do not stop the search
+                    // now but keep pondering until the GUI sends
+                    // "ponderhit" or "stop".
+                    if threads::ponder() {
+                        threads::set_stop_on_ponderhit(true);
+                    } else {
+                        threads::set_stop(true);
                     }
                 }
             }
@@ -735,7 +736,7 @@ fn search<NT: NodeType>(
     // partial search to overwrite a previous full search TT value, so we use
     // a different position key in case of an excluded move.
     let excluded_move = ss[5].excluded_move;
-    let pos_key = pos.key() ^ Key((excluded_move.0 << 16) as u64);
+    let pos_key = pos.key() ^ Key(u64::from(excluded_move.0 << 16));
     let (mut tte, mut tt_hit) = tt::probe(pos_key);
     let tt_value = if tt_hit {
         value_from_tt(tte.value(), ss[5].ply)
@@ -1127,11 +1128,7 @@ fn search<NT: NodeType>(
         // root_moves. As a consequence, any illegal move is also skipped.
         // In MultiPV mode we also skip PV moves which have already been
         // searched.
-        if root_node
-            && !pos.root_moves[pos.pv_idx..]
-                .iter()
-                .any(|ref rm| rm.pv[0] == m)
-        {
+        if root_node && !pos.root_moves[pos.pv_idx..].iter().any(|rm| rm.pv[0] == m) {
             continue;
         }
 
@@ -1384,11 +1381,7 @@ fn search<NT: NodeType>(
         }
 
         if root_node {
-            let rm = pos
-                .root_moves
-                .iter_mut()
-                .find(|ref rm| rm.pv[0] == m)
-                .unwrap();
+            let rm = pos.root_moves.iter_mut().find(|rm| rm.pv[0] == m).unwrap();
 
             // PV move or new best move?
             if move_count == 1 || value > alpha {
@@ -1396,7 +1389,7 @@ fn search<NT: NodeType>(
                 rm.sel_depth = pos.sel_depth;
                 rm.pv.truncate(1);
 
-                for &m in ss[6].pv.iter() {
+                for &m in &ss[6].pv {
                     rm.pv.push(m);
                 }
 
@@ -1989,9 +1982,9 @@ fn print_pv(pos: &mut Position, depth: Depth, alpha: Value, beta: Value) {
             print!(" hashfull {}", tt::hashfull());
         }
 
-        print!(" tbhits {} time {} pv", tb_hits, elapsed);
+        print!(" tbhits {tb_hits} time {elapsed} pv");
 
-        for &m in pos.root_moves[i].pv.iter() {
+        for &m in &pos.root_moves[i].pv {
             print!(" {}", uci::move_str(m, pos.is_chess960()));
         }
         println!();

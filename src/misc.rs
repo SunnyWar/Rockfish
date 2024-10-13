@@ -24,10 +24,10 @@ impl Prng {
     }
 
     pub fn rand64(&mut self) -> u64 {
-        (*self).0 ^= (*self).0 >> 12;
-        (*self).0 ^= (*self).0 << 25;
-        (*self).0 ^= (*self).0 >> 27;
-        u64::wrapping_mul(self.0, 2685821657736338717)
+        self.0 ^= self.0 >> 12;
+        self.0 ^= self.0 << 25;
+        self.0 ^= self.0 >> 27;
+        u64::wrapping_mul(self.0, 2_685_821_657_736_338_717)
     }
 }
 

@@ -16,13 +16,13 @@ pub struct ButterflyHistory {
 
 impl ButterflyHistory {
     pub fn get(&self, c: Color, m: Move) -> i32 {
-        self.v[c.0 as usize][m.from_to() as usize].get() as i32
+        i32::from(self.v[c.0 as usize][m.from_to() as usize].get())
     }
 
     pub fn update(&self, c: Color, m: Move, bonus: i32) {
         let entry = &self.v[c.0 as usize][m.from_to() as usize];
         let mut val = entry.get();
-        val += (bonus * 32 - val as i32 * bonus.abs() / 324) as i16;
+        val += (bonus * 32 - i32::from(val) * bonus.abs() / 324) as i16;
         entry.set(val);
     }
 }
@@ -33,13 +33,13 @@ pub struct PieceToHistory {
 
 impl PieceToHistory {
     pub fn get(&self, pc: Piece, s: Square) -> i32 {
-        self.v[pc.0 as usize][s.0 as usize].get() as i32
+        i32::from(self.v[pc.0 as usize][s.0 as usize].get())
     }
 
     pub fn update(&self, pc: Piece, s: Square, bonus: i32) {
         let entry = &self.v[pc.0 as usize][s.0 as usize];
         let mut val = entry.get();
-        val += (bonus * 32 - val as i32 * bonus.abs() / 936) as i16;
+        val += (bonus * 32 - i32::from(val) * bonus.abs() / 936) as i16;
         entry.set(val);
     }
 }
@@ -50,13 +50,13 @@ pub struct CapturePieceToHistory {
 
 impl CapturePieceToHistory {
     pub fn get(&self, pc: Piece, to: Square, cap: PieceType) -> i32 {
-        self.v[pc.0 as usize][to.0 as usize][cap.0 as usize].get() as i32
+        i32::from(self.v[pc.0 as usize][to.0 as usize][cap.0 as usize].get())
     }
 
     pub fn update(&self, pc: Piece, to: Square, cap: PieceType, bonus: i32) {
         let entry = &self.v[pc.0 as usize][to.0 as usize][cap.0 as usize];
         let mut val = entry.get();
-        val += (bonus * 2 - val as i32 * bonus.abs() / 324) as i16;
+        val += (bonus * 2 - i32::from(val) * bonus.abs() / 324) as i16;
         entry.set(val);
     }
 }
@@ -112,7 +112,7 @@ pub struct MovePicker {
     countermove: Move,
     killers: [Move; 2],
     cmh: [&'static PieceToHistory; 3],
-    list: [ExtMove; MAX_MOVES as usize],
+    list: [ExtMove; MAX_MOVES],
 }
 
 pub struct MovePickerQ {
@@ -122,7 +122,7 @@ pub struct MovePickerQ {
     depth: Depth,
     tt_move: Move,
     recapture_square: Square,
-    list: [ExtMove; MAX_MOVES as usize],
+    list: [ExtMove; MAX_MOVES],
 }
 
 pub struct MovePickerPC {
@@ -131,7 +131,7 @@ pub struct MovePickerPC {
     stage: i32,
     tt_move: Move,
     threshold: Value,
-    list: [ExtMove; MAX_MOVES as usize],
+    list: [ExtMove; MAX_MOVES],
 }
 
 const MAIN_SEARCH: i32 = 0;
@@ -254,7 +254,7 @@ impl MovePicker {
             list: [ExtMove {
                 m: Move::NONE,
                 value: 0,
-            }; MAX_MOVES as usize],
+            }; MAX_MOVES],
         }
     }
 

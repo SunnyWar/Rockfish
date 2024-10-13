@@ -18,25 +18,25 @@ pub fn popcount(bb: Bitboard) -> u32 {
 }
 
 pub const ALL_SQUARES: Bitboard = Bitboard(!0u64);
-pub const DARK_SQUARES: Bitboard = Bitboard(0xaa55aa55aa55aa55);
+pub const DARK_SQUARES: Bitboard = Bitboard(0xaa55_aa55_aa55_aa55);
 
-pub const FILEA_BB: Bitboard = Bitboard(0x0101010101010101);
-pub const FILEB_BB: Bitboard = Bitboard(0x0202020202020202);
-pub const FILEC_BB: Bitboard = Bitboard(0x0404040404040404);
-pub const FILED_BB: Bitboard = Bitboard(0x0808080808080808);
-pub const FILEE_BB: Bitboard = Bitboard(0x1010101010101010);
-pub const FILEF_BB: Bitboard = Bitboard(0x2020202020202020);
-pub const FILEG_BB: Bitboard = Bitboard(0x4040404040404040);
-pub const FILEH_BB: Bitboard = Bitboard(0x8080808080808080);
+pub const FILEA_BB: Bitboard = Bitboard(0x0101_0101_0101_0101);
+pub const FILEB_BB: Bitboard = Bitboard(0x0202_0202_0202_0202);
+pub const FILEC_BB: Bitboard = Bitboard(0x0404_0404_0404_0404);
+pub const FILED_BB: Bitboard = Bitboard(0x0808_0808_0808_0808);
+pub const FILEE_BB: Bitboard = Bitboard(0x1010_1010_1010_1010);
+pub const FILEF_BB: Bitboard = Bitboard(0x2020_2020_2020_2020);
+pub const FILEG_BB: Bitboard = Bitboard(0x4040_4040_4040_4040);
+pub const FILEH_BB: Bitboard = Bitboard(0x8080_8080_8080_8080);
 
 pub const RANK1_BB: Bitboard = Bitboard(0xff);
 pub const RANK2_BB: Bitboard = Bitboard(0xff00);
-pub const RANK3_BB: Bitboard = Bitboard(0xff0000);
-pub const RANK4_BB: Bitboard = Bitboard(0xff000000);
-pub const RANK5_BB: Bitboard = Bitboard(0xff00000000);
-pub const RANK6_BB: Bitboard = Bitboard(0xff0000000000);
-pub const RANK7_BB: Bitboard = Bitboard(0xff000000000000);
-pub const RANK8_BB: Bitboard = Bitboard(0xff00000000000000);
+pub const RANK3_BB: Bitboard = Bitboard(0x00ff_0000);
+pub const RANK4_BB: Bitboard = Bitboard(0xff00_0000);
+pub const RANK5_BB: Bitboard = Bitboard(0x00ff_0000_0000);
+pub const RANK6_BB: Bitboard = Bitboard(0xff00_0000_0000);
+pub const RANK7_BB: Bitboard = Bitboard(0x00ff_0000_0000_0000);
+pub const RANK8_BB: Bitboard = Bitboard(0xff00_0000_0000_0000);
 
 static mut SQUARE_DISTANCE: [[u32; 64]; 64] = [[0; 64]; 64];
 
@@ -89,137 +89,137 @@ macro_rules! M {
 }
 
 const BISHOP_INIT: [MagicInit; 64] = [
-    M!(0x007fbfbfbfbfbfff, 5378),
-    M!(0x0000a060401007fc, 4093),
-    M!(0x0001004008020000, 4314),
-    M!(0x0000806004000000, 6587),
-    M!(0x0000100400000000, 6491),
-    M!(0x000021c100b20000, 6330),
-    M!(0x0000040041008000, 5609),
-    M!(0x00000fb0203fff80, 22236),
-    M!(0x0000040100401004, 6106),
-    M!(0x0000020080200802, 5625),
-    M!(0x0000004010202000, 16785),
-    M!(0x0000008060040000, 16817),
-    M!(0x0000004402000000, 6842),
-    M!(0x0000000801008000, 7003),
-    M!(0x000007efe0bfff80, 4197),
-    M!(0x0000000820820020, 7356),
-    M!(0x0000400080808080, 4602),
-    M!(0x00021f0100400808, 4538),
-    M!(0x00018000c06f3fff, 29531),
-    M!(0x0000258200801000, 45393),
-    M!(0x0000240080840000, 12420),
-    M!(0x000018000c03fff8, 15763),
-    M!(0x00000a5840208020, 5050),
-    M!(0x0000020008208020, 4346),
-    M!(0x0000804000810100, 6074),
-    M!(0x0001011900802008, 7866),
-    M!(0x0000804000810100, 32139),
-    M!(0x000100403c0403ff, 57673),
-    M!(0x00078402a8802000, 55365),
-    M!(0x0000101000804400, 15818),
-    M!(0x0000080800104100, 5562),
-    M!(0x00004004c0082008, 6390),
-    M!(0x0001010120008020, 7930),
-    M!(0x000080809a004010, 13329),
-    M!(0x0007fefe08810010, 7170),
-    M!(0x0003ff0f833fc080, 27267),
-    M!(0x007fe08019003042, 53787),
-    M!(0x003fffefea003000, 5097),
-    M!(0x0000101010002080, 6643),
-    M!(0x0000802005080804, 6138),
-    M!(0x0000808080a80040, 7418),
-    M!(0x0000104100200040, 7898),
-    M!(0x0003ffdf7f833fc0, 42012),
-    M!(0x0000008840450020, 57350),
-    M!(0x00007ffc80180030, 22813),
-    M!(0x007fffdd80140028, 56693),
-    M!(0x00020080200a0004, 5818),
-    M!(0x0000101010100020, 7098),
-    M!(0x0007ffdfc1805000, 4451),
-    M!(0x0003ffefe0c02200, 4709),
-    M!(0x0000000820806000, 4794),
-    M!(0x0000000008403000, 13364),
-    M!(0x0000000100202000, 4570),
-    M!(0x0000004040802000, 4282),
-    M!(0x0004010040100400, 14964),
-    M!(0x00006020601803f4, 4026),
-    M!(0x0003ffdfdfc28048, 4826),
-    M!(0x0000000820820020, 7354),
-    M!(0x0000000008208060, 4848),
-    M!(0x0000000000808020, 15946),
-    M!(0x0000000001002020, 14932),
-    M!(0x0000000401002008, 16588),
-    M!(0x0000004040404040, 6905),
-    M!(0x007fff9fdf7ff813, 16076),
+    M!(0x007f_bfbf_bfbf_bfff, 5378),
+    M!(0x0000_a060_4010_07fc, 4093),
+    M!(0x0001_0040_0802_0000, 4314),
+    M!(0x0000_8060_0400_0000, 6587),
+    M!(0x0000_1004_0000_0000, 6491),
+    M!(0x0000_21c1_00b2_0000, 6330),
+    M!(0x0000_0400_4100_8000, 5609),
+    M!(0x0000_0fb0_203f_ff80, 22236),
+    M!(0x0000_0401_0040_1004, 6106),
+    M!(0x0000_0200_8020_0802, 5625),
+    M!(0x0000_0040_1020_2000, 16785),
+    M!(0x0000_0080_6004_0000, 16817),
+    M!(0x0000_0044_0200_0000, 6842),
+    M!(0x0000_0008_0100_8000, 7003),
+    M!(0x0000_07ef_e0bf_ff80, 4197),
+    M!(0x0000_0008_2082_0020, 7356),
+    M!(0x0000_4000_8080_8080, 4602),
+    M!(0x0002_1f01_0040_0808, 4538),
+    M!(0x0001_8000_c06f_3fff, 29531),
+    M!(0x0000_2582_0080_1000, 45393),
+    M!(0x0000_2400_8084_0000, 12420),
+    M!(0x0000_1800_0c03_fff8, 15763),
+    M!(0x0000_0a58_4020_8020, 5050),
+    M!(0x0000_0200_0820_8020, 4346),
+    M!(0x0000_8040_0081_0100, 6074),
+    M!(0x0001_0119_0080_2008, 7866),
+    M!(0x0000_8040_0081_0100, 32139),
+    M!(0x0001_0040_3c04_03ff, 57673),
+    M!(0x0007_8402_a880_2000, 55365),
+    M!(0x0000_1010_0080_4400, 15818),
+    M!(0x0000_0808_0010_4100, 5562),
+    M!(0x0000_4004_c008_2008, 6390),
+    M!(0x0001_0101_2000_8020, 7930),
+    M!(0x0000_8080_9a00_4010, 13329),
+    M!(0x0007_fefe_0881_0010, 7170),
+    M!(0x0003_ff0f_833f_c080, 27267),
+    M!(0x007f_e080_1900_3042, 53787),
+    M!(0x003f_ffef_ea00_3000, 5097),
+    M!(0x0000_1010_1000_2080, 6643),
+    M!(0x0000_8020_0508_0804, 6138),
+    M!(0x0000_8080_80a8_0040, 7418),
+    M!(0x0000_1041_0020_0040, 7898),
+    M!(0x0003_ffdf_7f83_3fc0, 42012),
+    M!(0x0000_0088_4045_0020, 57350),
+    M!(0x0000_7ffc_8018_0030, 22813),
+    M!(0x007f_ffdd_8014_0028, 56693),
+    M!(0x0002_0080_200a_0004, 5818),
+    M!(0x0000_1010_1010_0020, 7098),
+    M!(0x0007_ffdf_c180_5000, 4451),
+    M!(0x0003_ffef_e0c0_2200, 4709),
+    M!(0x0000_0008_2080_6000, 4794),
+    M!(0x0000_0000_0840_3000, 13364),
+    M!(0x0000_0001_0020_2000, 4570),
+    M!(0x0000_0040_4080_2000, 4282),
+    M!(0x0004_0100_4010_0400, 14964),
+    M!(0x0000_6020_6018_03f4, 4026),
+    M!(0x0003_ffdf_dfc2_8048, 4826),
+    M!(0x0000_0008_2082_0020, 7354),
+    M!(0x0000_0000_0820_8060, 4848),
+    M!(0x0000_0000_0080_8020, 15946),
+    M!(0x0000_0000_0100_2020, 14932),
+    M!(0x0000_0004_0100_2008, 16588),
+    M!(0x0000_0040_4040_4040, 6905),
+    M!(0x007f_ff9f_df7f_f813, 16076),
 ];
 
 const ROOK_INIT: [MagicInit; 64] = [
-    M!(0x00280077ffebfffe, 26304),
-    M!(0x2004010201097fff, 35520),
-    M!(0x0010020010053fff, 38592),
-    M!(0x0040040008004002, 8026),
-    M!(0x7fd00441ffffd003, 22196),
-    M!(0x4020008887dffffe, 80870),
-    M!(0x004000888847ffff, 76747),
-    M!(0x006800fbff75fffd, 30400),
-    M!(0x000028010113ffff, 11115),
-    M!(0x0020040201fcffff, 18205),
-    M!(0x007fe80042ffffe8, 53577),
-    M!(0x00001800217fffe8, 62724),
-    M!(0x00001800073fffe8, 34282),
-    M!(0x00001800e05fffe8, 29196),
-    M!(0x00001800602fffe8, 23806),
-    M!(0x000030002fffffa0, 49481),
-    M!(0x00300018010bffff, 2410),
-    M!(0x0003000c0085fffb, 36498),
-    M!(0x0004000802010008, 24478),
-    M!(0x0004002020020004, 10074),
-    M!(0x0001002002002001, 79315),
-    M!(0x0001001000801040, 51779),
-    M!(0x0000004040008001, 13586),
-    M!(0x0000006800cdfff4, 19323),
-    M!(0x0040200010080010, 70612),
-    M!(0x0000080010040010, 83652),
-    M!(0x0004010008020008, 63110),
-    M!(0x0000040020200200, 34496),
-    M!(0x0002008010100100, 84966),
-    M!(0x0000008020010020, 54341),
-    M!(0x0000008020200040, 60421),
-    M!(0x0000820020004020, 86402),
-    M!(0x00fffd1800300030, 50245),
-    M!(0x007fff7fbfd40020, 76622),
-    M!(0x003fffbd00180018, 84676),
-    M!(0x001fffde80180018, 78757),
-    M!(0x000fffe0bfe80018, 37346),
-    M!(0x0001000080202001, 370),
-    M!(0x0003fffbff980180, 42182),
-    M!(0x0001fffdff9000e0, 45385),
-    M!(0x00fffefeebffd800, 61659),
-    M!(0x007ffff7ffc01400, 12790),
-    M!(0x003fffbfe4ffe800, 16762),
-    M!(0x001ffff01fc03000, 0),
-    M!(0x000fffe7f8bfe800, 38380),
-    M!(0x0007ffdfdf3ff808, 11098),
-    M!(0x0003fff85fffa804, 21803),
-    M!(0x0001fffd75ffa802, 39189),
-    M!(0x00ffffd7ffebffd8, 58628),
-    M!(0x007fff75ff7fbfd8, 44116),
-    M!(0x003fff863fbf7fd8, 78357),
-    M!(0x001fffbfdfd7ffd8, 44481),
-    M!(0x000ffff810280028, 64134),
-    M!(0x0007ffd7f7feffd8, 41759),
-    M!(0x0003fffc0c480048, 1394),
-    M!(0x0001ffffafd7ffd8, 40910),
-    M!(0x00ffffe4ffdfa3ba, 66516),
-    M!(0x007fffef7ff3d3da, 3897),
-    M!(0x003fffbfdfeff7fa, 3930),
-    M!(0x001fffeff7fbfc22, 72934),
-    M!(0x0000020408001001, 72662),
-    M!(0x0007fffeffff77fd, 56325),
-    M!(0x0003ffffbf7dfeec, 66501),
-    M!(0x0001ffff9dffa333, 14826),
+    M!(0x0028_0077_ffeb_fffe, 26304),
+    M!(0x2004_0102_0109_7fff, 35520),
+    M!(0x0010_0200_1005_3fff, 38592),
+    M!(0x0040_0400_0800_4002, 8026),
+    M!(0x7fd0_0441_ffff_d003, 22196),
+    M!(0x4020_0088_87df_fffe, 80870),
+    M!(0x0040_0088_8847_ffff, 76747),
+    M!(0x0068_00fb_ff75_fffd, 30400),
+    M!(0x0000_2801_0113_ffff, 11115),
+    M!(0x0020_0402_01fc_ffff, 18205),
+    M!(0x007f_e800_42ff_ffe8, 53577),
+    M!(0x0000_1800_217f_ffe8, 62724),
+    M!(0x0000_1800_073f_ffe8, 34282),
+    M!(0x0000_1800_e05f_ffe8, 29196),
+    M!(0x0000_1800_602f_ffe8, 23806),
+    M!(0x0000_3000_2fff_ffa0, 49481),
+    M!(0x0030_0018_010b_ffff, 2410),
+    M!(0x0003_000c_0085_fffb, 36498),
+    M!(0x0004_0008_0201_0008, 24478),
+    M!(0x0004_0020_2002_0004, 10074),
+    M!(0x0001_0020_0200_2001, 79315),
+    M!(0x0001_0010_0080_1040, 51779),
+    M!(0x0000_0040_4000_8001, 13586),
+    M!(0x0000_0068_00cd_fff4, 19323),
+    M!(0x0040_2000_1008_0010, 70612),
+    M!(0x0000_0800_1004_0010, 83652),
+    M!(0x0004_0100_0802_0008, 63110),
+    M!(0x0000_0400_2020_0200, 34496),
+    M!(0x0002_0080_1010_0100, 84966),
+    M!(0x0000_0080_2001_0020, 54341),
+    M!(0x0000_0080_2020_0040, 60421),
+    M!(0x0000_8200_2000_4020, 86402),
+    M!(0x00ff_fd18_0030_0030, 50245),
+    M!(0x007f_ff7f_bfd4_0020, 76622),
+    M!(0x003f_ffbd_0018_0018, 84676),
+    M!(0x001f_ffde_8018_0018, 78757),
+    M!(0x000f_ffe0_bfe8_0018, 37346),
+    M!(0x0001_0000_8020_2001, 370),
+    M!(0x0003_fffb_ff98_0180, 42182),
+    M!(0x0001_fffd_ff90_00e0, 45385),
+    M!(0x00ff_fefe_ebff_d800, 61659),
+    M!(0x007f_fff7_ffc0_1400, 12790),
+    M!(0x003f_ffbf_e4ff_e800, 16762),
+    M!(0x001f_fff0_1fc0_3000, 0),
+    M!(0x000f_ffe7_f8bf_e800, 38380),
+    M!(0x0007_ffdf_df3f_f808, 11098),
+    M!(0x0003_fff8_5fff_a804, 21803),
+    M!(0x0001_fffd_75ff_a802, 39189),
+    M!(0x00ff_ffd7_ffeb_ffd8, 58628),
+    M!(0x007f_ff75_ff7f_bfd8, 44116),
+    M!(0x003f_ff86_3fbf_7fd8, 78357),
+    M!(0x001f_ffbf_dfd7_ffd8, 44481),
+    M!(0x000f_fff8_1028_0028, 64134),
+    M!(0x0007_ffd7_f7fe_ffd8, 41759),
+    M!(0x0003_fffc_0c48_0048, 1394),
+    M!(0x0001_ffff_afd7_ffd8, 40910),
+    M!(0x00ff_ffe4_ffdf_a3ba, 66516),
+    M!(0x007f_ffef_7ff3_d3da, 3897),
+    M!(0x003f_ffbf_dfef_f7fa, 3930),
+    M!(0x001f_ffef_f7fb_fc22, 72934),
+    M!(0x0000_0204_0800_1001, 72662),
+    M!(0x0007_fffe_ffff_77fd, 56325),
+    M!(0x0003_ffff_bf7d_feec, 66501),
+    M!(0x0001_ffff_9dff_a333, 14826),
 ];
 
 // Compute the attack's index using the 'magic bitboards' approach
@@ -369,7 +369,7 @@ where
 impl std::cmp::PartialEq<u64> for Bitboard {
     fn eq(&self, rhs: &u64) -> bool {
         debug_assert!(*rhs == 0);
-        (*self).0 == *rhs
+        self.0 == *rhs
     }
 }
 
@@ -421,7 +421,7 @@ pub fn backmost_sq(c: Color, b: Bitboard) -> Square {
 impl Iterator for Bitboard {
     type Item = Square;
     fn next(&mut self) -> Option<Self::Item> {
-        if (*self).0 != 0 {
+        if self.0 != 0 {
             Some(pop_lsb(self))
         } else {
             None
@@ -596,7 +596,7 @@ pub fn init() {
         }
     }
 
-    for &c in [WHITE, BLACK].iter() {
+    for &c in &[WHITE, BLACK] {
         for s in ALL_SQUARES {
             unsafe {
                 FORWARD_FILE_BB[c.0 as usize][s.0 as usize] =
@@ -626,15 +626,15 @@ pub fn init() {
         }
     }
 
-    for &c in [WHITE, BLACK].iter() {
-        for &pt in [PAWN, KNIGHT, KING].iter() {
+    for &c in &[WHITE, BLACK] {
+        for &pt in &[PAWN, KNIGHT, KING] {
             for s in ALL_SQUARES {
                 let steps: &[i32] = match pt {
                     PAWN => &[7, 9],
                     KNIGHT => &[6, 10, 15, 17],
                     _ => &[1, 7, 8, 9],
                 };
-                for &d in steps.iter() {
+                for &d in steps {
                     let to = s + if c == WHITE {
                         Direction(d)
                     } else {
@@ -670,7 +670,7 @@ pub fn init() {
             PSEUDO_ATTACKS[ROOK.0 as usize][s1.0 as usize] = r_att;
             PSEUDO_ATTACKS[QUEEN.0 as usize][s1.0 as usize] = b_att | r_att;
         }
-        for &pt in [BISHOP, ROOK].iter() {
+        for &pt in &[BISHOP, ROOK] {
             for s2 in ALL_SQUARES {
                 unsafe {
                     if PSEUDO_ATTACKS[pt.0 as usize][s1.0 as usize] & s2 == 0 {
@@ -690,7 +690,7 @@ pub fn init() {
 
 fn sliding_attack(directions: [Direction; 4], sq: Square, occupied: Bitboard) -> Bitboard {
     let mut attack = Bitboard(0);
-    for d in directions.iter() {
+    for d in &directions {
         let mut s = sq + *d;
         while s.is_ok() && Square::distance(s, s - *d) == 1 {
             attack |= s;

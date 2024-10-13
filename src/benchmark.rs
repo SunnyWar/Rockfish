@@ -93,7 +93,7 @@ pub fn setup_bench(pos: &Position, args: &str) -> Vec<String> {
 
     match fen_file {
         "default" => {
-            for fen in DEFAULTS.iter() {
+            for fen in &DEFAULTS {
                 fens.push(String::from(*fen));
             }
         }
@@ -103,7 +103,7 @@ pub fn setup_bench(pos: &Position, args: &str) -> Vec<String> {
         _ => {
             let file = match File::open(fen_file) {
                 Err(_) => {
-                    eprintln!("Unable to open file {}", fen_file);
+                    eprintln!("Unable to open file {fen_file}");
                     std::process::exit(-1);
                 }
                 Ok(file) => file,

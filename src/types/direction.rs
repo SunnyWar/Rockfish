@@ -69,8 +69,6 @@ pub fn pawn_push(c: Color) -> Direction {
 
 #[cfg(test)]
 mod tests {
-    use std::u32;
-
     use super::*;
     use crate::types::{BLACK, WHITE};
 

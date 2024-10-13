@@ -18,7 +18,7 @@ pub fn maximum() -> i64 {
 
 pub fn elapsed() -> i64 {
     let duration = unsafe { START_TIME.unwrap().elapsed() };
-    (duration.as_secs() * 1000 + duration.subsec_millis() as u64) as i64
+    (duration.as_secs() * 1000 + u64::from(duration.subsec_millis())) as i64
 }
 
 #[derive(PartialEq, Eq)]
@@ -26,7 +26,7 @@ enum TimeType {
     OptimumTime,
     MaxTime,
 }
-use self::TimeType::*;
+use self::TimeType::{MaxTime, OptimumTime};
 
 // Plan time management at most this many moves ahread
 const MOVE_HORIZON: i32 = 50;
@@ -46,7 +46,7 @@ fn importance(ply: i32) -> f64 {
     const XSHIFT: f64 = 64.5;
     const SKEW: f64 = 0.171;
 
-    (1. + ((ply as f64 - XSHIFT) / XSCALE).exp()).powf(-SKEW) + f64::MIN_POSITIVE
+    (1. + ((f64::from(ply) - XSHIFT) / XSCALE).exp()).powf(-SKEW) + f64::MIN_POSITIVE
 }
 
 fn remaining(my_time: i64, movestogo: i32, ply: i32, slow_mover: i64, time_type: TimeType) -> i64 {
@@ -86,9 +86,9 @@ fn remaining(my_time: i64, movestogo: i32, ply: i32, slow_mover: i64, time_type:
 //  inc >  0 && movestogo != 0 means: x moves in y minutes + z increment
 
 pub fn init(limits: &mut search::LimitsType, us: Color, ply: i32) {
-    let min_think_time = ucioption::get_i32("Minimum Thinking Time") as i64;
-    let move_overhead = ucioption::get_i32("Move Overhead") as i64;
-    let slow_mover = ucioption::get_i32("Slow Mover") as i64;
+    let min_think_time = i64::from(ucioption::get_i32("Minimum Thinking Time"));
+    let move_overhead = i64::from(ucioption::get_i32("Move Overhead"));
+    let slow_mover = i64::from(ucioption::get_i32("Slow Mover"));
 
     unsafe {
         START_TIME = limits.start_time;
@@ -110,9 +110,9 @@ pub fn init(limits: &mut search::LimitsType, us: Color, ply: i32) {
         // Calculate thinking time for hypothetical "moves to go" value
         let inc = limits.inc[us.0 as usize];
         let time = limits.time[us.0 as usize];
-        let overhead = 2 + std::cmp::min(hyp_mtg, 40) as i64;
+        let overhead = 2 + i64::from(std::cmp::min(hyp_mtg, 40));
 
-        let mut hyp_my_time = time + inc * (hyp_mtg - 1) as i64 - move_overhead * overhead;
+        let mut hyp_my_time = time + inc * i64::from(hyp_mtg - 1) - move_overhead * overhead;
         hyp_my_time = std::cmp::max(hyp_my_time, 0);
 
         let t1 = min_think_time + remaining(hyp_my_time, hyp_mtg, ply, slow_mover, OptimumTime);

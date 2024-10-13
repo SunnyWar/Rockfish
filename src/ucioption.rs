@@ -167,7 +167,7 @@ pub fn print() {
 
 pub fn set(key: &str, val: &str) {
     let mut opts = unsafe { Box::from_raw(OPTIONS) };
-    if let Some(opt) = opts.iter_mut().find(|ref o| o.key == key) {
+    if let Some(opt) = opts.iter_mut().find(|o| o.key == key) {
         match opt.val {
             OptVal::StringOpt { ref mut cur, .. } => *cur = String::from(val),
             OptVal::Spin { ref mut cur, .. } => *cur = val.parse().unwrap(),
@@ -179,7 +179,7 @@ pub fn set(key: &str, val: &str) {
             on_change(&opt.val);
         }
     } else {
-        println!("No such option: {}", key);
+        println!("No such option: {key}");
     }
     unsafe {
         OPTIONS = Box::into_raw(opts);
@@ -189,7 +189,7 @@ pub fn set(key: &str, val: &str) {
 pub fn get_i32(key: &str) -> i32 {
     let opts = unsafe { Box::from_raw(OPTIONS) };
     let val = {
-        let opt = opts.iter().find(|ref o| o.key == key).unwrap();
+        let opt = opts.iter().find(|o| o.key == key).unwrap();
         if let OptVal::Spin { cur, .. } = opt.val {
             cur
         } else {
@@ -203,7 +203,7 @@ pub fn get_i32(key: &str) -> i32 {
 pub fn get_bool(key: &str) -> bool {
     let opts = unsafe { Box::from_raw(OPTIONS) };
     let val = {
-        let opt = opts.iter().find(|ref o| o.key == key).unwrap();
+        let opt = opts.iter().find(|o| o.key == key).unwrap();
         if let OptVal::Check { cur, .. } = opt.val {
             cur
         } else {
@@ -217,7 +217,7 @@ pub fn get_bool(key: &str) -> bool {
 pub fn get_string(key: &str) -> String {
     let opts = unsafe { Box::from_raw(OPTIONS) };
     let val = {
-        let opt = opts.iter().find(|ref o| o.key == key).unwrap();
+        let opt = opts.iter().find(|o| o.key == key).unwrap();
         if let OptVal::StringOpt { ref cur, .. } = opt.val {
             String::from(cur.as_str())
         } else if let OptVal::Combo { ref cur, .. } = opt.val {

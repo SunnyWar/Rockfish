@@ -29,7 +29,7 @@ impl std::ops::Not for Color {
 impl std::ops::BitXor<bool> for Color {
     type Output = Self;
     fn bitxor(self, rhs: bool) -> Self {
-        Color(self.0 ^ (rhs as u32))
+        Color(self.0 ^ u32::from(rhs))
     }
 }
 
@@ -303,7 +303,7 @@ impl std::ops::Not for Piece {
 impl std::ops::BitXor<bool> for Piece {
     type Output = Self;
     fn bitxor(self, rhs: bool) -> Self {
-        Piece(self.0 ^ ((rhs as u32) << 3))
+        Piece(self.0 ^ (u32::from(rhs) << 3))
     }
 }
 
@@ -499,7 +499,7 @@ impl<'a> SquareList<'a> {
     }
 }
 
-impl<'a> Iterator for SquareList<'a> {
+impl Iterator for SquareList<'_> {
     type Item = Square;
     fn next(&mut self) -> Option<Self::Item> {
         let s = self.list[self.idx];
@@ -770,11 +770,11 @@ impl Score {
     pub const ZERO: Score = Score(0);
 
     pub fn eg(self) -> Value {
-        Value((((self.0 + 0x8000) >> 16) as i16) as i32)
+        Value(i32::from(((self.0 + 0x8000) >> 16) as i16))
     }
 
     pub fn mg(self) -> Value {
-        Value((self.0 as i16) as i32)
+        Value(i32::from(self.0 as i16))
     }
 
     pub fn make(mg: i32, eg: i32) -> Self {
@@ -886,10 +886,11 @@ mod tests {
         #[test]
         fn test_castling_sides() {
             type W = crate::types::White;
+            type B = crate::types::Black;
+
             assert_eq!(<W as crate::types::ColorTrait>::KingSide::CR, WHITE_OO);
             assert_eq!(<W as crate::types::ColorTrait>::QueenSide::CR, WHITE_OOO);
 
-            type B = crate::types::Black;
             assert_eq!(<B as crate::types::ColorTrait>::KingSide::CR, BLACK_OO);
             assert_eq!(<B as crate::types::ColorTrait>::QueenSide::CR, BLACK_OOO);
         }
@@ -984,7 +985,7 @@ mod tests {
         #[test]
         fn test_clone() {
             let pt = PAWN;
-            let cloned = pt.clone();
+            let cloned = pt;
             assert_eq!(pt, cloned);
         }
 

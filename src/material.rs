@@ -36,7 +36,7 @@ impl Entry {
     }
 
     pub fn imbalance(&self) -> Score {
-        Score::make(self.value as i32, self.value as i32)
+        Score::make(i32::from(self.value), i32::from(self.value))
     }
 
     pub fn game_phase(&self) -> Phase {
@@ -59,7 +59,7 @@ impl Entry {
         if sf != ScaleFactor::NONE {
             sf
         } else {
-            ScaleFactor(self.factor[c.0 as usize] as i32)
+            ScaleFactor(i32::from(self.factor[c.0 as usize]))
         }
     }
 }
@@ -122,7 +122,7 @@ fn imbalance(pc: &[[i32; 6]; 2], us: Color) -> i32 {
 
         let mut v = 0;
 
-        for pt2 in 0..(pt1 + 1) {
+        for pt2 in 0..=pt1 {
             v += QUADRATIC_OURS[pt1][pt2] * pc[us.0 as usize][pt2]
                 + QUADRATIC_THEIRS[pt1][pt2] * pc[them.0 as usize][pt2];
         }
@@ -175,7 +175,7 @@ pub fn probe(pos: &Position) -> &'static mut Entry {
         }
     }
 
-    for &c in [WHITE, BLACK].iter() {
+    for &c in &[WHITE, BLACK] {
         if is_kxk(pos, c) {
             e.evaluation_function = Some(evaluate_kxk);
             e.eval_side = c;
@@ -198,7 +198,7 @@ pub fn probe(pos: &Position) -> &'static mut Entry {
     // We didn't find any specialized scaling function, so fall back on
     // generic ones that refer to more than one material distributiion.
     // Note that in this case we don't return after setting the function.
-    for &c in [WHITE, BLACK].iter() {
+    for &c in &[WHITE, BLACK] {
         if is_kbpsks(pos, c) {
             e.scaling_function[c.0 as usize] = Some(scale_kbpsk);
         } else if is_kqkrps(pos, c) {
@@ -261,7 +261,7 @@ pub fn probe(pos: &Position) -> &'static mut Entry {
     // more flexible in defining bishop pair bonuses.
     let pc = [
         [
-            (pos.count(WHITE, BISHOP) > 1) as i32,
+            i32::from(pos.count(WHITE, BISHOP) > 1),
             pos.count(WHITE, PAWN),
             pos.count(WHITE, KNIGHT),
             pos.count(WHITE, BISHOP),
@@ -269,7 +269,7 @@ pub fn probe(pos: &Position) -> &'static mut Entry {
             pos.count(WHITE, QUEEN),
         ],
         [
-            (pos.count(BLACK, BISHOP) > 1) as i32,
+            i32::from(pos.count(BLACK, BISHOP) > 1),
             pos.count(BLACK, PAWN),
             pos.count(BLACK, KNIGHT),
             pos.count(BLACK, BISHOP),

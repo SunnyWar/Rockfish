@@ -114,8 +114,8 @@ pub fn set_stop_on_ponderhit(b: bool) {
 }
 
 pub fn init(requested: usize) {
-    let handlers: Box<Handlers> = Box::new(Vec::new());
-    let threads: Box<Threads> = Box::new(Vec::new());
+    let handlers: Box<Handlers> = Box::default();
+    let threads: Box<Threads> = Box::default();
     unsafe {
         HANDLERS = Box::into_raw(handlers);
         THREADS = Box::into_raw(threads);
@@ -207,7 +207,7 @@ fn run_thread(idx: usize, tx: Sender<Arc<ThreadCtrl>>) {
             let pos_data = common.pos_data.read().unwrap();
             pos.init_states();
             pos.set(&pos_data.fen, ucioption::get_bool("UCI_Chess960"));
-            for &m in pos_data.moves.iter() {
+            for &m in &pos_data.moves {
                 let gives_check = pos.gives_check(m);
                 pos.do_move(m, gives_check);
             }

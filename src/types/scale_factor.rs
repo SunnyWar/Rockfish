@@ -25,7 +25,7 @@ mod scale_factor_tests {
     #[test]
     fn test_scalefactor_clone() {
         let sf = ScaleFactor::NORMAL;
-        let cloned = sf.clone();
+        let cloned = sf;
         assert_eq!(sf, cloned);
     }
 
