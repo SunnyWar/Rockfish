@@ -573,12 +573,25 @@ impl std::ops::BitXor<bool> for Square {
     }
 }
 
-impl Iterator for Square {
+impl IntoIterator for Square {
     type Item = Self;
-    #[inline(always)]
+    type IntoIter = SquareIntoIterator;
+
+    fn into_iter(self) -> Self::IntoIter {
+        SquareIntoIterator { square: self }
+    }
+}
+
+pub struct SquareIntoIterator {
+    square: Square,
+}
+
+impl Iterator for SquareIntoIterator {
+    type Item = Square;
+
     fn next(&mut self) -> Option<Self::Item> {
-        let sq = self.0;
-        *self = Square(sq + 1);
+        let sq = self.square.0;
+        self.square.0 += 1;
         Some(Square(sq))
     }
 }
@@ -1481,11 +1494,12 @@ mod tests {
         }
 
         #[test]
-        fn test_iterator() {
-            let mut square = Square::A1;
-            assert_eq!(square.next(), Some(Square::A1));
-            assert_eq!(square.next(), Some(Square::B1));
-            assert_eq!(square.next(), Some(Square::C1));
+        fn test_square_into_iterator() {
+            let square = Square::A1;
+            let mut iter = square.into_iter();
+            assert_eq!(iter.next(), Some(Square::A1));
+            assert_eq!(iter.next(), Some(Square::B1));
+            assert_eq!(iter.next(), Some(Square::C1));
         }
     }
 }
