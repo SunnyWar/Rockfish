@@ -138,7 +138,7 @@ fn imbalance(pc: &[[i32; 6]; 2], us: Color) -> i32 {
 // is found. Otherwise a new Entry is computed and stored there, so we
 // don't have to recompute all when the same material configuration occurs
 // again.
-
+#[allow(clippy::too_many_lines)]
 pub fn probe(pos: &Position) -> &'static mut Entry {
     let key = pos.material_key();
     let e = pos.material_table[(key.0 & 8191) as usize].get();
@@ -199,28 +199,28 @@ pub fn probe(pos: &Position) -> &'static mut Entry {
     // generic ones that refer to more than one material distributiion.
     // Note that in this case we don't return after setting the function.
     for &c in &[WHITE, BLACK] {
-        if is_kbpsks(pos, c) {
-            e.scaling_function[c.0 as usize] = Some(scale_kbpsk);
-        } else if is_kqkrps(pos, c) {
-            e.scaling_function[c.0 as usize] = Some(scale_kqkrps);
-        }
+        e.scaling_function[c.0 as usize] = match (is_kbpsks(pos, c), is_kqkrps(pos, c)) {
+            (true, _) => Some(scale_kbpsk),
+            (_, true) => Some(scale_kqkrps),
+            _ => None,
+        };
     }
 
     if npm_w + npm_b == Value::ZERO && pos.pieces_p(PAWN) != 0 {
-        // Only pawns on the board
-        if pos.count(BLACK, PAWN) == 0 {
-            debug_assert!(pos.count(WHITE, PAWN) >= 2);
-
-            e.scaling_function[WHITE.0 as usize] = Some(scale_kpsk);
-        } else if pos.count(WHITE, PAWN) == 0 {
-            debug_assert!(pos.count(BLACK, PAWN) >= 2);
-
-            e.scaling_function[BLACK.0 as usize] = Some(scale_kpsk);
-        } else if pos.count(WHITE, PAWN) == 1 && pos.count(BLACK, PAWN) == 1 {
-            // This is a special case because we set scaling functions
-            // for both colors instead of only one.
-            e.scaling_function[WHITE.0 as usize] = Some(scale_kpkp);
-            e.scaling_function[BLACK.0 as usize] = Some(scale_kpkp);
+        match (pos.count(WHITE, PAWN), pos.count(BLACK, PAWN)) {
+            (white, 0) if white >= 2 => {
+                debug_assert!(white >= 2);
+                e.scaling_function[WHITE.0 as usize] = Some(scale_kpsk);
+            }
+            (0, black) if black >= 2 => {
+                debug_assert!(black >= 2);
+                e.scaling_function[BLACK.0 as usize] = Some(scale_kpsk);
+            }
+            (1, 1) => {
+                e.scaling_function[WHITE.0 as usize] = Some(scale_kpkp);
+                e.scaling_function[BLACK.0 as usize] = Some(scale_kpkp);
+            }
+            _ => {}
         }
     }
 
@@ -229,31 +229,28 @@ pub fn probe(pos: &Position) -> &'static mut Entry {
     // and KNK and gives a drawish scale factor for cases such as KRKBP
     // and KmmKm (except for KBBKN).
     if pos.count(WHITE, PAWN) == 0 && npm_w - npm_b <= BishopValueMg {
-        e.factor[WHITE.0 as usize] = if npm_w < RookValueMg {
-            ScaleFactor::DRAW.0 as u8
-        } else if npm_b <= BishopValueMg {
-            4
-        } else {
-            14
+        e.factor[WHITE.0 as usize] = match npm_w {
+            x if x < RookValueMg => ScaleFactor::DRAW.0 as u8,
+            _ if npm_b <= BishopValueMg => 4,
+            _ => 14,
         };
     }
 
     if pos.count(BLACK, PAWN) == 0 && npm_b - npm_w <= BishopValueMg {
-        e.factor[BLACK.0 as usize] = if npm_b < RookValueMg {
-            ScaleFactor::DRAW.0 as u8
-        } else if npm_w <= BishopValueMg {
-            4
-        } else {
-            14
+        e.factor[BLACK.0 as usize] = match npm_b {
+            x if x < RookValueMg => ScaleFactor::DRAW.0 as u8,
+            _ if npm_w <= BishopValueMg => 4,
+            _ => 14,
         };
     }
 
-    if pos.count(WHITE, PAWN) == 1 && npm_w - npm_b <= BishopValueMg {
-        e.factor[WHITE.0 as usize] = ScaleFactor::ONEPAWN.0 as u8;
-    }
-
-    if pos.count(BLACK, PAWN) == 1 && npm_b - npm_w <= BishopValueMg {
-        e.factor[BLACK.0 as usize] = ScaleFactor::ONEPAWN.0 as u8;
+    for &(color, npm_diff, scale_factor) in &[
+        (WHITE, npm_w - npm_b, WHITE.0),
+        (BLACK, npm_b - npm_w, BLACK.0),
+    ] {
+        if pos.count(color, PAWN) == 1 && npm_diff <= BishopValueMg {
+            e.factor[scale_factor as usize] = ScaleFactor::ONEPAWN.0 as u8;
+        }
     }
 
     // Evaluate the material imbalance. We use PIECE_TYPE_NONE as a place

@@ -1007,6 +1007,7 @@ pub fn free() {
     }
 }
 
+#[allow(clippy::too_many_lines)]
 pub fn init(path: String) {
     const P: [char; 5] = ['Q', 'R', 'B', 'N', 'P'];
     static mut INITIALIZED: bool = false;
@@ -1049,100 +1050,127 @@ pub fn init(path: String) {
         init_tb(&format!("K{item}vK"));
     }
 
-    P.iter().enumerate().for_each(|(i, item1)| {
-        P.iter().skip(i).for_each(|item2| {
-            init_tb(&format!("K{item1}vK{item2}"));
-        });
-    });
+    P.iter()
+        .enumerate()
+        .flat_map(|(i, item1)| {
+            P.iter()
+                .skip(i)
+                .map(move |item2| format!("K{item1}vK{item2}"))
+        })
+        .for_each(|tb| init_tb(&tb));
 
-    P.iter().enumerate().for_each(|(i, item1)| {
-        P.iter().skip(i).for_each(|item2| {
-            init_tb(&format!("K{item1}{item2}vK"));
-        });
-    });
+    P.iter()
+        .enumerate()
+        .flat_map(|(i, item1)| {
+            P.iter()
+                .skip(i)
+                .map(move |item2| format!("K{item1}{item2}vK"))
+        })
+        .for_each(|tb| init_tb(&tb));
 
-    P.iter().enumerate().for_each(|(i, item1)| {
-        P.iter().skip(i).for_each(|item2| {
-            for item3 in &P {
-                init_tb(&format!("K{item1}{item2}vK{item3}"));
-            }
-        });
-    });
+    P.iter()
+        .enumerate()
+        .flat_map(|(i, item1)| {
+            P.iter().skip(i).flat_map(move |item2| {
+                P.iter()
+                    .map(move |item3| format!("K{item1}{item2}vK{item3}"))
+            })
+        })
+        .for_each(|tb| init_tb(&tb));
 
-    P.iter().enumerate().for_each(|(i, item1)| {
-        P.iter().skip(i).enumerate().for_each(|(j, item2)| {
-            P.iter().skip(i + j).for_each(|item3| {
-                init_tb(&format!("K{item1}{item2}{item3}vK"));
-            });
-        });
-    });
+    P.iter()
+        .enumerate()
+        .flat_map(|(i, item1)| {
+            P.iter().skip(i).enumerate().flat_map(move |(j, item2)| {
+                P.iter()
+                    .skip(i + j)
+                    .map(move |item3| format!("K{item1}{item2}{item3}vK"))
+            })
+        })
+        .for_each(|tb| init_tb(&tb));
 
     if !max5 {
-        P.iter().enumerate().for_each(|(i, item1)| {
-            P.iter().skip(i).enumerate().for_each(|(j, item2)| {
-                P.iter().skip(i).enumerate().for_each(|(k, item3)| {
-                    P.iter().skip(if i == k { j } else { k }).for_each(|item4| {
-                        init_tb(&format!("K{item1}{item2}vK{item3}{item4}"));
-                    });
-                });
-            });
-        });
+        P.iter()
+            .enumerate()
+            .flat_map(|(i, item1)| {
+                P.iter().skip(i).enumerate().flat_map(move |(j, item2)| {
+                    P.iter().skip(i).enumerate().flat_map(move |(k, item3)| {
+                        P.iter()
+                            .skip(if i == k { j } else { k })
+                            .map(move |item4| format!("K{item1}{item2}vK{item3}{item4}"))
+                    })
+                })
+            })
+            .for_each(|tb| init_tb(&tb));
 
-        P.iter().enumerate().for_each(|(i, item1)| {
-            P.iter().skip(i).enumerate().for_each(|(j, item2)| {
-                P.iter().skip(j).for_each(|item3| {
-                    for item4 in &P {
-                        init_tb(&format!("K{item1}{item2}{item3}vK{item4}"));
-                    }
-                });
-            });
-        });
+        P.iter()
+            .enumerate()
+            .flat_map(|(i, item1)| {
+                P.iter().skip(i).enumerate().flat_map(move |(j, item2)| {
+                    P.iter().skip(j).flat_map(move |item3| {
+                        P.iter()
+                            .map(move |item4| format!("K{item1}{item2}{item3}vK{item4}"))
+                    })
+                })
+            })
+            .for_each(|tb| init_tb(&tb));
 
-        P.iter().enumerate().for_each(|(i, item1)| {
-            P.iter().skip(i).enumerate().for_each(|(j, item2)| {
-                P.iter().skip(j).enumerate().for_each(|(k, item3)| {
-                    P.iter().skip(k).for_each(|item4| {
-                        init_tb(&format!("K{item1}{item2}{item3}{item4}vK"));
-                    });
-                });
-            });
-        });
+        P.iter()
+            .enumerate()
+            .flat_map(|(i, item1)| {
+                P.iter().skip(i).enumerate().flat_map(move |(j, item2)| {
+                    P.iter().skip(j).enumerate().flat_map(move |(k, item3)| {
+                        P.iter()
+                            .skip(k)
+                            .map(move |item4| format!("K{item1}{item2}{item3}{item4}vK"))
+                    })
+                })
+            })
+            .for_each(|tb| init_tb(&tb));
 
-        P.iter().enumerate().for_each(|(i, item1)| {
-            P.iter().skip(i).enumerate().for_each(|(j, item2)| {
-                P.iter().skip(j).for_each(|item3| {
-                    P.iter().enumerate().for_each(|(l, item4)| {
-                        P.iter().skip(l).for_each(|item5| {
-                            init_tb(&format!("K{item1}{item2}{item3}vK{item4}{item5}"));
-                        });
-                    });
-                });
-            });
-        });
+        P.iter()
+            .enumerate()
+            .flat_map(|(i, item1)| {
+                P.iter().skip(i).enumerate().flat_map(move |(j, item2)| {
+                    P.iter().skip(j).flat_map(move |item3| {
+                        P.iter().enumerate().flat_map(move |(l, item4)| {
+                            P.iter()
+                                .skip(l)
+                                .map(move |item5| format!("K{item1}{item2}{item3}vK{item4}{item5}"))
+                        })
+                    })
+                })
+            })
+            .for_each(|tb| init_tb(&tb));
 
-        P.iter().enumerate().for_each(|(i, item1)| {
-            P.iter().skip(i).enumerate().for_each(|(j, item2)| {
-                P.iter().skip(j).enumerate().for_each(|(k, item3)| {
-                    P.iter().skip(k).for_each(|item4| {
-                        for item5 in &P {
-                            init_tb(&format!("K{item1}{item2}{item3}{item4}vK{item5}"));
-                        }
-                    });
-                });
-            });
-        });
+        P.iter()
+            .enumerate()
+            .flat_map(|(i, item1)| {
+                P.iter().skip(i).enumerate().flat_map(move |(j, item2)| {
+                    P.iter().skip(j).enumerate().flat_map(move |(k, item3)| {
+                        P.iter().skip(k).flat_map(move |item4| {
+                            P.iter()
+                                .map(move |item5| format!("K{item1}{item2}{item3}{item4}vK{item5}"))
+                        })
+                    })
+                })
+            })
+            .for_each(|tb| init_tb(&tb));
 
-        P.iter().enumerate().for_each(|(i, item1)| {
-            P.iter().skip(i).enumerate().for_each(|(j, item2)| {
-                P.iter().skip(j).enumerate().for_each(|(k, item3)| {
-                    P.iter().skip(k).enumerate().for_each(|(l, item4)| {
-                        P.iter().skip(l).for_each(|item5| {
-                            init_tb(&format!("K{item1}{item2}{item3}{item4}{item5}vK"));
-                        });
-                    });
-                });
-            });
-        });
+        P.iter()
+            .enumerate()
+            .flat_map(|(i, item1)| {
+                P.iter().skip(i).enumerate().flat_map(move |(j, item2)| {
+                    P.iter().skip(j).enumerate().flat_map(move |(k, item3)| {
+                        P.iter().skip(k).enumerate().flat_map(move |(l, item4)| {
+                            P.iter()
+                                .skip(l)
+                                .map(move |item5| format!("K{item1}{item2}{item3}{item4}{item5}vK"))
+                        })
+                    })
+                })
+            })
+            .for_each(|tb| init_tb(&tb));
     }
 
     println!(
@@ -1155,9 +1183,7 @@ pub fn init(path: String) {
 
 // place k like pieces on n squares
 fn subfactor(k: usize, n: usize) -> usize {
-    let f = (0..k).fold(n, |acc, i| acc * (n - i));
-    let l: usize = (1..=k).product();
-    f / l
+    (0..k).map(|i| n - i).product::<usize>() / (1..=k).product::<usize>()
 }
 
 fn calc_factors<T: Encoding>(
@@ -1394,6 +1420,7 @@ fn mmap_to_slice(mmap: &Option<Box<Mmap>>) -> &'static [u8] {
     unsafe { slice::from_raw_parts(data.as_ptr(), data.len()) }
 }
 
+#[allow(clippy::too_many_lines)]
 fn init_table<T: TbTable>(e: &T::Entry, name: &str) -> bool {
     let tb_map = map_file(name, T::Type::suffix());
     if tb_map.is_none() {
@@ -2745,13 +2772,4 @@ fn decompress_pairs(d: &PairsData, idx: usize) -> i32 {
     }
 
     s1(d.sym_pat[sym]) as i32
-}
-
-#[cfg(test)]
-mod tests {
-
-    #[test]
-    fn test_example() {
-        assert_eq!(2 + 2, 4);
-    }
 }
