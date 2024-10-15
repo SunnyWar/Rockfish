@@ -21,7 +21,7 @@ pub fn elapsed() -> i64 {
     (duration.as_secs() * 1000 + u64::from(duration.subsec_millis())) as i64
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Copy, Clone)]
 enum TimeType {
     OptimumTime,
     MaxTime,
@@ -46,34 +46,35 @@ fn importance(ply: i32) -> f64 {
     const XSHIFT: f64 = 64.5;
     const SKEW: f64 = 0.171;
 
-    (1. + ((f64::from(ply) - XSHIFT) / XSCALE).exp()).powf(-SKEW) + f64::MIN_POSITIVE
+    let scaled_ply = (f64::from(ply) - XSHIFT) / XSCALE;
+    let exp_term = scaled_ply.exp();
+    let importance_value = (1.0 + exp_term).powf(-SKEW);
+
+    importance_value + f64::MIN_POSITIVE
 }
 
 fn remaining(my_time: i64, movestogo: i32, ply: i32, slow_mover: i64, time_type: TimeType) -> i64 {
-    let max_ratio = if time_type == OptimumTime {
-        1.
+    let max_ratio = if time_type == TimeType::OptimumTime {
+        1.0
     } else {
         MAX_RATIO
     };
-    let steal_ratio = if time_type == OptimumTime {
-        0.
+    let steal_ratio = if time_type == TimeType::OptimumTime {
+        0.0
     } else {
         STEAL_RATIO
     };
+    let move_importance = (importance(ply) * slow_mover as f64) / 100.0;
 
-    let move_importance = (importance(ply) * slow_mover as f64) / 100.;
-    let mut other_moves_importance = 0.;
-
-    for i in 1..movestogo {
-        other_moves_importance += importance(ply + 2 * i);
-    }
+    let other_moves_importance: f64 = (1..movestogo).map(|i| importance(ply + 2 * i)).sum();
 
     let ratio1 =
-        (max_ratio * move_importance) / (max_ratio * move_importance + other_moves_importance);
+        max_ratio * move_importance / (max_ratio * move_importance + other_moves_importance);
     let ratio2 = (move_importance + steal_ratio * other_moves_importance)
         / (move_importance + other_moves_importance);
+    let min_ratio = ratio1.min(ratio2);
 
-    (my_time as f64 * ratio1.min(ratio2)) as i64
+    (my_time as f64 * min_ratio) as i64
 }
 
 // init() is called at the beginning of the search and calculates the allowed
