@@ -608,6 +608,10 @@ impl Value {
     }
 }
 
+// two separate values: PawnValueEg (Effective Gains) and PawnValueMg (Material Gains)
+// PawnValueEg is used for evaluating positions where the side to move had a material advantage
+// while PawnValueMg was used when the side to move was behind in material
+
 #[allow(non_upper_case_globals)]
 pub const PawnValueMg: Value = Value(171);
 #[allow(non_upper_case_globals)]
