@@ -816,14 +816,14 @@ fn search<NT: NodeType>(
                     _ => Value::DRAW + 2 * wdl * draw_score,
                 };
 
-                let b = match wdl {
+                let bound = match wdl {
                     x if x < -draw_score => Bound::UPPER,
                     x if x > draw_score => Bound::LOWER,
                     _ => Bound::EXACT,
                 };
 
-                if b == Bound::EXACT
-                    || match b {
+                if bound == Bound::EXACT
+                    || match bound {
                         Bound::LOWER if value >= beta => true,
                         _ if value <= alpha => true,
                         _ => false,
@@ -832,7 +832,7 @@ fn search<NT: NodeType>(
                     tte.save(
                         pos_key,
                         value_to_tt(value, ss[5].ply),
-                        b,
+                        bound,
                         std::cmp::min(Depth::MAX - ONE_PLY, depth + 6 * ONE_PLY),
                         Move::NONE,
                         Value::NONE,
@@ -862,7 +862,7 @@ fn search<NT: NodeType>(
                 }
 
                 if pv_node {
-                    match b {
+                    match bound {
                         Bound::LOWER => {
                             best_value = value;
                             if best_value > alpha {
@@ -1514,16 +1514,18 @@ fn search<NT: NodeType>(
     }
 
     if excluded_move == Move::NONE {
+        let bound = if best_value >= beta {
+            Bound::LOWER
+        } else if pv_node && best_move != Move::NONE {
+            Bound::EXACT
+        } else {
+            Bound::UPPER
+        };
+
         tte.save(
             pos_key,
             value_to_tt(best_value, ss[5].ply),
-            if best_value >= beta {
-                Bound::LOWER
-            } else if pv_node && best_move != Move::NONE {
-                Bound::EXACT
-            } else {
-                Bound::UPPER
-            },
+            bound,
             depth,
             best_move,
             ss[5].static_eval,
@@ -1587,7 +1589,9 @@ fn qsearch<NT: NodeType, InCheck: Bool>(
     // Transposition table lookup
     let pos_key = pos.key();
     let (tte, tt_hit) = tt::probe(pos_key);
+
     let tt_move = if tt_hit { tte.mov() } else { Move::NONE };
+    
     let tt_value = if tt_hit {
         value_from_tt(tte.value(), ss[5].ply)
     } else {
@@ -1607,7 +1611,7 @@ fn qsearch<NT: NodeType, InCheck: Bool>(
     let mut best_value;
     let futility_base;
 
-    // Evaluate the position statically
+    // Evaluate the position staticly
     if in_check {
         ss[5].static_eval = Value::NONE;
         best_value = -Value::INFINITE;
@@ -1681,10 +1685,13 @@ fn qsearch<NT: NodeType, InCheck: Bool>(
 
         debug_assert!(m.is_ok());
 
-        let gives_check = if m.move_type() == NORMAL
-            && pos.blockers_for_king(!pos.side_to_move()) & pos.pieces_c(pos.side_to_move()) == 0
-        {
-            pos.check_squares(pos.moved_piece(m).piece_type()) & m.to() != 0
+        let move_type_normal = m.move_type() == NORMAL;
+        let no_blockers =
+            pos.blockers_for_king(!pos.side_to_move()) & pos.pieces_c(pos.side_to_move()) == 0;
+
+        let gives_check = if move_type_normal && no_blockers {
+            let check_squares = pos.check_squares(pos.moved_piece(m).piece_type());
+            check_squares & m.to() != 0
         } else {
             pos.gives_check(m)
         };
@@ -1699,14 +1706,13 @@ fn qsearch<NT: NodeType, InCheck: Bool>(
             debug_assert!(m.move_type() != ENPASSANT);
 
             let futility_value = futility_base + piece_value(EG, pos.piece_on(m.to()));
-
             if futility_value <= alpha {
-                best_value = std::cmp::max(best_value, futility_value);
+                best_value = best_value.max(futility_value);
                 continue;
             }
 
             if futility_base <= alpha && !pos.see_ge(m, Value::ZERO + 1) {
-                best_value = std::cmp::max(best_value, futility_base);
+                best_value = best_value.max(futility_base);
                 continue;
             }
         }
@@ -1722,7 +1728,6 @@ fn qsearch<NT: NodeType, InCheck: Bool>(
         }
 
         // prefetch
-
         if !pos.legal(m) {
             move_count -= 1;
             continue;
@@ -1779,14 +1784,16 @@ fn qsearch<NT: NodeType, InCheck: Bool>(
         return mated_in(ss[5].ply); // Plies to mate from the root
     }
 
+    let bound = if pv_node && best_value > old_alpha {
+        Bound::EXACT
+    } else {
+        Bound::UPPER
+    };
+
     tte.save(
         pos_key,
         value_to_tt(best_value, ss[5].ply),
-        if pv_node && best_value > old_alpha {
-            Bound::EXACT
-        } else {
-            Bound::UPPER
-        },
+        bound,
         tt_depth,
         best_move,
         ss[5].static_eval,

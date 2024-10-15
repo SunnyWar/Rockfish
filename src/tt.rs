@@ -42,23 +42,34 @@ impl TTEntry {
         Bound(u32::from(self.gen_bound8 & 3))
     }
 
-    pub fn save(&mut self, k: Key, v: Value, b: Bound, d: Depth, m: Move, ev: Value, g: u8) {
-        debug_assert!(d / ONE_PLY * ONE_PLY == d);
+    #[allow(clippy::too_many_arguments)]
+    pub fn save(
+        &mut self,
+        key: Key,
+        value: Value,
+        bound: Bound,
+        depth: Depth,
+        mov: Move,
+        eval: Value,
+        generation: u8,
+    ) {
+        debug_assert!(depth / ONE_PLY * ONE_PLY == depth);
 
-        let k16 = (k.0 >> 48) as u16;
+        let key16 = (key.0 >> 48) as u16;
 
         // Preserve any existing move for the same position
-        if m != Move::NONE || k16 != self.key16 {
-            self.move16 = m.0 as u16;
+        if mov != Move::NONE || key16 != self.key16 {
+            self.move16 = mov.0 as u16;
         }
 
         // Don't overwrite more valuable entries
-        if k16 != self.key16 || (d / ONE_PLY) as i8 > self.depth8 - 4 || b == Bound::EXACT {
-            self.key16 = k16;
-            self.value16 = v.0 as i16;
-            self.eval16 = ev.0 as i16;
-            self.gen_bound8 = g | (b.0 as u8);
-            self.depth8 = (d / ONE_PLY) as i8;
+        if key16 != self.key16 || (depth / ONE_PLY) as i8 > self.depth8 - 4 || bound == Bound::EXACT
+        {
+            self.key16 = key16;
+            self.value16 = value.0 as i16;
+            self.eval16 = eval.0 as i16;
+            self.gen_bound8 = generation | (bound.0 as u8);
+            self.depth8 = (depth / ONE_PLY) as i8;
         }
     }
 }

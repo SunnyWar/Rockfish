@@ -475,12 +475,31 @@ pub struct Squares {
     pub end: Square,
 }
 
-impl Iterator for Squares {
+impl IntoIterator for Squares {
     type Item = Square;
+    type IntoIter = SquaresIntoIterator;
+
+    fn into_iter(self) -> Self::IntoIter {
+        SquaresIntoIterator {
+            current: self.start,
+            end: self.end,
+        }
+    }
+}
+
+pub struct SquaresIntoIterator {
+    current: Square,
+    end: Square,
+}
+
+#[allow(clippy::if_not_else)] // s!= self.end usually true
+impl Iterator for SquaresIntoIterator {
+    type Item = Square;
+
     fn next(&mut self) -> Option<Self::Item> {
-        let s = self.start;
+        let s = self.current;
         if s != self.end {
-            self.start += Direction(1);
+            self.current += Direction(1); // or however you increment a Square
             Some(s)
         } else {
             None
@@ -499,6 +518,7 @@ impl<'a> SquareList<'a> {
     }
 }
 
+#[allow(clippy::if_not_else)] // s!= Square::NONE is usually true
 impl Iterator for SquareList<'_> {
     type Item = Square;
     fn next(&mut self) -> Option<Self::Item> {
