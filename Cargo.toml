@@ -7,6 +7,8 @@ authors = ["Syzygy", "SunnyWar"]
 [profile.release] 
 debug = true
 strip = false
+codegen-units = 1
+lto = "fat"
 
 [dependencies]
 lazy_static = "1.5.0"
