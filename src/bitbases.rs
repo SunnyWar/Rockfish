@@ -155,7 +155,7 @@ impl KPKPosition {
 }
 
 pub fn init() {
-    static mut BITBASE_STORAGE: [u32; MAX_INDEX / 32] = [0; MAX_INDEX / 32];
+    let mut bitbase_storage: Box<[u32; MAX_INDEX / 32]> = Box::new([0; MAX_INDEX / 32]);
     let mut db: Vec<KPKPosition> = Vec::with_capacity(MAX_INDEX);
 
     // Initialize db with known win/draw positions
@@ -183,17 +183,15 @@ pub fn init() {
     // Map 32 results into one KPK_BITBASE[] entry
     for idx in 0..MAX_INDEX {
         if db[idx].result == WIN {
-            unsafe {
-                BITBASE_STORAGE[idx / 32] |= 1u32 << (idx & 0x1f);
-            }
+            bitbase_storage[idx / 32] |= 1u32 << (idx & 0x1f);
         }
     }
 
-    unsafe {
-        KPK_BITBASE_INIT.call_once(|| {
-            KPK_BITBASE = Some(&BITBASE_STORAGE);
-        });
-    }
+    KPK_BITBASE_INIT.call_once(|| {
+        unsafe {
+            KPK_BITBASE = Some(Box::leak(bitbase_storage));
+        }
+    });
 }
 
 pub fn probe(wksq: Square, wpsq: Square, bksq: Square, us: Color) -> bool {
