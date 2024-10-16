@@ -7,6 +7,7 @@ use crate::movegen::{generate, Captures, Evasions, ExtMove, Legal, MoveList, Non
 use crate::position::zobrist::material;
 use crate::position::Position;
 use crate::search::RootMoves;
+use crate::types::key;
 use crate::types::{
     depth::Depth, depth::ONE_PLY, key::Key, Color, Move, PawnValueEg, Piece, PieceType, Square,
     Value, ANY_CASTLING, BISHOP, BLACK, B_PAWN, ENPASSANT, FILE_A, FILE_B, FILE_C, FILE_D, KING,
@@ -698,19 +699,21 @@ fn prt_str(pos: &Position, flip: bool) -> String {
     s
 }
 
-fn calc_key_from_pcs(pcs: &[i32; 16], flip: bool) -> Key {
-    let mut key = Key(0);
+fn calc_keys_from_pcs(pcs: &[i32; 16]) -> (Key, Key) {
+    let mut key_false = Key(0);
+    let mut key_true = Key(0);
 
     (0..2).for_each(|c| {
         (1..7).for_each(|pt| {
             let pc = Piece::make(Color(c), PieceType(pt));
             (0..pcs[pc.0 as usize]).for_each(|i| {
-                key ^= material(pc ^ flip, i);
+                key_false ^= material(pc, i);
+                key_true ^= material(pc ^ true, i);
             });
         });
     });
 
-    key
+    (key_false, key_true)
 }
 
 fn calc_key_from_pieces(pieces: &[u8]) -> Key {
@@ -873,8 +876,7 @@ pub fn init_tb(name: &str) {
         }
     }
 
-    let key = calc_key_from_pcs(&pcs, false);
-    let key2 = calc_key_from_pcs(&pcs, true);
+    let (key, key2) = calc_keys_from_pcs(&pcs);
     let symmetric = key == key2;
 
     let num = pcs.iter().sum::<i32>() as u32;
