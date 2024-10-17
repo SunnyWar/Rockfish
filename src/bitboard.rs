@@ -38,7 +38,7 @@ pub const RANK6_BB: Bitboard = Bitboard(0xff00_0000_0000);
 pub const RANK7_BB: Bitboard = Bitboard(0x00ff_0000_0000_0000);
 pub const RANK8_BB: Bitboard = Bitboard(0xff00_0000_0000_0000);
 
-static mut SQUARE_DISTANCE: [[u32; 64]; 64] = [[0; 64]; 64];
+static mut SQUARE_DISTANCE: [u32; 64 * 64] = [0; 64 * 64];
 
 static mut SQUARE_BB: [Bitboard; 64] = [Bitboard(0); 64];
 static mut FILE_BB: [Bitboard; 8] = [Bitboard(0); 8];
@@ -427,6 +427,18 @@ impl IntoIterator for Bitboard {
     }
 }
 
+impl<'a> IntoIterator for &'a Bitboard {
+    type Item = Square;
+    type IntoIter = BitboardIter<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        BitboardIter {
+            bitboard: self,
+            remaining: *self,
+        }
+    }
+}
+
 pub struct BitboardIntoIter(Bitboard);
 
 impl Iterator for BitboardIntoIter {
@@ -435,6 +447,23 @@ impl Iterator for BitboardIntoIter {
     fn next(&mut self) -> Option<Self::Item> {
         if self.0 != 0 {
             Some(pop_lsb(&mut self.0))
+        } else {
+            None
+        }
+    }
+}
+
+pub struct BitboardIter<'a> {
+    bitboard: &'a Bitboard,
+    remaining: Bitboard,
+}
+
+impl<'a> Iterator for BitboardIter<'a> {
+    type Item = Square;
+
+    fn next(&mut self) -> Option<Square> {
+        if self.remaining.0 != 0 {
+            Some(pop_lsb(&mut self.remaining))
         } else {
             None
         }
@@ -556,14 +585,18 @@ impl Distance for u32 {
     }
 }
 
+fn get_index(x: usize, y: usize) -> usize {
+    x * 64 + y
+}
+
 impl Distance for Square {
     fn distance(x: Self, y: Self) -> u32 {
-        unsafe { SQUARE_DISTANCE[x.0 as usize][y.0 as usize] }
+        unsafe { SQUARE_DISTANCE[get_index(x.0 as usize, y.0 as usize)] }
     }
 }
 
 // init() initializes various bitboard tables. It is called at startup.
-
+#[allow(clippy::too_many_lines)]
 pub fn init() {
     for s in ALL_SQUARES {
         unsafe {
@@ -584,80 +617,95 @@ pub fn init() {
     }
 
     for f in 0..8 {
+        let left = if f > FILE_A {
+            file_bb(f - 1)
+        } else {
+            Bitboard(0)
+        };
+        let right = if f < FILE_H {
+            file_bb(f + 1)
+        } else {
+            Bitboard(0)
+        };
+
         unsafe {
-            let left = if f > FILE_A {
-                file_bb(f - 1)
-            } else {
-                Bitboard(0)
-            };
-            let right = if f < FILE_H {
-                file_bb(f + 1)
-            } else {
-                Bitboard(0)
-            };
             ADJACENT_FILES_BB[f as usize] = left | right;
         }
     }
 
     for r in 0..7 {
         unsafe {
-            FORWARD_RANKS_BB[BLACK.0 as usize][(r + 1) as usize] =
+            let black_forward_rank =
                 FORWARD_RANKS_BB[BLACK.0 as usize][r as usize] | RANK_BB[r as usize];
-            FORWARD_RANKS_BB[WHITE.0 as usize][r as usize] =
-                !FORWARD_RANKS_BB[BLACK.0 as usize][(r + 1) as usize];
+            FORWARD_RANKS_BB[BLACK.0 as usize][(r + 1) as usize] = black_forward_rank;
+
+            let white_forward_rank = !black_forward_rank;
+            FORWARD_RANKS_BB[WHITE.0 as usize][r as usize] = white_forward_rank;
         }
     }
 
-    for &c in &[WHITE, BLACK] {
-        for s in ALL_SQUARES {
+    for &color in &[WHITE, BLACK] {
+        for square in &ALL_SQUARES {
             unsafe {
-                FORWARD_FILE_BB[c.0 as usize][s.0 as usize] =
-                    FORWARD_RANKS_BB[c.0 as usize][s.rank() as usize] & FILE_BB[s.file() as usize];
-                PAWN_ATTACK_SPAN[c.0 as usize][s.0 as usize] = FORWARD_RANKS_BB[c.0 as usize]
-                    [s.rank() as usize]
-                    & ADJACENT_FILES_BB[s.file() as usize];
-                PASSED_PAWN_MASK[c.0 as usize][s.0 as usize] = FORWARD_FILE_BB[c.0 as usize]
-                    [s.0 as usize]
-                    | PAWN_ATTACK_SPAN[c.0 as usize][s.0 as usize];
+                let forward_rank = FORWARD_RANKS_BB[color.0 as usize][square.rank() as usize];
+                let file_bb = FILE_BB[square.file() as usize];
+
+                let forward_file = forward_rank & file_bb;
+                FORWARD_FILE_BB[color.0 as usize][square.0 as usize] = forward_file;
+
+                let adjacent_files = ADJACENT_FILES_BB[square.file() as usize];
+                let pawn_attack_span = forward_rank & adjacent_files;
+                PAWN_ATTACK_SPAN[color.0 as usize][square.0 as usize] = pawn_attack_span;
+
+                let passed_pawn_mask = forward_file | pawn_attack_span;
+                PASSED_PAWN_MASK[color.0 as usize][square.0 as usize] = passed_pawn_mask;
             }
         }
     }
 
-    for s1 in ALL_SQUARES {
-        for s2 in ALL_SQUARES {
+    // set square distance
+    for s1 in &ALL_SQUARES {
+        for s2 in &ALL_SQUARES {
             if s1 != s2 {
+                let dist = std::cmp::max(
+                    File::distance(s1.file(), s2.file()),
+                    Rank::distance(s1.rank(), s2.rank()),
+                );
+
                 unsafe {
-                    let dist = std::cmp::max(
-                        File::distance(s1.file(), s2.file()),
-                        Rank::distance(s1.rank(), s2.rank()),
-                    );
-                    SQUARE_DISTANCE[s1.0 as usize][s2.0 as usize] = dist;
+                    let index = get_index(s1.0 as usize, s2.0 as usize);
+                    SQUARE_DISTANCE[index] = dist;
                     DISTANCE_RING_BB[s1.0 as usize][dist as usize - 1] |= s2;
                 }
             }
         }
     }
 
-    for &c in &[WHITE, BLACK] {
-        for &pt in &[PAWN, KNIGHT, KING] {
-            for s in ALL_SQUARES {
-                let steps: &[i32] = match pt {
+    for &color in &[WHITE, BLACK] {
+        for &piece_type in &[PAWN, KNIGHT, KING] {
+            for square in &ALL_SQUARES {
+                let steps: &[i32] = match piece_type {
                     PAWN => &[7, 9],
                     KNIGHT => &[6, 10, 15, 17],
                     _ => &[1, 7, 8, 9],
                 };
-                for &d in steps {
-                    let to = s + if c == WHITE {
-                        Direction(d)
+
+                for &step in steps {
+                    let direction = if color == WHITE {
+                        Direction(step)
                     } else {
-                        -Direction(d)
+                        Direction(-step)
                     };
-                    if to.is_ok() && Square::distance(s, to) < 3 {
+
+                    let to_square = square + direction;
+
+                    if to_square.is_ok() && Square::distance(square, to_square) < 3 {
                         unsafe {
-                            if pt == PAWN {
-                                PAWN_ATTACKS[c.0 as usize][s.0 as usize] |= to;
+                            if piece_type == PAWN {
+                                PAWN_ATTACKS[color.0 as usize][square.0 as usize] |= to_square;
                             } else {
-                                PSEUDO_ATTACKS[pt.0 as usize][s.0 as usize] |= to;
+                                PSEUDO_ATTACKS[piece_type.0 as usize][square.0 as usize] |=
+                                    to_square;
                             }
                         }
                     }
@@ -674,26 +722,30 @@ pub fn init() {
         init_magics(&mut BISHOP_MAGICS, &BISHOP_INIT, bishop_dirs, index_bishop);
     }
 
-    for s1 in ALL_SQUARES {
-        let b_att = attacks_bb(BISHOP, s1, Bitboard(0));
-        let r_att = attacks_bb(ROOK, s1, Bitboard(0));
+    for s1 in &ALL_SQUARES {
+        let bishop_attacks = attacks_bb(BISHOP, s1, Bitboard(0));
+        let rook_attacks = attacks_bb(ROOK, s1, Bitboard(0));
+
         unsafe {
-            PSEUDO_ATTACKS[BISHOP.0 as usize][s1.0 as usize] = b_att;
-            PSEUDO_ATTACKS[ROOK.0 as usize][s1.0 as usize] = r_att;
-            PSEUDO_ATTACKS[QUEEN.0 as usize][s1.0 as usize] = b_att | r_att;
+            PSEUDO_ATTACKS[BISHOP.0 as usize][s1.0 as usize] = bishop_attacks;
+            PSEUDO_ATTACKS[ROOK.0 as usize][s1.0 as usize] = rook_attacks;
+            PSEUDO_ATTACKS[QUEEN.0 as usize][s1.0 as usize] = bishop_attacks | rook_attacks;
         }
-        for &pt in &[BISHOP, ROOK] {
-            for s2 in ALL_SQUARES {
+
+        for &piece_type in &[BISHOP, ROOK] {
+            let s1_attacks = attacks_bb(piece_type, s1, Bitboard(0));
+
+            for s2 in &ALL_SQUARES {
                 unsafe {
-                    if PSEUDO_ATTACKS[pt.0 as usize][s1.0 as usize] & s2 == 0 {
+                    if s1_attacks & s2 == 0 {
                         continue;
                     }
-                    LINE_BB[s1.0 as usize][s2.0 as usize] = (attacks_bb(pt, s1, Bitboard(0))
-                        & attacks_bb(pt, s2, Bitboard(0)))
-                        | s1
-                        | s2;
+
+                    let s2_attacks = attacks_bb(piece_type, s2, Bitboard(0));
+
+                    LINE_BB[s1.0 as usize][s2.0 as usize] = (s1_attacks & s2_attacks) | s1 | s2;
                     BETWEEN_BB[s1.0 as usize][s2.0 as usize] =
-                        attacks_bb(pt, s1, s2.bb()) & attacks_bb(pt, s2, s1.bb());
+                        attacks_bb(piece_type, s1, s2.bb()) & attacks_bb(piece_type, s2, s1.bb());
                 }
             }
         }
