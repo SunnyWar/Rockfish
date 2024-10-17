@@ -187,10 +187,8 @@ pub fn init() {
         }
     }
 
-    KPK_BITBASE_INIT.call_once(|| {
-        unsafe {
-            KPK_BITBASE = Some(Box::leak(bitbase_storage));
-        }
+    KPK_BITBASE_INIT.call_once(|| unsafe {
+        KPK_BITBASE = Some(Box::leak(bitbase_storage));
     });
 }
 

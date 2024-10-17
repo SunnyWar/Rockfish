@@ -418,11 +418,23 @@ pub fn backmost_sq(c: Color, b: Bitboard) -> Square {
     }
 }
 
-impl Iterator for Bitboard {
+impl IntoIterator for Bitboard {
     type Item = Square;
+    type IntoIter = BitboardIntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        BitboardIntoIter(self)
+    }
+}
+
+pub struct BitboardIntoIter(Bitboard);
+
+impl Iterator for BitboardIntoIter {
+    type Item = Square;
+
     fn next(&mut self) -> Option<Self::Item> {
         if self.0 != 0 {
-            Some(pop_lsb(self))
+            Some(pop_lsb(&mut self.0))
         } else {
             None
         }

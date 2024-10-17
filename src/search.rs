@@ -1591,7 +1591,7 @@ fn qsearch<NT: NodeType, InCheck: Bool>(
     let (tte, tt_hit) = tt::probe(pos_key);
 
     let tt_move = if tt_hit { tte.mov() } else { Move::NONE };
-    
+
     let tt_value = if tt_hit {
         value_from_tt(tte.value(), ss[5].ply)
     } else {
