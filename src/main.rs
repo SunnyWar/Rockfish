@@ -40,8 +40,8 @@ fn main() {
     search::init();
     pawns::init();
     endgame::init();
-    tt::resize(ucioption::get_i32("Hash") as usize);
-    threads::init(ucioption::get_i32("Threads") as usize);
+    tt::resize(ucioption::get_u32("Hash") as usize);
+    threads::init(ucioption::get_u16("Threads"));
     tb::init(ucioption::get_string("SyzygyPath"));
     search::clear();
 

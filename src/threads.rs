@@ -113,7 +113,7 @@ pub fn set_stop_on_ponderhit(b: bool) {
     STOP_ON_PONDERHIT.store(b, Ordering::SeqCst);
 }
 
-pub fn init(requested: usize) {
+pub fn init(requested: u16) {
     let handlers: Box<Handlers> = Box::default();
     let threads: Box<Threads> = Box::default();
     unsafe {
@@ -132,11 +132,10 @@ pub fn free() {
     }
 }
 
-pub fn set(requested: usize) {
+pub fn set(requested: u16) {
     let mut handlers = unsafe { Box::from_raw(HANDLERS) };
     let mut threads = unsafe { Box::from_raw(THREADS) };
-
-    while handlers.len() < requested {
+    while handlers.len() < requested as usize {
         let idx = handlers.len();
         let (tx, rx) = channel();
         // 16 MB stacks are now too small in debug mode, so use 32 MB stacks
@@ -146,14 +145,12 @@ pub fn set(requested: usize) {
         handlers.push(handler);
         threads.push(th);
     }
-
-    while handlers.len() > requested {
+    while handlers.len() > requested as usize {
         let handler = handlers.pop().unwrap();
         let th = threads.pop().unwrap();
         wake_up(&th, true, false);
         let _ = handler.join();
     }
-
     std::mem::forget(handlers);
     std::mem::forget(threads);
 }

@@ -85,7 +85,7 @@ fn on_hash_size(opt_val: &OptVal) {
 
 fn on_threads(opt_val: &OptVal) {
     if let &OptVal::Spin { cur, .. } = opt_val {
-        threads::set(cur as usize);
+        threads::set(cur as u16);
     }
 }
 
@@ -213,6 +213,19 @@ pub fn get_u32(key: &str) -> u32 {
 
     0 // Default return value if no match found
 }
+
+pub fn get_u16(key: &str) -> u16 {
+    let opts = unsafe { &*OPTIONS }; // Use reference without transferring ownership
+
+    if let Some(opt) = opts.iter().find(|o| o.key == key) {
+        if let OptVal::Spin { cur, .. } = opt.val {
+            return cur as u16;
+        }
+    }
+
+    0 // Default return value if no match found
+}
+
 
 pub fn get_bool(key: &str) -> bool {
     let opts = unsafe { Box::from_raw(OPTIONS) };
