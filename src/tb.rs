@@ -7,7 +7,6 @@ use crate::movegen::{generate, Captures, Evasions, ExtMove, Legal, MoveList, Non
 use crate::position::zobrist::material;
 use crate::position::Position;
 use crate::search::RootMoves;
-use crate::types::key;
 use crate::types::{
     depth::Depth, depth::ONE_PLY, key::Key, Color, Move, PawnValueEg, Piece, PieceType, Square,
     Value, ANY_CASTLING, BISHOP, BLACK, B_PAWN, ENPASSANT, FILE_A, FILE_B, FILE_C, FILE_D, KING,

@@ -2028,11 +2028,3 @@ fn extract_ponder_from_tt(pos: &mut Position) -> bool {
     pos.root_moves[0].pv.len() > 1
 }
 
-#[cfg(test)]
-mod tests {
-
-    #[test]
-    fn test_example() {
-        assert_eq!(2 + 2, 4);
-    }
-}

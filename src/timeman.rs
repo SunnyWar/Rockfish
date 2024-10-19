@@ -132,11 +132,3 @@ pub fn init(limits: &mut search::LimitsType, us: Color, ply: i32) {
     }
 }
 
-#[cfg(test)]
-mod tests {
-
-    #[test]
-    fn test_example() {
-        assert_eq!(2 + 2, 4);
-    }
-}
