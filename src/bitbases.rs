@@ -194,8 +194,11 @@ pub fn init() {
 
 pub fn probe(wksq: Square, wpsq: Square, bksq: Square, us: Color) -> bool {
     debug_assert!(wpsq.file() <= FILE_D);
-
     let idx = index(us, bksq, wksq, wpsq);
-    unsafe { KPK_BITBASE.unwrap()[idx / 32] & (1 << (idx & 0x1f)) != 0 }
+    let byte = idx / 32;
+    let bit = idx % 32;
+    unsafe {
+        let bitbase = KPK_BITBASE.unwrap();
+        bitbase[byte] & (1 << bit) != 0
+    }
 }
-

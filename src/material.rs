@@ -279,4 +279,3 @@ pub fn probe(pos: &Position) -> &'static mut Entry {
 
     e
 }
-

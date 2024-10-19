@@ -131,4 +131,3 @@ pub fn init(limits: &mut search::LimitsType, us: Color, ply: i32) {
         }
     }
 }
-

@@ -329,4 +329,3 @@ pub fn to_move(pos: &Position, s: &str) -> Move {
 
     Move::NONE
 }
-

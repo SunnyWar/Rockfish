@@ -227,4 +227,3 @@ pub fn hashfull() -> i32 {
 
     cnt
 }
-

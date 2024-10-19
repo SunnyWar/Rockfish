@@ -1,4 +1,5 @@
 use super::{Color, Square, WHITE};
+use std::arch::x86_64::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Direction(pub i32);
@@ -23,7 +24,13 @@ pub const SOUTH_WEST: Direction = Direction(-9);
 impl std::ops::Add<Direction> for Direction {
     type Output = Self;
     fn add(self, rhs: Self) -> Self {
-        Direction(self.0 + rhs.0)
+        // the unsafe block replaces this: Direction(self.0 + rhs.0)
+        unsafe {
+            let left = _mm_set1_epi32(self.0);
+            let right = _mm_set1_epi32(rhs.0);
+            let result = _mm_add_epi32(left, right);
+            Direction(_mm_extract_epi32(result, 0))
+        }
     }
 }
 

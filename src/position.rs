@@ -1643,4 +1643,3 @@ impl Position {
         true
     }
 }
-

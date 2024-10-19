@@ -574,4 +574,3 @@ pub fn generate<T: GenType>(pos: &Position, list: &mut [ExtMove], idx: usize) ->
         }
     }
 }
-

@@ -243,4 +243,3 @@ pub fn get_string(key: &str) -> String {
     std::mem::forget(opts);
     val
 }
-

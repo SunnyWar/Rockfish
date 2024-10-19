@@ -815,4 +815,3 @@ pub fn attacks_bb(pt: PieceType, s: Square, occupied: Bitboard) -> Bitboard {
         _ => pseudo_attacks(pt, s),
     }
 }
-

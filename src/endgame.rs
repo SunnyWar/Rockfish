@@ -993,4 +993,3 @@ pub fn scale_kpkp(pos: &Position, strong_side: Color) -> ScaleFactor {
         ScaleFactor::DRAW
     }
 }
-

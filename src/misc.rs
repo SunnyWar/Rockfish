@@ -23,7 +23,6 @@ impl Prng {
         Prng(seed)
     }
 
-
     pub fn rand64(&mut self) -> u64 {
         self.0 ^= self.0.rotate_right(12);
         self.0 ^= self.0.rotate_left(25);

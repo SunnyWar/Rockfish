@@ -436,4 +436,3 @@ fn evaluate<Us: ColorTrait>(pos: &Position, e: &mut Entry) -> Score {
 
     score
 }
-

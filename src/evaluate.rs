@@ -683,20 +683,18 @@ fn evaluate_threats<Us: ColorTrait>(pos: &Position, ei: &EvalInfo) -> Score {
     let left = if us == WHITE { NORTH_WEST } else { SOUTH_EAST };
     let right = if us == WHITE { NORTH_EAST } else { SOUTH_WEST };
     let trank3bb = if us == WHITE { RANK3_BB } else { RANK6_BB };
-
     let mut score = Score::ZERO;
 
     // Non-pawn enemies attacked by a pawn
-    let weak = (pos.pieces_c(them) ^ pos.pieces_cp(them, PAWN))
-        & ei.attacked_by[us.0 as usize][PAWN.0 as usize];
+    let us_pawn_attacks = ei.attacked_by[us.0 as usize][PAWN.0 as usize];
+    let all_pieces_them = ei.attacked_by[them.0 as usize][ALL_PIECES.0 as usize];
+    let all_pieces_us = ei.attacked_by[us.0 as usize][ALL_PIECES.0 as usize];
 
+    // Non-pawn enemies attacked by a pawn
+    let weak = (pos.pieces_c(them) ^ pos.pieces_cp(them, PAWN)) & us_pawn_attacks;
     if weak != 0 {
-        let b = pos.pieces_cp(us, PAWN)
-            & (!ei.attacked_by[them.0 as usize][ALL_PIECES.0 as usize]
-                | ei.attacked_by[us.0 as usize][ALL_PIECES.0 as usize]);
-
+        let b = pos.pieces_cp(us, PAWN) & (!all_pieces_them | all_pieces_us);
         let safe_threats = (b.shift(right) | b.shift(left)) & weak;
-
         score += THREAT_BY_SAFE_PAWN * (popcount(safe_threats) as i32);
     }
 
@@ -716,19 +714,19 @@ fn evaluate_threats<Us: ColorTrait>(pos: &Position, ei: &EvalInfo) -> Score {
 
     // Add a bonus according to the kind of attacking pieces
     if defended | weak != 0 {
-        let b = (defended | weak)
+        let minor_threats = (defended | weak)
             & (ei.attacked_by[us.0 as usize][KNIGHT.0 as usize]
                 | ei.attacked_by[us.0 as usize][BISHOP.0 as usize]);
-        for s in b {
+        for s in minor_threats {
             score += THREAT_BY_MINOR[pos.piece_on(s).piece_type().0 as usize];
             if pos.piece_on(s).piece_type() != PAWN {
                 score += THREAT_BY_RANK * (s.relative_rank(them) as i32);
             }
         }
 
-        let b =
+        let rook_threats =
             (pos.pieces_cp(them, QUEEN) | weak) & ei.attacked_by[us.0 as usize][ROOK.0 as usize];
-        for s in b {
+        for s in rook_threats {
             score += THREAT_BY_ROOK[pos.piece_on(s).piece_type().0 as usize];
             if pos.piece_on(s).piece_type() != PAWN {
                 score += THREAT_BY_RANK * (s.relative_rank(them) as i32);
@@ -738,9 +736,9 @@ fn evaluate_threats<Us: ColorTrait>(pos: &Position, ei: &EvalInfo) -> Score {
         score += HANGING
             * (popcount(weak & !ei.attacked_by[them.0 as usize][ALL_PIECES.0 as usize]) as i32);
 
-        let b = weak & ei.attacked_by[us.0 as usize][KING.0 as usize];
-        if b != 0 {
-            score += THREAT_BY_KING[usize::from(more_than_one(b))];
+        let king_threats = weak & ei.attacked_by[us.0 as usize][KING.0 as usize];
+        if king_threats != 0 {
+            score += THREAT_BY_KING[usize::from(more_than_one(king_threats))];
         }
     }
 
@@ -754,25 +752,25 @@ fn evaluate_threats<Us: ColorTrait>(pos: &Position, ei: &EvalInfo) -> Score {
     b |= (b & trank3bb).shift(up) & !pos.pieces();
 
     // Keep only the squares which are not completely unsafe
-    b &= !ei.attacked_by[them.0 as usize][PAWN.0 as usize]
-        & (ei.attacked_by[us.0 as usize][ALL_PIECES.0 as usize]
-            | !ei.attacked_by[them.0 as usize][ALL_PIECES.0 as usize]);
+    b &= !ei.attacked_by[them.0 as usize][PAWN.0 as usize] & (all_pieces_us | !all_pieces_them);
 
-    // Add a bonus for each new pawn threats from those squares
+    // Add a bonus for each new pawn threat from those squares
     b = (b.shift(left) | b.shift(right))
         & pos.pieces_c(them)
-        & !ei.attacked_by[us.0 as usize][PAWN.0 as usize];
-
+        & !ei.attacked_by[them.0 as usize][PAWN.0 as usize];
     score += THREAT_BY_PAWN_PUSH * (popcount(b) as i32);
 
     // Add a bonus for safe slider attack threats on opponent queen
     let safe_threats =
         !pos.pieces_c(us) & !ei.attacked_by2[them.0 as usize] & ei.attacked_by2[us.0 as usize];
-    b = (ei.attacked_by[us.0 as usize][BISHOP.0 as usize]
-        & ei.attacked_by[them.0 as usize][QUEEN_DIAGONAL.0 as usize])
-        | (ei.attacked_by[us.0 as usize][ROOK.0 as usize]
-            & ei.attacked_by[them.0 as usize][QUEEN.0 as usize]
-            & !ei.attacked_by[them.0 as usize][QUEEN_DIAGONAL.0 as usize]);
+    let them_queen_diag = ei.attacked_by[them.0 as usize][QUEEN_DIAGONAL.0 as usize];
+    let them_queen = ei.attacked_by[them.0 as usize][QUEEN.0 as usize];
+    let us_bishop = ei.attacked_by[us.0 as usize][BISHOP.0 as usize];
+    let us_rook = ei.attacked_by[us.0 as usize][ROOK.0 as usize];
+
+    let bishop_attacks = us_bishop & them_queen_diag;
+    let rook_attacks = us_rook & them_queen & !them_queen_diag;
+    let b = bishop_attacks | rook_attacks;
 
     score += THREAT_BY_ATTACK_ON_QUEEN * popcount(b & safe_threats) as i32;
 
@@ -791,77 +789,61 @@ fn evaluate_passed_pawns<Us: ColorTrait>(pos: &Position, ei: &EvalInfo) -> Score
     let us = Us::COLOR;
     let them = if us == WHITE { BLACK } else { WHITE };
     let up = if us == WHITE { NORTH } else { SOUTH };
-
     let mut score = Score::ZERO;
 
     for s in ei.pe.passed_pawns(us) {
         debug_assert!(pos.pieces_cp(them, PAWN) & forward_file_bb(us, s + up) == 0);
 
-        let bb = forward_file_bb(us, s)
-            & (ei.attacked_by[them.0 as usize][ALL_PIECES.0 as usize] | pos.pieces_c(them));
+        let forward_bb = forward_file_bb(us, s);
+        let attacked_or_occupied =
+            ei.attacked_by[them.0 as usize][ALL_PIECES.0 as usize] | pos.pieces_c(them);
+        let bb = forward_bb & attacked_or_occupied;
         score -= HINDER_PASSED_PAWN * popcount(bb) as i32;
 
         let r = s.relative_rank(us);
         let rr = RANK_FACTOR[r as usize];
-
         let mut mbonus = PASSED[MG][r as usize];
         let mut ebonus = PASSED[EG][r as usize];
 
         if rr != 0 {
             let block_sq = s + up;
+            let us_king_dist = capped_distance(pos.square(us, KING), block_sq);
+            let them_king_dist = capped_distance(pos.square(them, KING), block_sq);
 
-            // Adjust bonus based on the king's proximity
-            ebonus += capped_distance(pos.square(them, KING), block_sq) * 5 * rr
-                - capped_distance(pos.square(us, KING), block_sq) * 2 * rr;
+            ebonus += them_king_dist * 5 * rr - us_king_dist * 2 * rr;
 
-            // If block_sq is not the queening square then consider also a
-            // second push
             if r != RANK_7 {
                 ebonus -= capped_distance(pos.square(us, KING), block_sq + up) * rr;
             }
 
-            // If the pawn is free to advance, then increase the bonus
             if pos.empty(block_sq) {
-                // If there is a rook or queen attacking/defending the pawn
-                // from behind, consider all the squaresToSqueen. Otherwise
-                // consider only the squares in the pawn's path attacked or
-                // occupied by the enemy.
                 let mut defended_squares = forward_file_bb(us, s);
                 let mut unsafe_squares = defended_squares;
                 let squares_to_queen = defended_squares;
-
-                let bb = forward_file_bb(them, s)
+                let rook_or_queen_attacks = forward_file_bb(them, s)
                     & pos.pieces_pp(ROOK, QUEEN)
                     & pos.attacks_from(ROOK, s);
 
-                if pos.pieces_c(us) & bb == 0 {
+                if pos.pieces_c(us) & rook_or_queen_attacks == 0 {
                     defended_squares &= ei.attacked_by[us.0 as usize][ALL_PIECES.0 as usize];
                 }
-
-                if pos.pieces_c(them) & bb == 0 {
+                if pos.pieces_c(them) & rook_or_queen_attacks == 0 {
                     unsafe_squares &=
                         ei.attacked_by[them.0 as usize][ALL_PIECES.0 as usize] | pos.pieces_c(them);
                 }
 
-                // If there aren't any enemy attacks, assign a big bonus.
-                // Otherwise assign a smaller bonus if the block square isn't
-                // attacked.
-                let mut k = if unsafe_squares == 0 {
-                    20
-                } else if unsafe_squares & block_sq == 0 {
-                    9
-                } else {
-                    0
+                let k = match (
+                    unsafe_squares == 0,
+                    unsafe_squares & block_sq == 0,
+                    defended_squares == squares_to_queen,
+                    defended_squares & block_sq != 0,
+                ) {
+                    (true, _, _, _) => 20,
+                    (_, true, _, _) => 9,
+                    (_, _, true, _) => 6,
+                    (_, _, _, true) => 4,
+                    _ => 0,
                 };
-
-                // If the path to the queen is fully defended, assign a big
-                // bonus. Otherwise assign a smaller bonus if the block square
-                // is defended.
-                if defended_squares == squares_to_queen {
-                    k += 6;
-                } else if defended_squares & block_sq != 0 {
-                    k += 4;
-                }
 
                 mbonus += k * rr;
                 ebonus += k * rr;
@@ -869,10 +851,8 @@ fn evaluate_passed_pawns<Us: ColorTrait>(pos: &Position, ei: &EvalInfo) -> Score
                 mbonus += rr + r as i32 * 2;
                 ebonus += rr + r as i32 * 2;
             }
-        } // rr != 0
+        }
 
-        // Scale down bonus for candidate passers which need more than one
-        // pawn push to become passed or have a pawn in front of them.
         if !pos.pawn_passed(us, s + up) || pos.pieces_p(PAWN) & forward_file_bb(us, s) != 0 {
             mbonus /= 2;
             ebonus /= 2;
@@ -894,23 +874,24 @@ fn evaluate_passed_pawns<Us: ColorTrait>(pos: &Position, ei: &EvalInfo) -> Score
 fn evaluate_space<Us: ColorTrait>(pos: &Position, ei: &EvalInfo) -> Score {
     let us = Us::COLOR;
     let them = if us == WHITE { BLACK } else { WHITE };
+    
     let space_mask = if us == WHITE {
         CENTER_FILES & (RANK2_BB | RANK3_BB | RANK4_BB)
     } else {
         CENTER_FILES & (RANK7_BB | RANK6_BB | RANK5_BB)
     };
 
-    // Find the safe squares for our pieces inside the areas defended by
-    // SpaceMask. A square is unsafe if it is attacked by an enemy pawn
-    // or if it is undefended and attacked by an enemy piece.
+    // Find the safe squares for our pieces inside the areas defended by SpaceMask.
+    let us_attacks_all = ei.attacked_by[us.0 as usize][ALL_PIECES.0 as usize];
+    let them_attacks_all = ei.attacked_by[them.0 as usize][ALL_PIECES.0 as usize];
+    let them_attacks_pawn = ei.attacked_by[them.0 as usize][PAWN.0 as usize];
+
     let safe = space_mask
         & !pos.pieces_cp(us, PAWN)
-        & !ei.attacked_by[them.0 as usize][PAWN.0 as usize]
-        & (ei.attacked_by[us.0 as usize][ALL_PIECES.0 as usize]
-            | !ei.attacked_by[them.0 as usize][ALL_PIECES.0 as usize]);
+        & !them_attacks_pawn
+        & (us_attacks_all | !them_attacks_all);
 
-    // Find all squares which are at most three squares behind some friendly
-    // pawn.
+    // Find all squares which are at most three squares behind some friendly pawn.
     let mut behind = pos.pieces_cp(us, PAWN);
     behind |= if us == WHITE {
         behind >> 8
@@ -926,9 +907,8 @@ fn evaluate_space<Us: ColorTrait>(pos: &Position, ei: &EvalInfo) -> Score {
     // Since space_mask[us] is fully on our half of the board...
     debug_assert!((safe >> (if us == WHITE { 32 } else { 0 })).0 as u32 == 0);
 
-    // ...count safe + (behind & safe) with a single popcount.
-    let bonus =
-        popcount((if us == WHITE { safe << 32 } else { safe >> 32 }) | (behind & safe)) as i32;
+    // Count safe + (behind & safe) with a single popcount.
+    let bonus = popcount((if us == WHITE { safe << 32 } else { safe >> 32 }) | (behind & safe)) as i32;
     let weight = pos.count(us, ALL_PIECES) - 2 * ei.pe.open_files();
 
     Score::make(bonus * weight * weight / 16, 0)
@@ -1010,16 +990,12 @@ pub fn evaluate(pos: &Position) -> Value {
     // Probe the material hash table
     let me = material::probe(pos);
 
-    // If we have a specialized evluation function for the current material
-    // configuration, call it and return.
+    // If we have a specialized evaluation function for the current material configuration, call it and return.
     if me.specialized_eval_exists() {
         return me.evaluate(pos);
     }
 
-    // Initialize score by reading the incrementally updated scores included
-    // in the position object (material + piece square tables) and the
-    // material imbalance. Score is computer internally from the white point
-    // of view.
+    // Initialize score by reading the incrementally updated scores included in the position object (material + piece square tables) and the material imbalance.
     let mut score = pos.psq_score() + me.imbalance() + contempt();
 
     // Probe the pawn hash table
@@ -1033,42 +1009,42 @@ pub fn evaluate(pos: &Position) -> Value {
     }
 
     // Main evaluation begins here
-
     let mut ei = EvalInfo::new(me, pe);
 
     initialize::<White>(pos, &mut ei);
     initialize::<Black>(pos, &mut ei);
 
-    score += evaluate_pieces::<White, Knight>(pos, &mut ei)
-        - evaluate_pieces::<Black, Knight>(pos, &mut ei);
-    score += evaluate_pieces::<White, Bishop>(pos, &mut ei)
-        - evaluate_pieces::<Black, Bishop>(pos, &mut ei);
-    score +=
-        evaluate_pieces::<White, Rook>(pos, &mut ei) - evaluate_pieces::<Black, Rook>(pos, &mut ei);
-    score += evaluate_pieces::<White, Queen>(pos, &mut ei)
-        - evaluate_pieces::<Black, Queen>(pos, &mut ei);
+    // Evaluate pieces
+    score += evaluate_pieces::<White, Knight>(pos, &mut ei) - evaluate_pieces::<Black, Knight>(pos, &mut ei);
+    score += evaluate_pieces::<White, Bishop>(pos, &mut ei) - evaluate_pieces::<Black, Bishop>(pos, &mut ei);
+    score += evaluate_pieces::<White, Rook>(pos, &mut ei) - evaluate_pieces::<Black, Rook>(pos, &mut ei);
+    score += evaluate_pieces::<White, Queen>(pos, &mut ei) - evaluate_pieces::<Black, Queen>(pos, &mut ei);
 
+    // Evaluate mobility
     score += ei.mobility[WHITE.0 as usize] - ei.mobility[BLACK.0 as usize];
 
+    // Evaluate kings
     score += evaluate_king::<White>(pos, &mut ei) - evaluate_king::<Black>(pos, &mut ei);
 
+    // Evaluate threats
     score += evaluate_threats::<White>(pos, &ei) - evaluate_threats::<Black>(pos, &ei);
 
+    // Evaluate passed pawns
     score += evaluate_passed_pawns::<White>(pos, &ei) - evaluate_passed_pawns::<Black>(pos, &ei);
 
+    // Evaluate space if non-pawn material is above a threshold
     if pos.non_pawn_material() >= SPACE_THRESHOLD {
         score += evaluate_space::<White>(pos, &ei) - evaluate_space::<Black>(pos, &ei);
     }
 
+    // Evaluate initiative
     score += evaluate_initiative(pos, &ei, score.eg());
 
     // Interpolate between a middlegame and a (scaled by 'sf') endgame score
     let sf = evaluate_scale_factor(pos, &ei, score.eg());
     let mut v = score.mg() * ei.me.game_phase()
         + score.eg() * (PHASE_MIDGAME - ei.me.game_phase()) * sf.0 / ScaleFactor::NORMAL.0;
-
     v /= PHASE_MIDGAME;
 
     TEMPO + if pos.side_to_move() == WHITE { v } else { -v }
 }
-

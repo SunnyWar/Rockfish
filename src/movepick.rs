@@ -559,4 +559,3 @@ impl MovePickerPC {
         Move::NONE
     }
 }
-
