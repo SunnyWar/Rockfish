@@ -40,6 +40,29 @@
             },
             "args": [],
             "cwd": "${workspaceFolder}"
-        }
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug bench in executable 'rockfish'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=rockfish",
+                    "--package=rockfish"
+                ],
+                "filter": {
+                    "name": "rockfish",
+                    "kind": "bin"
+                }
+            },
+            "args": [
+                "bench",
+                "64",
+                "1",
+                "15"
+            ],
+            "cwd": "${workspaceFolder}"
+        }          
     ]
 }

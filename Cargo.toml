@@ -4,9 +4,6 @@ version = "0.1.0"
 edition = "2021"
 authors = ["Syzygy", "SunnyWar"]
 
-[build]
-rustflags = ["-C", "target-cpu=native"]
-
 [profile.release] 
 debug = true
 strip = false
