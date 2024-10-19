@@ -15,8 +15,8 @@ use crate::types::{
 use crate::ucioption;
 
 use memmap::{Mmap, MmapOptions};
+use rustc_hash::FxHashMap;
 use std::cell::UnsafeCell;
-use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 use std::slice;
@@ -846,7 +846,7 @@ static mut PAWN_ENTRIES: GlobalVec<PawnEntry> = GlobalVec {
     cap: 0,
 };
 
-static mut TB_MAP: *mut HashMap<Key, TbHashEntry> = 0 as *mut HashMap<Key, TbHashEntry>;
+static mut TB_MAP: *mut FxHashMap<Key, TbHashEntry> = 0 as *mut FxHashMap<Key, TbHashEntry>;
 
 static mut NUM_WDL: u32 = 0;
 static mut NUM_DTM: u32 = 0;
@@ -1021,14 +1021,14 @@ pub fn init(path: String) {
             init_indices();
             PIECE_ENTRIES.init(if max5 { 84 } else { 254 });
             PAWN_ENTRIES.init(if max5 { 61 } else { 256 });
-            TB_MAP = Box::into_raw(Box::new(HashMap::new()));
+            TB_MAP = Box::into_raw(Box::new(FxHashMap::default()));
             INITIALIZED = true;
         }
 
         if PATH.is_some() {
             PATH = None;
             std::mem::drop(Box::from_raw(TB_MAP));
-            TB_MAP = Box::into_raw(Box::new(HashMap::new()));
+            TB_MAP = Box::into_raw(Box::new(FxHashMap::default()));
             PIECE_ENTRIES.reset();
             PAWN_ENTRIES.reset();
             NUM_WDL = 0;

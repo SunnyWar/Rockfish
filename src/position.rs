@@ -443,7 +443,7 @@ impl Position {
             _ => !self.empty(m.to()),
         }
     }
-    
+
     pub fn captured_piece(&self) -> Piece {
         self.st().captured_piece
     }
@@ -496,14 +496,22 @@ impl Position {
         self.by_color_bb.iter_mut().for_each(|bb| *bb = Bitboard(0));
         self.by_type_bb.iter_mut().for_each(|bb| *bb = Bitboard(0));
         self.piece_count.iter_mut().for_each(|pc| *pc = 0);
-        self.castling_path.iter_mut().for_each(|cp| *cp = Bitboard(0));
-        self.castling_rook_square.iter_mut().for_each(|cr| *cr = Square::NONE);
+        self.castling_path
+            .iter_mut()
+            .for_each(|cp| *cp = Bitboard(0));
+        self.castling_rook_square
+            .iter_mut()
+            .for_each(|cr| *cr = Square::NONE);
         self.board.iter_mut().for_each(|b| *b = NO_PIECE);
-        self.castling_rights_mask.iter_mut().for_each(|crm| *crm = CastlingRight(0));
-        self.piece_list.iter_mut().for_each(|pl| pl.iter_mut().for_each(|p| *p = Square::NONE));
-    
+        self.castling_rights_mask
+            .iter_mut()
+            .for_each(|crm| *crm = CastlingRight(0));
+        self.piece_list
+            .iter_mut()
+            .for_each(|pl| pl.iter_mut().for_each(|p| *p = Square::NONE));
+
         let mut iter = fen_str.split_whitespace();
-    
+
         // 1. Piece placement
         let pieces = iter.next().unwrap();
         let mut sq = Square::A8;
@@ -517,11 +525,11 @@ impl Position {
                 sq += EAST;
             }
         }
-    
+
         // 2. Active color
         let color = iter.next().unwrap();
         self.side_to_move = if color == "b" { BLACK } else { WHITE };
-    
+
         // 3. Castling availability
         let castling = iter.next().unwrap();
         if castling != "-" {
@@ -532,12 +540,16 @@ impl Position {
                 let rsq = match side {
                     'K' => {
                         let mut square = Square::H1.relative(color);
-                        while self.piece_on(square) != rook { square += WEST; }
+                        while self.piece_on(square) != rook {
+                            square += WEST;
+                        }
                         square
                     }
                     'Q' => {
                         let mut square = Square::A1.relative(color);
-                        while self.piece_on(square) != rook { square += EAST; }
+                        while self.piece_on(square) != rook {
+                            square += EAST;
+                        }
                         square
                     }
                     'A'..='H' => {
@@ -549,7 +561,7 @@ impl Position {
                 self.set_castling_right(color, rsq);
             }
         }
-    
+
         // 4. En passant square
         let enpassant = iter.next().unwrap();
         self.st_mut().ep_square = Square::NONE;
@@ -558,12 +570,14 @@ impl Position {
             let rank = if self.side_to_move == WHITE { 5 } else { 2 };
             let ep_sq = Square::make(file, rank);
             if self.attackers_to(ep_sq) & self.pieces_cp(self.side_to_move, PAWN) != 0
-                && self.pieces_cp(!self.side_to_move, PAWN) & (ep_sq + pawn_push(!self.side_to_move)) != 0
+                && self.pieces_cp(!self.side_to_move, PAWN)
+                    & (ep_sq + pawn_push(!self.side_to_move))
+                    != 0
             {
                 self.st_mut().ep_square = ep_sq;
             }
         }
-    
+
         // 5-6. Halfmove clock and fullmove number
         self.st_mut().rule50 = iter.next().unwrap_or("0").parse().unwrap_or(0);
         let fullmove = iter.next().unwrap_or("1").parse::<i32>().unwrap_or(1);
@@ -571,12 +585,12 @@ impl Position {
         if self.side_to_move == BLACK {
             self.game_ply += 1;
         }
-    
+
         self.chess960 = is_chess960;
         self.set_state();
         debug_assert!(self.is_ok());
     }
-    
+
     // set_castling_right() is a helper function used to set castling rights
     // given the corresponding color and the rook starting square.
 
