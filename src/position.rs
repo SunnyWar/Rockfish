@@ -428,18 +428,22 @@ impl Position {
 
     pub fn capture_or_promotion(&self, m: Move) -> bool {
         debug_assert!(m.is_ok());
-        if m.move_type() != NORMAL {
-            m.move_type() != CASTLING
-        } else {
-            !self.empty(m.to())
+        match m.move_type() {
+            NORMAL => !self.empty(m.to()),
+            CASTLING => false,
+            _ => true,
         }
     }
 
     pub fn capture(&self, m: Move) -> bool {
         debug_assert!(m.is_ok());
-        (!self.empty(m.to()) && m.move_type() != CASTLING) || m.move_type() == ENPASSANT
+        match m.move_type() {
+            CASTLING => false,
+            ENPASSANT => true,
+            _ => !self.empty(m.to()),
+        }
     }
-
+    
     pub fn captured_piece(&self) -> Piece {
         self.st().captured_piece
     }
@@ -488,27 +492,18 @@ impl Position {
     // correct. This is assumed to be the responsibility of the GUI.
 
     pub fn set(&mut self, fen_str: &str, is_chess960: bool) {
-        for c in 0..2 {
-            self.by_color_bb[c] = Bitboard(0);
-        }
-        for t in 0..8 {
-            self.by_type_bb[t] = Bitboard(0);
-        }
-        for i in 0..16 {
-            self.piece_count[i] = 0;
-            self.castling_path[i] = Bitboard(0);
-            self.castling_rook_square[i] = Square::NONE;
-            for j in 0..16 {
-                self.piece_list[i][j] = Square::NONE;
-            }
-        }
-        for i in 0..64 {
-            self.board[i] = NO_PIECE;
-            self.castling_rights_mask[i] = CastlingRight(0);
-        }
-
+        // Initialize arrays with default values
+        self.by_color_bb.iter_mut().for_each(|bb| *bb = Bitboard(0));
+        self.by_type_bb.iter_mut().for_each(|bb| *bb = Bitboard(0));
+        self.piece_count.iter_mut().for_each(|pc| *pc = 0);
+        self.castling_path.iter_mut().for_each(|cp| *cp = Bitboard(0));
+        self.castling_rook_square.iter_mut().for_each(|cr| *cr = Square::NONE);
+        self.board.iter_mut().for_each(|b| *b = NO_PIECE);
+        self.castling_rights_mask.iter_mut().for_each(|crm| *crm = CastlingRight(0));
+        self.piece_list.iter_mut().for_each(|pl| pl.iter_mut().for_each(|p| *p = Square::NONE));
+    
         let mut iter = fen_str.split_whitespace();
-
+    
         // 1. Piece placement
         let pieces = iter.next().unwrap();
         let mut sq = Square::A8;
@@ -522,86 +517,66 @@ impl Position {
                 sq += EAST;
             }
         }
-
+    
         // 2. Active color
         let color = iter.next().unwrap();
         self.side_to_move = if color == "b" { BLACK } else { WHITE };
-
-        // 3. Castling availability. Compatible with 3 standards: Normal FEN
-        // standard, Shredder-FEN that uses the letters of the columns on
-        // which the rooks began the game instead of KQkq and also X-FEN
-        // standard that, in case of Chess960, if an inner rook is associated
-        // with the castling right, the castling tag is replaced by the file
-        // letter of the involved rook, as for the Shredder-FEN.
+    
+        // 3. Castling availability
         let castling = iter.next().unwrap();
         if castling != "-" {
             for c in castling.chars() {
                 let color = if c.is_lowercase() { BLACK } else { WHITE };
                 let rook = Piece::make(color, ROOK);
                 let side = c.to_uppercase().next().unwrap();
-                let mut rsq;
-                if side == 'K' {
-                    rsq = Square::H1.relative(color);
-                    while self.piece_on(rsq) != rook {
-                        rsq += WEST;
+                let rsq = match side {
+                    'K' => {
+                        let mut square = Square::H1.relative(color);
+                        while self.piece_on(square) != rook { square += WEST; }
+                        square
                     }
-                } else if side == 'Q' {
-                    rsq = Square::A1.relative(color);
-                    while self.piece_on(rsq) != rook {
-                        rsq += EAST;
+                    'Q' => {
+                        let mut square = Square::A1.relative(color);
+                        while self.piece_on(square) != rook { square += EAST; }
+                        square
                     }
-                } else if ('A'..='H').contains(&side) {
-                    let file = side.to_digit(18).unwrap() - 10;
-                    rsq = Square::make(file, relative_rank(color, RANK_1));
-                } else {
-                    continue;
-                }
+                    'A'..='H' => {
+                        let file = side.to_digit(18).unwrap() - 10;
+                        Square::make(file, relative_rank(color, RANK_1))
+                    }
+                    _ => continue,
+                };
                 self.set_castling_right(color, rsq);
             }
         }
-
-        // 4. En passant square. Ignore if no pawn capture is possible
+    
+        // 4. En passant square
         let enpassant = iter.next().unwrap();
         self.st_mut().ep_square = Square::NONE;
         if enpassant != "-" {
-            let file = enpassant.chars().nth(0).unwrap();
-            let file = file.to_digit(18).unwrap() - 10;
+            let file = enpassant.chars().nth(0).unwrap().to_digit(18).unwrap() - 10;
             let rank = if self.side_to_move == WHITE { 5 } else { 2 };
             let ep_sq = Square::make(file, rank);
             if self.attackers_to(ep_sq) & self.pieces_cp(self.side_to_move, PAWN) != 0
-                && self.pieces_cp(!self.side_to_move, PAWN)
-                    & (ep_sq + pawn_push(!self.side_to_move))
-                    != 0
+                && self.pieces_cp(!self.side_to_move, PAWN) & (ep_sq + pawn_push(!self.side_to_move)) != 0
             {
                 self.st_mut().ep_square = ep_sq;
             }
         }
-
+    
         // 5-6. Halfmove clock and fullmove number
-        if let Some(halfmove) = iter.next() {
-            self.st_mut().rule50 = halfmove.parse().unwrap();
-        } else {
-            self.st_mut().rule50 = 0;
-        }
-
-        // Convert from fullmove starting from 1 to game_ply starting from 0.
-        // Handle also common incorrect FEN with fullmove = 0.
-        if let Some(fullmove) = iter.next() {
-            let fullmove = fullmove.parse::<i32>().unwrap();
-            self.game_ply = std::cmp::max(2 * (fullmove - 1), 0);
-        } else {
-            self.game_ply = 0;
-        }
+        self.st_mut().rule50 = iter.next().unwrap_or("0").parse().unwrap_or(0);
+        let fullmove = iter.next().unwrap_or("1").parse::<i32>().unwrap_or(1);
+        self.game_ply = std::cmp::max(2 * (fullmove - 1), 0);
         if self.side_to_move == BLACK {
             self.game_ply += 1;
         }
-
+    
         self.chess960 = is_chess960;
         self.set_state();
-
         debug_assert!(self.is_ok());
     }
-
+    
     // set_castling_right() is a helper function used to set castling rights
     // given the corresponding color and the rook starting square.
 

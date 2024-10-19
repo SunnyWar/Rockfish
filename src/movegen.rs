@@ -98,25 +98,19 @@ impl MoveList {
     }
 
     pub fn contains(&self, m: Move) -> bool {
-        let mut i = 0;
-        while i < self.len {
-            if self.list[i].m == m {
-                return true;
-            }
-            i += 1;
-        }
-        false
+        self.list.iter().take(self.len).any(|&item| item.m == m)
     }
 }
 
 impl Iterator for MoveList {
     type Item = Move;
+
     fn next(&mut self) -> Option<Self::Item> {
-        if self.idx == self.len {
-            None
-        } else {
+        if self.idx < self.len {
             self.idx += 1;
             Some(self.list[self.idx - 1].m)
+        } else {
+            None
         }
     }
 }
@@ -142,20 +136,17 @@ fn generate_castling<Cr: CastlingRightTrait, Checks: Bool, Chess960: Bool>(
 
     debug_assert!(pos.checkers() == 0);
 
-    let direction = match Chess960::BOOL {
-        true => {
-            if kto > kfrom {
-                WEST
-            } else {
-                EAST
-            }
+    let direction = if Chess960::BOOL {
+        if kto > kfrom {
+            WEST
+        } else {
+            EAST
         }
-        false => {
-            if king_side {
-                WEST
-            } else {
-                EAST
-            }
+    } else {
+        if king_side {
+            WEST
+        } else {
+            EAST
         }
     };
 

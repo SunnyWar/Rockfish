@@ -874,7 +874,7 @@ fn evaluate_passed_pawns<Us: ColorTrait>(pos: &Position, ei: &EvalInfo) -> Score
 fn evaluate_space<Us: ColorTrait>(pos: &Position, ei: &EvalInfo) -> Score {
     let us = Us::COLOR;
     let them = if us == WHITE { BLACK } else { WHITE };
-    
+
     let space_mask = if us == WHITE {
         CENTER_FILES & (RANK2_BB | RANK3_BB | RANK4_BB)
     } else {
@@ -908,7 +908,8 @@ fn evaluate_space<Us: ColorTrait>(pos: &Position, ei: &EvalInfo) -> Score {
     debug_assert!((safe >> (if us == WHITE { 32 } else { 0 })).0 as u32 == 0);
 
     // Count safe + (behind & safe) with a single popcount.
-    let bonus = popcount((if us == WHITE { safe << 32 } else { safe >> 32 }) | (behind & safe)) as i32;
+    let bonus =
+        popcount((if us == WHITE { safe << 32 } else { safe >> 32 }) | (behind & safe)) as i32;
     let weight = pos.count(us, ALL_PIECES) - 2 * ei.pe.open_files();
 
     Score::make(bonus * weight * weight / 16, 0)
@@ -1015,10 +1016,14 @@ pub fn evaluate(pos: &Position) -> Value {
     initialize::<Black>(pos, &mut ei);
 
     // Evaluate pieces
-    score += evaluate_pieces::<White, Knight>(pos, &mut ei) - evaluate_pieces::<Black, Knight>(pos, &mut ei);
-    score += evaluate_pieces::<White, Bishop>(pos, &mut ei) - evaluate_pieces::<Black, Bishop>(pos, &mut ei);
-    score += evaluate_pieces::<White, Rook>(pos, &mut ei) - evaluate_pieces::<Black, Rook>(pos, &mut ei);
-    score += evaluate_pieces::<White, Queen>(pos, &mut ei) - evaluate_pieces::<Black, Queen>(pos, &mut ei);
+    score += evaluate_pieces::<White, Knight>(pos, &mut ei)
+        - evaluate_pieces::<Black, Knight>(pos, &mut ei);
+    score += evaluate_pieces::<White, Bishop>(pos, &mut ei)
+        - evaluate_pieces::<Black, Bishop>(pos, &mut ei);
+    score +=
+        evaluate_pieces::<White, Rook>(pos, &mut ei) - evaluate_pieces::<Black, Rook>(pos, &mut ei);
+    score += evaluate_pieces::<White, Queen>(pos, &mut ei)
+        - evaluate_pieces::<Black, Queen>(pos, &mut ei);
 
     // Evaluate mobility
     score += ei.mobility[WHITE.0 as usize] - ei.mobility[BLACK.0 as usize];

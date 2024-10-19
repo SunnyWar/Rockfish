@@ -268,17 +268,13 @@ impl Entry {
 
         // If we can castle use the bonus after the castling if it is bigger
         if pos.has_castling_right(us | CastlingSide::KING) {
-            bonus = std::cmp::max(
-                bonus,
-                Entry::shelter_storm::<Us>(pos, Square::G1.relative(us)),
-            );
+            let king_castle_bonus = Entry::shelter_storm::<Us>(pos, Square::G1.relative(us));
+            bonus = std::cmp::max(bonus, king_castle_bonus);
         }
 
         if pos.has_castling_right(us | CastlingSide::QUEEN) {
-            bonus = std::cmp::max(
-                bonus,
-                Entry::shelter_storm::<Us>(pos, Square::C1.relative(us)),
-            );
+            let queen_castle_bonus = Entry::shelter_storm::<Us>(pos, Square::C1.relative(us));
+            bonus = std::cmp::max(bonus, queen_castle_bonus);
         }
 
         Score::make(bonus.0, -16 * min_king_pawn_distance)
@@ -319,11 +315,10 @@ pub fn init() {
 
 // pawns::probe() looks up the current position's pawn configuration in the
 // pawn hash table. If it is not found, it is computed and stored in the table.
-
 pub fn probe(pos: &Position) -> &mut Entry {
     let key = pos.pawn_key();
-    let e = pos.pawns_table[(key.0 & 16383) as usize].get();
-    let e: &'static mut Entry = unsafe { &mut *e };
+    let e_ptr = pos.pawns_table[(key.0 & 16383) as usize].get();
+    let e: &'static mut Entry = unsafe { &mut *e_ptr };
 
     if e.key == key {
         return e;
@@ -331,12 +326,14 @@ pub fn probe(pos: &Position) -> &mut Entry {
 
     e.key = key;
     e.score = evaluate::<White>(pos, e) - evaluate::<Black>(pos, e);
-    e.open_files = (e.semiopen_files[WHITE.0 as usize] & e.semiopen_files[BLACK.0 as usize])
-        .count_ones() as i32;
-    e.asymmetry = (e.passed_pawns[WHITE.0 as usize].0
-        | e.passed_pawns[BLACK.0 as usize].0
-        | (e.semiopen_files[WHITE.0 as usize] ^ e.semiopen_files[BLACK.0 as usize]) as u64)
-        .count_ones() as i32;
+
+    let white_semiopen = e.semiopen_files[WHITE.0 as usize];
+    let black_semiopen = e.semiopen_files[BLACK.0 as usize];
+    let passed_pawns = e.passed_pawns[WHITE.0 as usize].0 | e.passed_pawns[BLACK.0 as usize].0;
+    let semiopen_diff = white_semiopen ^ black_semiopen;
+
+    e.open_files = (white_semiopen & black_semiopen).count_ones() as i32;
+    e.asymmetry = (passed_pawns | semiopen_diff as u64).count_ones() as i32;
 
     e
 }
