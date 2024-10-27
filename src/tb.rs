@@ -36,7 +36,7 @@ static mut PROBE_DEPTH: Depth = Depth(0);
 pub fn read_options() {
     unsafe {
         USE_RULE_50 = ucioption::get_bool("Syzygy50MoveRule");
-        PROBE_DEPTH = ucioption::get_i32("SyzygyProbeDepth") * Depth::ONE_PLY;
+        PROBE_DEPTH = ucioption::get_i32("SyzygyProbeDepth") * Depth::ONE;
         CARDINALITY = ucioption::get_u32("SyzygyProbeLimit");
         if CARDINALITY > MAX_CARDINALITY {
             CARDINALITY = MAX_CARDINALITY;

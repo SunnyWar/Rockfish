@@ -179,7 +179,7 @@ fn reduction<PvNode: NodeType>(i: bool, d: Depth, mn: i32) -> Depth {
     unsafe {
         REDUCTIONS[PvNode::NT][usize::from(i)][std::cmp::min(d.value(), 63) as usize]
             [std::cmp::min(mn, 63) as usize]
-            * Depth::ONE_PLY
+            * Depth::ONE
     }
 }
 
@@ -201,11 +201,11 @@ fn stat_bonus(depth: Depth) -> i32 {
 // to the given depth are generated and counted, and the sum is returned.
 fn perft<Root: Bool>(pos: &mut Position, depth: Depth) -> u64 {
     let mut nodes = 0u64;
-    let leaf = depth == 2 * Depth::ONE_PLY;
+    let leaf = depth == Depth::TWO;
 
     for m in MoveList::new::<Legal>(pos) {
         let cnt;
-        if Root::BOOL && depth <= Depth::ONE_PLY {
+        if Root::BOOL && depth <= Depth::ONE {
             cnt = 1;
             nodes += 1;
         } else {
@@ -214,7 +214,7 @@ fn perft<Root: Bool>(pos: &mut Position, depth: Depth) -> u64 {
             cnt = if leaf {
                 MoveList::new::<Legal>(pos).len() as u64
             } else {
-                perft::<False>(pos, depth - Depth::ONE_PLY)
+                perft::<False>(pos, depth - Depth::ONE)
             };
             nodes += cnt;
             pos.undo_move(m);
@@ -269,7 +269,7 @@ pub fn clear() {
 
 pub fn mainthread_search(pos: &mut Position, th: &threads::ThreadCtrl) {
     if limits().perft != 0 {
-        let nodes = perft::<True>(pos, (limits().perft as i32) * Depth::ONE_PLY);
+        let nodes = perft::<True>(pos, (limits().perft as i32) * Depth::ONE);
         println!("\nNodes searched: {nodes}");
         return;
     }
@@ -399,7 +399,7 @@ pub fn thread_search(pos: &mut Position, _th: &threads::ThreadCtrl) {
     // Iterative deepening loop until requested to stop or the target depth
     // is reached
     while !threads::stop() {
-        root_depth += Depth::ONE_PLY;
+        root_depth += Depth::ONE;
         if root_depth >= Depth::MAX
             || (limits().depth != 0 && pos.is_main && root_depth.value() > limits().depth as i32)
         {
@@ -461,7 +461,7 @@ pub fn thread_search(pos: &mut Position, _th: &threads::ThreadCtrl) {
             }
 
             // Reset aspiration window starting size
-            if root_depth >= 5 * Depth::ONE_PLY {
+            if root_depth >= Depth::FIVE {
                 delta = Value(18);
                 alpha = std::cmp::max(
                     pos.root_moves[pos.pv_idx].previous_score - delta,
@@ -671,7 +671,6 @@ fn search<NT: NodeType>(
     debug_assert!(pv_node || alpha == beta - 1);
     debug_assert!(Depth::ZERO < depth && depth < Depth::MAX);
     debug_assert!(!(pv_node && cut_node));
-    debug_assert!(depth / Depth::ONE_PLY * Depth::ONE_PLY == depth);
 
     let mut captures_searched: [Move; 32] = [Move::NONE; 32];
     let mut quiets_searched: [Move; 64] = [Move::NONE; 64];
@@ -773,7 +772,7 @@ fn search<NT: NodeType>(
                         ss,
                         pos.piece_on(prev_sq),
                         prev_sq,
-                        -stat_bonus(depth + Depth::ONE_PLY),
+                        -stat_bonus(depth + Depth::ONE),
                     );
                 }
             }
@@ -833,7 +832,7 @@ fn search<NT: NodeType>(
                         pos_key,
                         value_to_tt(value, ss[5].ply),
                         bound,
-                        std::cmp::min(Depth::MAX - Depth::ONE_PLY, depth + 6 * Depth::ONE_PLY),
+                        std::cmp::min(Depth::MAX - Depth::ONE, depth + Depth::SIX),
                         Move::NONE,
                         Value::NONE,
                         tt::generation(),
@@ -852,7 +851,7 @@ fn search<NT: NodeType>(
                             pos_key,
                             value_to_tt(mate, ss[5].ply),
                             Bound::EXACT,
-                            std::cmp::min(Depth::MAX - Depth::ONE_PLY, depth + 6 * Depth::ONE_PLY),
+                            std::cmp::min(Depth::MAX - Depth::ONE, depth + Depth::SIX),
                             Move::NONE,
                             Value::NONE,
                             tt::generation(),
@@ -928,11 +927,11 @@ fn search<NT: NodeType>(
         }
 
         // Step 7. Razoring (skipped when in check)
-        if !pv_node && depth <= Depth::ONE_PLY {
+        if !pv_node && depth <= Depth::ONE {
             if eval + RAZOR_MARGIN1 <= alpha {
                 return qsearch::<NonPv, False>(pos, ss, alpha, alpha + 1, Depth::ZERO);
             }
-        } else if !pv_node && depth <= 2 * Depth::ONE_PLY && eval + RAZOR_MARGIN2 <= alpha {
+        } else if !pv_node && depth <= Depth::TWO && eval + RAZOR_MARGIN2 <= alpha {
             let ralpha = alpha - RAZOR_MARGIN2;
             let v = qsearch::<NonPv, False>(pos, ss, ralpha, ralpha + 1, Depth::ZERO);
             if v <= ralpha {
@@ -942,7 +941,7 @@ fn search<NT: NodeType>(
 
         // Step 8. Futility pruning: child node (skipped when in check)
         if !root_node
-            && depth < 7 * Depth::ONE_PLY
+            && depth < Depth::SEVEN
             && eval - futility_margin(depth) >= beta
             && eval < Value::KNOWN_WIN
         {
@@ -961,13 +960,13 @@ fn search<NT: NodeType>(
             // Null move dynamic reduction based on depth and value
             let r = ((823 + 67 * depth.value()) / 256
                 + std::cmp::min((eval - beta) / PawnValueMg, 3))
-                * Depth::ONE_PLY;
+                * Depth::ONE;
 
             ss[5].current_move = Move::NULL;
             ss[5].cont_history = pos.cont_history.get(NO_PIECE, Square(0));
 
             pos.do_null_move();
-            let mut null_value = if depth - r < Depth::ONE_PLY {
+            let mut null_value = if depth - r < Depth::ONE {
                 -qsearch::<NonPv, False>(pos, &mut ss[1..], -beta, -beta + 1, Depth::ZERO)
             } else {
                 -search::<NonPv>(
@@ -988,16 +987,16 @@ fn search<NT: NodeType>(
                     null_value = beta;
                 }
 
-                if (depth < 12 * Depth::ONE_PLY || pos.nmp_ply != 0) && beta.abs() < Value::KNOWN_WIN {
+                if (depth < Depth::TWELVE || pos.nmp_ply != 0) && beta.abs() < Value::KNOWN_WIN {
                     return null_value;
                 }
 
                 // Do verification search at high depths
                 // Disable null move pruning for the side to move for the
                 // first part of the remaining search tree
-                pos.nmp_ply = ss[5].ply + 3 * (depth - r) / (4 * Depth::ONE_PLY);
+                pos.nmp_ply = ss[5].ply + 3 * (depth - r) / (Depth::FOUR);
                 pos.nmp_odd = ss[5].ply & 1;
-                let v = if depth - r < Depth::ONE_PLY {
+                let v = if depth - r < Depth::ONE {
                     qsearch::<NonPv, False>(pos, ss, beta - 1, beta, Depth::ZERO)
                 } else {
                     search::<NonPv>(pos, ss, beta - 1, beta, depth - r, false, true)
@@ -1014,7 +1013,7 @@ fn search<NT: NodeType>(
         // If we have a good enough capture and a reduced search returns a
         // value much above beta, we can (almost) safely prune the previous
         // move.
-        if !pv_node && depth >= 5 * Depth::ONE_PLY && beta.abs() < Value::MATE_IN_MAX_PLY {
+        if !pv_node && depth >= Depth::FIVE && beta.abs() < Value::MATE_IN_MAX_PLY {
             let rbeta = std::cmp::min(beta + 200, Value::INFINITE);
 
             debug_assert!(ss[4].current_move.is_ok());
@@ -1029,7 +1028,7 @@ fn search<NT: NodeType>(
                 if pos.legal(m) {
                     ss[5].current_move = m;
                     ss[5].cont_history = pos.cont_history.get(pos.moved_piece(m), m.to());
-                    debug_assert!(depth >= 5 * Depth::ONE_PLY);
+                    debug_assert!(depth >= Depth::FIVE);
                     let gives_check = pos.gives_check(m);
                     pos.do_move(m, gives_check);
 
@@ -1037,25 +1036,25 @@ fn search<NT: NodeType>(
                     // the move holds. Skip if depth is 5 to avoid two searches
                     // at depth 1 in a row.
                     let mut value = Value::ZERO; // to prevent warning
-                    if depth != 5 * Depth::ONE_PLY {
+                    if depth != Depth::FIVE {
                         value = -search::<NonPv>(
                             pos,
                             &mut ss[1..],
                             -rbeta,
                             -rbeta + 1,
-                            Depth::ONE_PLY,
+                            Depth::ONE,
                             !cut_node,
                             true,
                         );
                     }
 
-                    if depth == 5 * Depth::ONE_PLY || value >= rbeta {
+                    if depth == Depth::FIVE || value >= rbeta {
                         value = -search::<NonPv>(
                             pos,
                             &mut ss[1..],
                             -rbeta,
                             -rbeta + 1,
-                            depth - 4 * Depth::ONE_PLY,
+                            depth - Depth::FOUR,
                             !cut_node,
                             false,
                         );
@@ -1074,11 +1073,11 @@ fn search<NT: NodeType>(
         }
 
         // Step 11. Internal iterative deepening (skipped when in check)
-        if depth >= 6 * Depth::ONE_PLY
+        if depth >= Depth::SIX
             && tt_move == Move::NONE
             && (pv_node || ss[5].static_eval + 256 >= beta)
         {
-            let d = (3 * depth / (4 * Depth::ONE_PLY) - 2) * Depth::ONE_PLY;
+            let d = (3 * depth / (Depth::FOUR) - 2) * Depth::ONE;
             search::<NT>(pos, ss, alpha, beta, d, cut_node, true);
 
             let (tmp_tte, tmp_tt_hit) = tt::probe(pos_key);
@@ -1100,12 +1099,12 @@ fn search<NT: NodeType>(
     let improving = ss[5].static_eval >= ss[3].static_eval || ss[3].static_eval == Value::NONE;
 
     let singular_extension_node = !root_node
-        && depth >= 8 * Depth::ONE_PLY
+        && depth >= Depth::EIGHT
         && tt_move != Move::NONE
         && tt_value != Value::NONE
         && excluded_move == Move::NONE
         && tte.bound() & Bound::LOWER != 0
-        && tte.depth() >= depth - 3 * Depth::ONE_PLY;
+        && tte.depth() >= depth - Depth::THREE;
 
     let mut skip_quiets = false;
     let mut tt_capture = false;
@@ -1167,7 +1166,7 @@ fn search<NT: NodeType>(
         };
 
         let move_count_pruning =
-            depth < 16 * Depth::ONE_PLY && move_count >= futility_move_counts(improving, depth);
+            depth < Depth::SIXTEEN && move_count >= futility_move_counts(improving, depth);
 
         // Step 13. Singular and Gives Check Extensions
 
@@ -1182,22 +1181,22 @@ fn search<NT: NodeType>(
         ) {
             (true, _) => {
                 let rbeta = std::cmp::max(tt_value - 2 * depth.value(), -Value::MATE);
-                let d = (depth / (2 * Depth::ONE_PLY)) * Depth::ONE_PLY;
+                let d = (depth / (Depth::TWO)) * Depth::ONE;
                 ss[5].excluded_move = m;
                 let value = search::<NonPv>(pos, ss, rbeta - 1, rbeta, d, cut_node, true);
                 ss[5].excluded_move = Move::NONE;
                 if value < rbeta {
-                    extension = Depth::ONE_PLY;
+                    extension = Depth::ONE;
                 }
             }
             (_, true) => {
-                extension = Depth::ONE_PLY;
+                extension = Depth::ONE;
             }
             _ => {}
         }
 
         // Calculate new depth for this move
-        let new_depth = depth - Depth::ONE_PLY + extension;
+        let new_depth = depth - Depth::ONE + extension;
 
         // Step 14. Pruning at shallow depth
         if !root_node
@@ -1238,7 +1237,7 @@ fn search<NT: NodeType>(
                 if lmr_depth < 8 && !pos.see_ge(m, Value(-35 * lmr_depth * lmr_depth)) {
                     continue;
                 }
-            } else if depth < 7 * Depth::ONE_PLY
+            } else if depth < Depth::SEVEN
                 && extension == Depth::ZERO
                 && !pos.see_ge(m, -PawnValueEg * (depth.value()))
             {
@@ -1271,34 +1270,34 @@ fn search<NT: NodeType>(
         // be re-searched at full depth.
         let do_full_depth_search;
 
-        if depth >= 3 * Depth::ONE_PLY && move_count > 1 && (!capture_or_promotion || move_count_pruning) {
+        if depth >= 3 * Depth::ONE && move_count > 1 && (!capture_or_promotion || move_count_pruning) {
             let mut r = reduction::<NT>(improving, depth, move_count);
 
             if capture_or_promotion {
                 r -= if r != Depth::ZERO {
-                    Depth::ONE_PLY
+                    Depth::ONE
                 } else {
                     Depth::ZERO
                 };
             } else {
                 // Decrease reduction if opponent's move count is high
                 if ss[4].move_count > 15 {
-                    r -= Depth::ONE_PLY;
+                    r -= Depth::ONE;
                 }
 
                 // Decrease reduction for exact PV nodes
                 if pv_exact {
-                    r -= Depth::ONE_PLY;
+                    r -= Depth::ONE;
                 }
 
                 // Increase reduction if tt_move is a capture
                 if tt_capture {
-                    r += Depth::ONE_PLY;
+                    r += Depth::ONE;
                 }
 
                 // Increase reduction for cut nodes
                 if cut_node {
-                    r += 2 * Depth::ONE_PLY;
+                    r += 2 * Depth::ONE;
                 }
                 // Decrease reduction for moves that escape a capture. Filter
                 // out castling moves, because they are coded as "king captures
@@ -1306,7 +1305,7 @@ fn search<NT: NodeType>(
                 else if m.move_type() == NORMAL
                     && !pos.see_ge(Move::make(m.to(), m.from()), Value::ZERO)
                 {
-                    r -= 2 * Depth::ONE_PLY;
+                    r -= 2 * Depth::ONE;
                 }
 
                 ss[5].stat_score = pos.main_history.get(!pos.side_to_move(), m)
@@ -1323,8 +1322,8 @@ fn search<NT: NodeType>(
                     ss[4].stat_score >= 0,
                     ss[5].stat_score < 0,
                 ) {
-                    (true, true, _, _) => r -= Depth::ONE_PLY,
-                    (_, _, true, true) => r += Depth::ONE_PLY,
+                    (true, true, _, _) => r -= Depth::ONE,
+                    (_, _, true, true) => r += Depth::ONE,
                     _ => {}
                 }
 
@@ -1332,11 +1331,11 @@ fn search<NT: NodeType>(
                 // history
                 r = std::cmp::max(
                     Depth::ZERO,
-                    (r.value() - ss[5].stat_score / 20000) * Depth::ONE_PLY,
+                    (r.value() - ss[5].stat_score / 20000) * Depth::ONE,
                 );
             }
 
-            let d = std::cmp::max(new_depth - r, Depth::ONE_PLY);
+            let d = std::cmp::max(new_depth - r, Depth::ONE);
 
             value = -search::<NonPv>(pos, &mut ss[1..], -(alpha + 1), -alpha, d, true, false);
             do_full_depth_search = value > alpha && d != new_depth;
@@ -1346,7 +1345,7 @@ fn search<NT: NodeType>(
 
         // Step 17. Full depth search if LMR is skipped or fails high
         if do_full_depth_search {
-            value = if new_depth < Depth::ONE_PLY {
+            value = if new_depth < Depth::ONE {
                 if gives_check {
                     -qsearch::<NonPv, True>(pos, &mut ss[1..], -(alpha + 1), -alpha, Depth::ZERO)
                 } else {
@@ -1372,7 +1371,7 @@ fn search<NT: NodeType>(
         if pv_node && (move_count == 1 || (value > alpha && (root_node || value < beta))) {
             ss[6].pv.truncate(0);
 
-            value = if new_depth < Depth::ONE_PLY {
+            value = if new_depth < Depth::ONE {
                 if gives_check {
                     -qsearch::<Pv, True>(pos, &mut ss[1..], -beta, -alpha, Depth::ZERO)
                 } else {
@@ -1499,12 +1498,12 @@ fn search<NT: NodeType>(
                 ss,
                 pos.piece_on(prev_sq),
                 prev_sq,
-                -stat_bonus(depth + Depth::ONE_PLY),
+                -stat_bonus(depth + Depth::ONE),
             );
         }
     }
     // Bonus for prior countermove that caused the fail low
-    else if depth >= 3 * Depth::ONE_PLY && pos.captured_piece() == NO_PIECE && ss[4].current_move.is_ok()
+    else if depth >= Depth::THREE && pos.captured_piece() == NO_PIECE && ss[4].current_move.is_ok()
     {
         update_continuation_histories(ss, pos.piece_on(prev_sq), prev_sq, stat_bonus(depth));
     }
@@ -1555,7 +1554,6 @@ fn qsearch<NT: NodeType, InCheck: Bool>(
     debug_assert!(alpha >= -Value::INFINITE && alpha < beta && beta <= Value::INFINITE);
     debug_assert!(pv_node || (alpha == beta - 1));
     debug_assert!(depth <= Depth::ZERO);
-    debug_assert!(depth / Depth::ONE_PLY * Depth::ONE_PLY == depth);
 
     let old_alpha = alpha;
     if pv_node {
@@ -1738,9 +1736,9 @@ fn qsearch<NT: NodeType, InCheck: Bool>(
         // Make and search the move
         pos.do_move(m, gives_check);
         let value = if gives_check {
-            -qsearch::<NT, True>(pos, &mut ss[1..], -beta, -alpha, depth - Depth::ONE_PLY)
+            -qsearch::<NT, True>(pos, &mut ss[1..], -beta, -alpha, depth - Depth::ONE)
         } else {
-            -qsearch::<NT, False>(pos, &mut ss[1..], -beta, -alpha, depth - Depth::ONE_PLY)
+            -qsearch::<NT, False>(pos, &mut ss[1..], -beta, -alpha, depth - Depth::ONE)
         };
         pos.undo_move(m);
 
@@ -1940,11 +1938,11 @@ fn print_pv(pos: &mut Position, depth: Depth, alpha: Value, beta: Value) {
     for i in 0..multi_pv {
         let updated = i <= pv_idx && pos.root_moves[i].score != -Value::INFINITE;
 
-        if depth == Depth::ONE_PLY && !updated {
+        if depth == Depth::ONE && !updated {
             continue;
         }
 
-        let d = if updated { depth } else { depth - Depth::ONE_PLY };
+        let d = if updated { depth } else { depth - Depth::ONE };
         let mut v = if updated {
             pos.root_moves[i].score
         } else {

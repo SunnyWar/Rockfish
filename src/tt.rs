@@ -53,8 +53,6 @@ impl TTEntry {
         eval: Value,
         generation: u8,
     ) {
-        debug_assert!(depth / Depth::ONE_PLY * Depth::ONE_PLY == depth);
-
         let key16 = (key.0 >> 48) as u16;
 
         // Preserve any existing move for the same position

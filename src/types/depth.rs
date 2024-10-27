@@ -3,8 +3,37 @@ use super::MAX_PLY;
 #[derive(Debug, Clone, Copy, PartialOrd, Ord, PartialEq, Eq)]
 pub struct Depth(pub i32);
 
+#[allow(dead_code)]
+pub const DEPTH_ZERO: Depth = Depth(0);
+//pub const DEPTH_QS_CHECKS: Depth = Depth(0);
+#[allow(dead_code)]
+pub const DEPTH_QS_NO_CHECKS: Depth = Depth(-1);
+#[allow(dead_code)]
+pub const DEPTH_QS_RECAPTURES: Depth = Depth(-5);
+#[allow(dead_code)]
+pub const DEPTH_NONE: Depth = Depth(-6);
+//pub const DEPTH_MAX: Depth = Depth(MAX_PLY);
+
 impl Depth {
-    pub const ONE_PLY: Depth = Depth(1);
+    pub const ZERO: Depth = Depth(0);
+    pub const ONE: Depth = Depth(1);
+    pub const TWO: Depth = Depth(2);
+    pub const THREE: Depth = Depth(3);
+    pub const FOUR: Depth = Depth(4);
+    pub const FIVE: Depth = Depth(5);
+    pub const SIX: Depth = Depth(6);
+    pub const SEVEN: Depth = Depth(7);
+    pub const EIGHT: Depth = Depth(8);
+
+    pub const TWELVE: Depth = Depth(12);
+    pub const SIXTEEN: Depth = Depth(16);
+
+    pub const QS_CHECKS: Depth = Depth(0);
+    pub const QS_NO_CHECKS: Depth = Depth(-1);
+    pub const QS_RECAPTURES: Depth = Depth(-5);
+
+    pub const NONE: Depth = Depth(-6);
+    pub const MAX: Depth = Depth(MAX_PLY);
 
     pub fn value(&self) -> i32 {
         self.0
@@ -56,30 +85,6 @@ impl std::ops::Div<Depth> for Depth {
     fn div(self, rhs: Depth) -> i32 {
         self.0 / rhs.0
     }
-}
-
-#[allow(dead_code)]
-pub const DEPTH_ZERO: Depth = Depth(0);
-//pub const DEPTH_QS_CHECKS: Depth = Depth(0);
-
-#[allow(dead_code)]
-pub const DEPTH_QS_NO_CHECKS: Depth = Depth(-1);
-
-#[allow(dead_code)]
-pub const DEPTH_QS_RECAPTURES: Depth = Depth(-5);
-
-#[allow(dead_code)]
-pub const DEPTH_NONE: Depth = Depth(-6);
-//pub const DEPTH_MAX: Depth = Depth(MAX_PLY);
-
-impl Depth {
-    pub const ZERO: Depth = Depth(0);
-    pub const QS_CHECKS: Depth = Depth(0);
-    pub const QS_NO_CHECKS: Depth = Depth(-1);
-    pub const QS_RECAPTURES: Depth = Depth(-5);
-
-    pub const NONE: Depth = Depth(-6);
-    pub const MAX: Depth = Depth(MAX_PLY);
 }
 
 #[cfg(test)]
