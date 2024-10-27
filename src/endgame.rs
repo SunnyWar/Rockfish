@@ -187,18 +187,20 @@ fn verify_material(pos: &Position, c: Color, npm: Value, pawns_cnt: i32) -> bool
 
 // Map the square as if strong_side is white and strong_side's only pawn
 // is on the left half of the baord.
-fn normalize(pos: &Position, strong_side: Color, mut sq: Square) -> Square {
+fn normalize(pos: &Position, strong_side: Color, sq: Square) -> Square {
     debug_assert!(pos.count(strong_side, PAWN) == 1);
 
-    if pos.square(strong_side, PAWN).file() >= FILE_E {
-        sq = Square(sq.0 ^ 7); // Mirror SQ_H1 -> SQ_A1
-    }
+    let sq = if pos.square(strong_side, PAWN).file() >= FILE_E {
+        Square(sq.0 ^ 7) // Mirror SQ_H1 -> SQ_A1
+    } else {
+        sq
+    };
 
     if strong_side == BLACK {
-        sq = !sq;
+        !sq
+    } else {
+        sq
     }
-
-    sq
 }
 
 // Mate with KX vs K. This function is used to evaluate positions with king
@@ -282,22 +284,20 @@ fn evaluate_kpk(pos: &Position, strong_side: Color) -> Value {
     debug_assert!(verify_material(pos, weak_side, Value::ZERO, 0));
 
     // Assume strong_side is white and the pawn is on files A-D
-    let wksq = normalize(pos, strong_side, pos.square(strong_side, KING));
-    let bksq = normalize(pos, strong_side, pos.square(weak_side, KING));
-    let psq = normalize(pos, strong_side, pos.square(strong_side, PAWN));
-
     let us = if strong_side == pos.side_to_move() {
         WHITE
     } else {
         BLACK
     };
 
+    let wksq = normalize(pos, strong_side, pos.square(strong_side, KING));
+    let bksq = normalize(pos, strong_side, pos.square(weak_side, KING));
+    let psq = normalize(pos, strong_side, pos.square(strong_side, PAWN));
     if !bitbases::probe(wksq, psq, bksq, us) {
         return Value::DRAW;
     }
 
     let result = Value::KNOWN_WIN + PawnValueEg + Value(psq.rank() as i32);
-
     if strong_side == pos.side_to_move() {
         result
     } else {
@@ -320,28 +320,28 @@ fn evaluate_krkp(pos: &Position, strong_side: Color) -> Value {
     let rsq = pos.square(strong_side, ROOK).relative(strong_side);
     let psq = pos.square(weak_side, PAWN).relative(strong_side);
 
+    let wpsqdis = Square::distance(wksq, psq);
+    let bpsqdis = Square::distance(bksq, psq);
+    let brsqdis = Square::distance(bksq, rsq);
+
     let queening_sq = Square::make(psq.file(), RANK_1);
     let result;
 
-    // If the strong side's king is in front of the pawn, it is a win.
-    if wksq.0 < psq.0 && wksq.file() == psq.file() {
-        result = RookValueEg - Square::distance(wksq, psq) as i32;
-    }
-    // If the weaker side's king is too far from the pawn and the rook,
+    // If the strong side's king is in front of the pawn
+    // or  If the weaker side's king is too far from the pawn and the rook,
     // it is a win.
-    else if Square::distance(bksq, psq) >= 3 + u32::from(pos.side_to_move() == weak_side)
-        && Square::distance(bksq, rsq) >= 3
-    {
-        result = RookValueEg - Square::distance(wksq, psq) as i32;
+    if wksq.0 < psq.0 && wksq.file() == psq.file() || (bpsqdis >= 3 + u32::from(pos.side_to_move() == weak_side)
+    && brsqdis >= 3){
+        result = RookValueEg - wpsqdis as i32;
     }
     // If the pawn is far advanced and supported by the defending king,
     // the position is drawish.
     else if bksq.rank() <= RANK_3
-        && Square::distance(bksq, psq) == 1
+        && bpsqdis == 1
         && wksq.rank() >= RANK_4
-        && Square::distance(wksq, psq) > 2 + u32::from(pos.side_to_move() == strong_side)
+        && wpsqdis > 2 + u32::from(pos.side_to_move() == strong_side)
     {
-        result = Value(80) - 8 * Square::distance(wksq, psq) as i32;
+        result = Value(80) - 8 * wpsqdis as i32;
     } else {
         result = Value(200)
             - 8 * (Square::distance(wksq, psq + SOUTH) as i32
