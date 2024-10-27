@@ -290,10 +290,10 @@ impl TbTable for DtmPiece {
     fn set_map(&mut self, map: &'static [Self::MapType]) {
         self.map = map;
     }
-    fn map(&self, _t: usize, bside: usize, mut res: i32, won: bool) -> i32 {
+    fn map(&self, _t: usize, bside: usize, res: i32, won: bool) -> i32 {
         if !self.loss_only {
             let idx = self.map_idx[bside][usize::from(won)];
-            res = i32::from(u16::from_le(self.map[idx as usize + res as usize]));
+            return i32::from(u16::from_le(self.map[idx as usize + res as usize]));
         }
         res
     }
@@ -348,15 +348,19 @@ impl TbTable for DtzPiece {
     fn set_map(&mut self, map: &'static [Self::MapType]) {
         self.map = map;
     }
-    fn map(&self, _t: usize, _b: usize, mut res: i32, wdl: i32) -> i32 {
-        if self.flags & 2 != 0 {
+    fn map(&self, _t: usize, _b: usize, res: i32, wdl: i32) -> i32 {
+        let mapped_res = if self.flags & 2 != 0 {
             let idx = self.map_idx[WDL_TO_MAP[(wdl + 2) as usize] as usize];
-            res = i32::from(self.map[idx as usize + res as usize]);
-        }
+            i32::from(self.map[idx as usize + res as usize])
+        } else {
+            res
+        };
+    
         if self.flags & PA_FLAGS[(wdl + 2) as usize] == 0 || wdl & 1 != 0 {
-            res *= 2;
+            mapped_res * 2
+        } else {
+            mapped_res
         }
-        res
     }
     fn set_switched(&mut self) {}
     fn switched(&self) -> bool {
@@ -531,13 +535,14 @@ impl TbTable for DtmPawn {
     fn set_map(&mut self, map: &'static [Self::MapType]) {
         self.map = map;
     }
-    fn map(&self, t: usize, bside: usize, mut res: i32, won: bool) -> i32 {
-        if !self.loss_only {
-            let idx = self.map_idx[t][bside][usize::from(won)];
-            res = i32::from(u16::from_le(self.map[idx as usize + res as usize]));
+    fn map(&self, t: usize, bside: usize, res: i32, won: bool) -> i32 {
+        if self.loss_only {
+            return res;
         }
-        res
-    }
+    
+        let idx = self.map_idx[t][bside][usize::from(won)];
+        i32::from(u16::from_le(self.map[idx as usize + res as usize]))
+    }   
     fn set_switched(&mut self) {
         self.switched = true;
     }
@@ -591,16 +596,20 @@ impl TbTable for DtzPawn {
     fn set_map(&mut self, map: &'static [Self::MapType]) {
         self.map = map;
     }
-    fn map(&self, t: usize, _b: usize, mut res: i32, wdl: i32) -> i32 {
-        if self.flags[t] & 2 != 0 {
+    fn map(&self, t: usize, _b: usize, res: i32, wdl: i32) -> i32 {
+        let mapped_res = if self.flags[t] & 2 != 0 {
             let idx = self.map_idx[t][WDL_TO_MAP[(wdl + 2) as usize] as usize];
-            res = i32::from(self.map[idx as usize + res as usize]);
-        }
+            i32::from(self.map[idx as usize + res as usize])
+        } else {
+            res
+        };
+    
         if self.flags[t] & PA_FLAGS[(wdl + 2) as usize] == 0 || wdl & 1 != 0 {
-            res *= 2;
+            mapped_res * 2
+        } else {
+            mapped_res
         }
-        res
-    }
+    }   
     fn set_switched(&mut self) {}
     fn switched(&self) -> bool {
         false
@@ -1663,14 +1672,12 @@ fn add_underprom_caps(pos: &Position, list: &mut [ExtMove], end: usize) -> usize
     extra
 }
 
-fn probe_ab(pos: &mut Position, mut alpha: i32, beta: i32, success: &mut i32) -> i32 {
+fn probe_ab(pos: &mut Position, alpha: i32, beta: i32, success: &mut i32) -> i32 {
     assert!(pos.ep_square() == Square::NONE);
-
     let mut list: [ExtMove; 64] = [ExtMove {
         m: Move::NONE,
         value: 0,
     }; 64];
-
     let end = if pos.checkers() == 0 {
         let end = generate::<Captures>(pos, &mut list, 0);
         add_underprom_caps(pos, &mut list, end)
@@ -1678,29 +1685,31 @@ fn probe_ab(pos: &mut Position, mut alpha: i32, beta: i32, success: &mut i32) ->
         generate::<Evasions>(pos, &mut list, 0)
     };
 
+    let mut best_value = alpha;
     for &m in &list[0..end] {
         if !pos.capture(m.m) || !pos.legal(m.m) {
             continue;
         }
         let gives_check = pos.gives_check(m.m);
+
+        // TODO - this look very inefficient, do_move...undo_move
         pos.do_move(m.m, gives_check);
-        let v = -probe_ab(pos, -beta, -alpha, success);
+        let v = -probe_ab(pos, -beta, -best_value, success);
         pos.undo_move(m.m);
+
         if *success == 0 {
             return 0;
         }
-        if v > alpha {
+        if v > best_value {
             if v >= beta {
                 return v;
             }
-            alpha = v;
+            best_value = v;
         }
     }
-
     let v = probe_table::<Wdl>(pos, (), success);
-
-    if alpha >= v {
-        alpha
+    if best_value >= v {
+        best_value
     } else {
         v
     }
@@ -1743,9 +1752,12 @@ pub fn probe_wdl(pos: &mut Position, success: &mut i32) -> i32 {
             continue;
         }
         let gives_check = pos.gives_check(m.m);
+
+        // TODO - this look very inefficient, do_move...undo_move
         pos.do_move(m.m, gives_check);
         let v = -probe_ab(pos, -2, -best_cap, success);
         pos.undo_move(m.m);
+
         if *success == 0 {
             return 0;
         }
@@ -1843,10 +1855,10 @@ fn probe_dtm_loss(pos: &mut Position, success: &mut i32) -> Value {
         }
 
         let gives_check = pos.gives_check(m.m);
+
+        // TODO - this look very inefficient, do_move...undo_move
         pos.do_move(m.m, gives_check);
-
         let v = -probe_dtm_win(pos, success) + 1;
-
         pos.undo_move(m.m);
 
         best = std::cmp::max(best, v);
@@ -1886,6 +1898,8 @@ fn probe_dtm_win(pos: &mut Position, success: &mut i32) -> Value {
         }
 
         let gives_check = pos.gives_check(m.m);
+
+        // TODO - this look very inefficient, do_move...undo_move
         pos.do_move(m.m, gives_check);
 
         let wdl = match pos.ep_square() {
@@ -1985,9 +1999,12 @@ pub fn probe_dtz(pos: &mut Position, success: &mut i32) -> i32 {
                 continue;
             }
             let gives_check = pos.gives_check(m.m);
+
+            // TODO - this look very inefficient, do_move...undo_move
             pos.do_move(m.m, gives_check);
             let v = -probe_wdl(pos, success);
             pos.undo_move(m.m);
+
             if *success == 0 {
                 return 0;
             }
@@ -2033,9 +2050,12 @@ pub fn probe_dtz(pos: &mut Position, success: &mut i32) -> i32 {
             continue;
         }
         let gives_check = pos.gives_check(m.m);
+
+        // TODO - this look very inefficient, do_move...undo_move
         pos.do_move(m.m, gives_check);
         let v = -probe_dtz(pos, success);
         pos.undo_move(m.m);
+
         if *success == 0 {
             return 0;
         }
@@ -2076,6 +2096,8 @@ fn root_probe_dtz(pos: &mut Position, root_moves: &mut RootMoves) -> bool {
     for ref mut rm in root_moves.iter_mut() {
         let m = rm.pv[0];
         let gives_check = pos.gives_check(m);
+
+        // TODO - this look very inefficient, do_move...undo_move
         pos.do_move(m, gives_check);
 
         // Calculate dtz for the current move, counting from the root position
@@ -2157,10 +2179,10 @@ fn root_probe_wdl(pos: &mut Position, root_moves: &mut RootMoves) -> bool {
     for ref mut rm in root_moves.iter_mut() {
         let m = rm.pv[0];
         let gives_check = pos.gives_check(m);
+
+        // TODO - this look very inefficient, do_move...undo_move
         pos.do_move(m, gives_check);
-
         let mut v = -probe_wdl(pos, &mut success);
-
         pos.undo_move(m);
 
         if success == 0 {
@@ -2203,9 +2225,12 @@ fn root_probe_dtm(pos: &mut Position, root_moves: &mut RootMoves) -> bool {
             tmp_score.push(Value::ZERO);
         } else {
             let gives_check = pos.gives_check(rm.pv[0]);
+
+            // TODO - this look very inefficient, do_move...undo_move
             pos.do_move(rm.pv[0], gives_check);
             let v = -probe_dtm(pos, -wdl, &mut success);
             pos.undo_move(rm.pv[0]);
+
             if success == 0 {
                 return false;
             }
@@ -2251,6 +2276,8 @@ pub fn expand_mate(pos: &mut Position, idx: usize) {
             let mut best_move = Move::NONE;
             for m in MoveList::new::<Legal>(pos) {
                 let gives_check = pos.gives_check(m);
+
+                // TODO - this look very inefficient, do_move...undo_move
                 pos.do_move(m, gives_check);
                 if wdl < 0 {
                     // We must check that the move is winning
@@ -2262,6 +2289,7 @@ pub fn expand_mate(pos: &mut Position, idx: usize) {
                     Value::ZERO
                 };
                 pos.undo_move(m);
+                 
                 if success == 0 {
                     break;
                 }

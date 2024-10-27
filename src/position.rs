@@ -134,25 +134,6 @@ impl StateInfo {
             check_squares: [Bitboard(0); 8],
         }
     }
-
-    pub fn copy(&self) -> StateInfo {
-        StateInfo {
-            pawn_key: self.pawn_key,
-            material_key: self.material_key,
-            non_pawn_material: self.non_pawn_material,
-            castling_rights: self.castling_rights,
-            rule50: self.rule50,
-            plies_from_null: self.plies_from_null,
-            psq: self.psq,
-            ep_square: self.ep_square,
-            key: Key(0),
-            checkers_bb: Bitboard(0),
-            captured_piece: NO_PIECE,
-            blockers_for_king: [Bitboard(0); 2],
-            pinners_for_king: [Bitboard(0); 2],
-            check_squares: [Bitboard(0); 8],
-        }
-    }
 }
 
 pub struct Position {
@@ -1051,7 +1032,7 @@ impl Position {
         // Copy some fields of the old state to our new StateInfo object
         // except the ones which are going to be recalculated from scratch
         // anyway.
-        let st_copy = self.st().copy();
+        let st_copy = self.st().clone();
         self.states.push(st_copy);
 
         // Increment ply counters. The rule50 field will be reset to zero

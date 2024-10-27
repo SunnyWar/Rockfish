@@ -189,11 +189,12 @@ fn pick_best(list: &mut [ExtMove]) -> Move {
 // with a good history.
 fn score_captures(pos: &Position, list: &mut [ExtMove]) {
     for m in list.iter_mut() {
-        m.value = piece_value(MG, pos.piece_on(m.m.to())).0
+        let x = pos.piece_on(m.m.to());
+        m.value = piece_value(MG, x).0
             + pos.capture_history.get(
                 pos.moved_piece(m.m),
                 m.m.to(),
-                pos.piece_on(m.m.to()).piece_type(),
+                x.piece_type(),
             );
     }
 }
@@ -202,10 +203,11 @@ fn score_captures(pos: &Position, list: &mut [ExtMove]) {
 fn score_quiets(pos: &Position, mp: &mut MovePicker) {
     let list = &mut mp.list[mp.cur..mp.end_moves];
     for m in list.iter_mut() {
+        let mp_mm = pos.moved_piece(m.m);
         m.value = pos.main_history.get(pos.side_to_move(), m.m)
-            + mp.cmh[0].get(pos.moved_piece(m.m), m.m.to())
-            + mp.cmh[1].get(pos.moved_piece(m.m), m.m.to())
-            + mp.cmh[2].get(pos.moved_piece(m.m), m.m.to());
+            + mp.cmh[0].get(mp_mm, m.m.to())
+            + mp.cmh[1].get(mp_mm, m.m.to())
+            + mp.cmh[2].get(mp_mm, m.m.to());
     }
 }
 
