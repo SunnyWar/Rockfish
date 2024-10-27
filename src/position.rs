@@ -1288,7 +1288,6 @@ impl Position {
 
     // do(undo)_null_move() is used to do(undo) a "null move": it flips the
     // side to move without executing any move on the board.
-
     pub fn do_null_move(&mut self) {
         debug_assert!(self.checkers() == 0);
 
@@ -1322,29 +1321,9 @@ impl Position {
         self.side_to_move = !self.side_to_move;
     }
 
-    // key_after() computes the new hash key after the given move. Needed
-    // for specualtive prefetch. It does not recognize special moves like
-    // castling, en-passant and promotions.
-
-    #[allow(dead_code)]
-    fn key_after(&self, m: Move) -> Key {
-        let from = m.from();
-        let to = m.to();
-        let pc = self.piece_on(from);
-        let captured = self.piece_on(to);
-        let mut k = self.st().key ^ zobrist::side();
-
-        if captured != NO_PIECE {
-            k ^= zobrist::psq(captured, to);
-        }
-
-        k ^ zobrist::psq(pc, to) ^ zobrist::psq(pc, from)
-    }
-
     // see_ge() tests if the SEE value of move is greater than or equal to
     // the given threshold. We use an algorithm similar to alpha-beta pruning
     // with a null window.
-
     pub fn see_ge(&self, m: Move, value: Value) -> bool {
         debug_assert!(m.is_ok());
 

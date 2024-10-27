@@ -165,7 +165,7 @@ const SKIP_SIZE: [i32; 20] = [1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4,
 const SKIP_PHASE: [i32; 20] = [0, 1, 0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 6, 7];
 
 fn futility_margin(d: Depth) -> Value {
-    Value(150 * d / ONE_PLY)
+    Value(150 * d.value())
 }
 
 const RAZOR_MARGIN1: i32 = 590;
@@ -177,19 +177,19 @@ static mut REDUCTIONS: [[[[i32; 64]; 64]; 2]; 2] = [[[[0; 64]; 64]; 2]; 2];
 
 fn reduction<PvNode: NodeType>(i: bool, d: Depth, mn: i32) -> Depth {
     unsafe {
-        REDUCTIONS[PvNode::NT][usize::from(i)][std::cmp::min(d / ONE_PLY, 63) as usize]
+        REDUCTIONS[PvNode::NT][usize::from(i)][std::cmp::min(d.value(), 63) as usize]
             [std::cmp::min(mn, 63) as usize]
             * ONE_PLY
     }
 }
 
 fn futility_move_counts(i: bool, d: Depth) -> i32 {
-    unsafe { FUTILITY_MOVE_COUNTS[usize::from(i)][(d / ONE_PLY) as usize] }
+    unsafe { FUTILITY_MOVE_COUNTS[usize::from(i)][(d.value()) as usize] }
 }
 
 // History and stats update bonus, based on depth
 fn stat_bonus(depth: Depth) -> i32 {
-    let d = depth / ONE_PLY;
+    let d = depth.value();
     if d > 17 {
         0
     } else {
@@ -401,7 +401,7 @@ pub fn thread_search(pos: &mut Position, _th: &threads::ThreadCtrl) {
     while !threads::stop() {
         root_depth += ONE_PLY;
         if root_depth >= Depth::MAX
-            || (limits().depth != 0 && pos.is_main && root_depth / ONE_PLY > limits().depth as i32)
+            || (limits().depth != 0 && pos.is_main && root_depth.value() > limits().depth as i32)
         {
             break;
         }
@@ -409,7 +409,7 @@ pub fn thread_search(pos: &mut Position, _th: &threads::ThreadCtrl) {
         // Distribute search depths across the threads
         if !pos.is_main {
             let i = ((pos.thread_idx - 1) & 20) as usize;
-            if ((root_depth / ONE_PLY + pos.game_ply() + SKIP_PHASE[i]) / SKIP_SIZE[i]) % 2 != 0 {
+            if ((root_depth.value() + pos.game_ply() + SKIP_PHASE[i]) / SKIP_SIZE[i]) % 2 != 0 {
                 continue;
             }
         }
@@ -953,13 +953,13 @@ fn search<NT: NodeType>(
         // nodes)
         if !pv_node
             && eval >= beta
-            && ss[5].static_eval >= beta - 36 * depth / ONE_PLY + 225
+            && ss[5].static_eval >= beta - 36 * depth.value() + 225
             && (ss[5].ply >= pos.nmp_ply || ss[5].ply & 1 != pos.nmp_odd)
         {
             debug_assert!(eval - beta >= Value::ZERO);
 
             // Null move dynamic reduction based on depth and value
-            let r = ((823 + 67 * depth / ONE_PLY) / 256
+            let r = ((823 + 67 * depth.value()) / 256
                 + std::cmp::min((eval - beta) / PawnValueMg, 3))
                 * ONE_PLY;
 
@@ -1020,7 +1020,7 @@ fn search<NT: NodeType>(
             debug_assert!(ss[4].current_move.is_ok());
 
             let mut mp = MovePickerPC::new(pos, tt_move, rbeta - ss[5].static_eval);
-            let mut prob_cut_count = depth / ONE_PLY - 3;
+            let mut prob_cut_count = depth.value() - 3;
             loop {
                 let m = mp.next_move(pos);
                 if m == Move::NONE {
@@ -1140,7 +1140,7 @@ fn search<NT: NodeType>(
         if root_node && pos.is_main && timeman::elapsed() > 3000 {
             println!(
                 "info depth {} currmove {} currmovenumber {}",
-                depth / ONE_PLY,
+                depth.value(),
                 uci::move_str(m, pos.is_chess960()),
                 move_count + pos.pv_idx as i32
             );
@@ -1181,7 +1181,7 @@ fn search<NT: NodeType>(
             gives_check && !move_count_pruning && pos.see_ge(m, Value::ZERO),
         ) {
             (true, _) => {
-                let rbeta = std::cmp::max(tt_value - 2 * depth / ONE_PLY, -Value::MATE);
+                let rbeta = std::cmp::max(tt_value - 2 * depth.value(), -Value::MATE);
                 let d = (depth / (2 * ONE_PLY)) * ONE_PLY;
                 ss[5].excluded_move = m;
                 let value = search::<NonPv>(pos, ss, rbeta - 1, rbeta, d, cut_node, true);
@@ -1218,7 +1218,7 @@ fn search<NT: NodeType>(
                 let lmr_depth = std::cmp::max(
                     new_depth - reduction::<NT>(improving, depth, move_count),
                     Depth::ZERO,
-                ) / ONE_PLY;
+                ).value();
 
                 // Countermoves based pruning
                 if lmr_depth < 3
@@ -1240,7 +1240,7 @@ fn search<NT: NodeType>(
                 }
             } else if depth < 7 * ONE_PLY
                 && extension == Depth::ZERO
-                && !pos.see_ge(m, -PawnValueEg * (depth / ONE_PLY))
+                && !pos.see_ge(m, -PawnValueEg * (depth.value()))
             {
                 continue;
             }
@@ -1332,7 +1332,7 @@ fn search<NT: NodeType>(
                 // history
                 r = std::cmp::max(
                     Depth::ZERO,
-                    (r / ONE_PLY - ss[5].stat_score / 20000) * ONE_PLY,
+                    (r.value() - ss[5].stat_score / 20000) * ONE_PLY,
                 );
             }
 
@@ -1968,7 +1968,7 @@ fn print_pv(pos: &mut Position, depth: Depth, alpha: Value, beta: Value) {
 
         print!(
             "info depth {} seldepth {} multipv {} score {} ",
-            d / ONE_PLY,
+            d.value(),
             pos.root_moves[i].sel_depth + 1,
             i + 1,
             uci::value(v)

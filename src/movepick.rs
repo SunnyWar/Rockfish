@@ -332,7 +332,7 @@ impl MovePicker {
                     score_quiets(pos, self);
                     partial_insertion_sort(
                         &mut self.list[self.cur..self.end_moves],
-                        -4000 * self.depth / ONE_PLY,
+                        -4000 * self.depth.value(),
                     );
                     self.stage += 1;
                 }
