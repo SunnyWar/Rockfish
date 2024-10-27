@@ -8,7 +8,7 @@ use crate::position::zobrist::material;
 use crate::position::Position;
 use crate::search::RootMoves;
 use crate::types::{
-    depth::Depth, depth::ONE_PLY, key::Key, Color, Move, PawnValueEg, Piece, PieceType, Square,
+    depth::Depth, key::Key, Color, Move, PawnValueEg, Piece, PieceType, Square,
     Value, ANY_CASTLING, BISHOP, BLACK, B_PAWN, ENPASSANT, FILE_A, FILE_B, FILE_C, FILE_D, KING,
     KNIGHT, MAX_MATE_PLY, NO_PIECE, PAWN, PROMOTION, QUEEN, ROOK, WHITE, W_PAWN,
 };
@@ -36,7 +36,7 @@ static mut PROBE_DEPTH: Depth = Depth(0);
 pub fn read_options() {
     unsafe {
         USE_RULE_50 = ucioption::get_bool("Syzygy50MoveRule");
-        PROBE_DEPTH = ucioption::get_i32("SyzygyProbeDepth") * ONE_PLY;
+        PROBE_DEPTH = ucioption::get_i32("SyzygyProbeDepth") * Depth::ONE_PLY;
         CARDINALITY = ucioption::get_u32("SyzygyProbeLimit");
         if CARDINALITY > MAX_CARDINALITY {
             CARDINALITY = MAX_CARDINALITY;
@@ -2289,7 +2289,7 @@ pub fn expand_mate(pos: &mut Position, idx: usize) {
                     Value::ZERO
                 };
                 pos.undo_move(m);
-                 
+
                 if success == 0 {
                     break;
                 }

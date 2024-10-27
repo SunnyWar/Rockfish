@@ -4,7 +4,7 @@ use crate::movegen::{generate, Captures, Evasions, ExtMove, QuietChecks, Quiets}
 use crate::position::Position;
 use crate::search;
 use crate::types::{
-    depth::Depth, depth::ONE_PLY, piece_value, Color, Move, Piece, PieceType, Square, Value,
+    depth::Depth, piece_value, Color, Move, Piece, PieceType, Square, Value,
     MAX_MOVES, MG,
 };
 

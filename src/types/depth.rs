@@ -4,6 +4,8 @@ use super::MAX_PLY;
 pub struct Depth(pub i32);
 
 impl Depth {
+    pub const ONE_PLY: Depth = Depth(1);
+
     pub fn value(&self) -> i32 {
         self.0
     }
@@ -56,30 +58,28 @@ impl std::ops::Div<Depth> for Depth {
     }
 }
 
-pub const ONE_PLY: Depth = Depth(1);
-
 #[allow(dead_code)]
 pub const DEPTH_ZERO: Depth = Depth(0);
 //pub const DEPTH_QS_CHECKS: Depth = Depth(0);
 
 #[allow(dead_code)]
-pub const DEPTH_QS_NO_CHECKS: Depth = Depth(-ONE_PLY.0);
+pub const DEPTH_QS_NO_CHECKS: Depth = Depth(-1);
 
 #[allow(dead_code)]
-pub const DEPTH_QS_RECAPTURES: Depth = Depth(-5 * ONE_PLY.0);
+pub const DEPTH_QS_RECAPTURES: Depth = Depth(-5);
 
 #[allow(dead_code)]
-pub const DEPTH_NONE: Depth = Depth(-6 * ONE_PLY.0);
-//pub const DEPTH_MAX: Depth = Depth(MAX_PLY * ONE_PLY.0);
+pub const DEPTH_NONE: Depth = Depth(-6);
+//pub const DEPTH_MAX: Depth = Depth(MAX_PLY);
 
 impl Depth {
     pub const ZERO: Depth = Depth(0);
     pub const QS_CHECKS: Depth = Depth(0);
-    pub const QS_NO_CHECKS: Depth = Depth(-ONE_PLY.0);
-    pub const QS_RECAPTURES: Depth = Depth(-5 * ONE_PLY.0);
+    pub const QS_NO_CHECKS: Depth = Depth(-1);
+    pub const QS_RECAPTURES: Depth = Depth(-5);
 
-    pub const NONE: Depth = Depth(-6 * ONE_PLY.0);
-    pub const MAX: Depth = Depth(MAX_PLY * ONE_PLY.0);
+    pub const NONE: Depth = Depth(-6);
+    pub const MAX: Depth = Depth(MAX_PLY);
 }
 
 #[cfg(test)]
@@ -88,8 +88,6 @@ mod depth_tests {
 
     #[test]
     fn test_depth_constants() {
-        assert_eq!(ONE_PLY, Depth(1));
-        assert_eq!(DEPTH_ZERO, Depth(0));
         assert_eq!(DEPTH_QS_NO_CHECKS, Depth(-1));
         assert_eq!(DEPTH_QS_RECAPTURES, Depth(-5));
         assert_eq!(DEPTH_NONE, Depth(-6));

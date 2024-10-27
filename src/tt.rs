@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use crate::types::{bound::Bound, depth::Depth, depth::ONE_PLY, key::Key, Move, Value};
+use crate::types::{bound::Bound, depth::Depth, key::Key, Move, Value};
 
 // TTEntry struct is the 10 bytes transposition-table entry, defined as below:
 //
@@ -53,7 +53,7 @@ impl TTEntry {
         eval: Value,
         generation: u8,
     ) {
-        debug_assert!(depth / ONE_PLY * ONE_PLY == depth);
+        debug_assert!(depth / Depth::ONE_PLY * Depth::ONE_PLY == depth);
 
         let key16 = (key.0 >> 48) as u16;
 
