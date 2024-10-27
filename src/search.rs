@@ -2015,6 +2015,8 @@ fn extract_ponder_from_tt(pos: &mut Position) -> bool {
     }
 
     let gives_check = pos.gives_check(m1);
+
+    // TODO - seem inefficient to do_move then undo_move
     pos.do_move(m1, gives_check);
 
     if let (tte, true) = tt::probe(pos.key()) {

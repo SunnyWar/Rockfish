@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-#![allow(dead_code)]
-
 use crate::types::{
     direction::Direction, direction::EAST, direction::NORTH, direction::NORTH_EAST,
     direction::NORTH_WEST, direction::SOUTH, direction::SOUTH_EAST, direction::SOUTH_WEST,
@@ -23,8 +21,8 @@ pub const DARK_SQUARES: Bitboard = Bitboard(0xaa55_aa55_aa55_aa55);
 pub const FILEA_BB: Bitboard = Bitboard(0x0101_0101_0101_0101);
 pub const FILEB_BB: Bitboard = Bitboard(0x0202_0202_0202_0202);
 pub const FILEC_BB: Bitboard = Bitboard(0x0404_0404_0404_0404);
-pub const FILED_BB: Bitboard = Bitboard(0x0808_0808_0808_0808);
-pub const FILEE_BB: Bitboard = Bitboard(0x1010_1010_1010_1010);
+//pub const FILED_BB: Bitboard = Bitboard(0x0808_0808_0808_0808);
+//pub const FILEE_BB: Bitboard = Bitboard(0x1010_1010_1010_1010);
 pub const FILEF_BB: Bitboard = Bitboard(0x2020_2020_2020_2020);
 pub const FILEG_BB: Bitboard = Bitboard(0x4040_4040_4040_4040);
 pub const FILEH_BB: Bitboard = Bitboard(0x8080_8080_8080_8080);
@@ -458,7 +456,7 @@ pub struct BitboardIter<'a> {
     remaining: Bitboard,
 }
 
-impl<'a> Iterator for BitboardIter<'a> {
+impl Iterator for BitboardIter<'_> {
     type Item = Square;
 
     fn next(&mut self) -> Option<Square> {

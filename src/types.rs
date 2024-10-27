@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-#![allow(dead_code)]
-
 use direction::Direction;
 pub mod bound;
 pub mod depth;
@@ -87,7 +85,7 @@ pub enum CastlingSide {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CastlingRight(pub u32);
 
-pub const NO_CASTLING: CastlingRight = CastlingRight(0);
+//pub const NO_CASTLING: CastlingRight = CastlingRight(0);
 pub const WHITE_OO: CastlingRight = CastlingRight(1);
 pub const WHITE_OOO: CastlingRight = CastlingRight(2);
 pub const BLACK_OO: CastlingRight = CastlingRight(4);
@@ -180,7 +178,7 @@ impl std::cmp::PartialEq<u32> for CastlingRight {
 
 pub type Phase = i32;
 
-pub const PHASE_ENDGAME: Phase = 0;
+//pub const PHASE_ENDGAME: Phase = 0;
 pub const PHASE_MIDGAME: Phase = 128;
 
 pub const MG: usize = 0;
@@ -189,7 +187,7 @@ pub const EG: usize = 1;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct PieceType(pub u32);
 
-pub const NO_PIECE_TYPE: PieceType = PieceType(0);
+//pub const NO_PIECE_TYPE: PieceType = PieceType(0);
 
 pub const PAWN: PieceType = PieceType(1);
 pub const KNIGHT: PieceType = PieceType(2);
@@ -243,17 +241,17 @@ pub struct Piece(pub u32);
 pub const NO_PIECE: Piece = Piece(0);
 
 pub const W_PAWN: Piece = Piece(1);
-pub const W_KNIGHT: Piece = Piece(2);
+//pub const W_KNIGHT: Piece = Piece(2);
 pub const W_BISHOP: Piece = Piece(3);
-pub const W_ROOK: Piece = Piece(4);
-pub const W_QUEEN: Piece = Piece(5);
+//pub const W_ROOK: Piece = Piece(4);
+//pub const W_QUEEN: Piece = Piece(5);
 pub const W_KING: Piece = Piece(6);
 
 pub const B_PAWN: Piece = Piece(9);
-pub const B_KNIGHT: Piece = Piece(10);
+//pub const B_KNIGHT: Piece = Piece(10);
 pub const B_BISHOP: Piece = Piece(11);
-pub const B_ROOK: Piece = Piece(12);
-pub const B_QUEEN: Piece = Piece(13);
+//pub const B_ROOK: Piece = Piece(12);
+//pub const B_QUEEN: Piece = Piece(13);
 pub const B_KING: Piece = Piece(14);
 
 impl Piece {
@@ -318,7 +316,7 @@ pub const FILE_B: File = 1;
 pub const FILE_C: File = 2;
 pub const FILE_D: File = 3;
 pub const FILE_E: File = 4;
-pub const FILE_F: File = 5;
+//pub const FILE_F: File = 5;
 pub const FILE_G: File = 6;
 pub const FILE_H: File = 7;
 
