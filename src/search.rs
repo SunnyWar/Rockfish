@@ -579,7 +579,7 @@ pub fn thread_search(pos: &mut Position, _th: &threads::ThreadCtrl) {
                 (best_value - pos.previous_score).0,
             ];
             let improving_factor =
-                std::cmp::max(246, std::cmp::min(832, 306 + 119 * f[0] - 6 * f[1]));
+                (306 + 119 * f[0] - 6 * f[1]).clamp(246, 832);
 
             let mut unstable_pv_factor = 1. + pos.best_move_changes;
 

@@ -136,20 +136,13 @@ fn generate_castling<Cr: CastlingRightTrait, Checks: Bool, Chess960: Bool>(
 
     debug_assert!(pos.checkers() == 0);
 
-    let direction = if Chess960::BOOL {
-        if kto > kfrom {
-            WEST
-        } else {
-            EAST
-        }
-    } else {
-        if king_side {
-            WEST
-        } else {
-            EAST
-        }
+    let direction = match (Chess960::BOOL, kto > kfrom, king_side) {
+        (true, true, _) => WEST,
+        (true, false, _) => EAST,
+        (false, _, true) => WEST,
+        (false, _, false) => EAST,
     };
-
+    
     let mut s = kto;
     while s != kfrom {
         if pos.attackers_to(s) & enemies != 0 {

@@ -899,9 +899,7 @@ pub fn init_tb(name: &str) {
 
     let mut map = unsafe { Box::from_raw(TB_MAP) };
 
-    let tb_entry;
-
-    if pcs[W_PAWN.0 as usize] + pcs[B_PAWN.0 as usize] == 0 {
+    let tb_entry = if pcs[W_PAWN.0 as usize] + pcs[B_PAWN.0 as usize] == 0 {
         let entry = PieceEntry {
             key,
             lock: Mutex::new(()),
@@ -935,7 +933,7 @@ pub fn init_tb(name: &str) {
         unsafe {
             PIECE_ENTRIES.push(entry);
         }
-        tb_entry = TbHashEntry::Piece(unsafe { PIECE_ENTRIES.len() - 1 });
+        TbHashEntry::Piece(unsafe { PIECE_ENTRIES.len() - 1 })
     } else {
         let mut p0 = pcs[W_PAWN.0 as usize];
         let mut p1 = pcs[B_PAWN.0 as usize];
@@ -993,8 +991,8 @@ pub fn init_tb(name: &str) {
         unsafe {
             PAWN_ENTRIES.push(entry);
         }
-        tb_entry = TbHashEntry::Pawn(unsafe { PAWN_ENTRIES.len() - 1 });
-    }
+        TbHashEntry::Pawn(unsafe { PAWN_ENTRIES.len() - 1 })
+    };
 
     map.insert(key, tb_entry.clone());
     if key != key2 {
@@ -1383,9 +1381,9 @@ fn setup_pairs(
         let b2 = u64::from(u16::from_le(offset[i + 1]));
         base[i] = (base[i + 1] + b1 - b2) / 2;
     }
-    for i in 0..h {
+    (0..h).for_each(|i| {
         base[i] <<= 64 - (min_len as usize + i);
-    }
+    });
 
     Box::new(PairsData {
         index_table: &[],
@@ -1452,13 +1450,13 @@ fn init_table<T: TbTable>(e: &T::Entry, name: &str) -> bool {
     data = &data[5..];
     let mut tb_size = [[0; 2]; 6];
     let num = T::num_tables();
-    for t in 0..num {
+    (0..num).for_each(|t| {
         tb_size[t][0] = setup_pieces::<T::Enc>(tb.ei_mut(t, 0), e, data, 0, t);
         if split {
             tb_size[t][1] = setup_pieces::<T::Enc>(tb.ei_mut(t, 1), e, data, 4, t);
         }
         data = &data[e.num() as usize + 1 + usize::from(e.pawns(1) > 0)..];
-    }
+    });
     data = align_slice(data, 2);
 
     let mut size = [[0; 6]; 6];
@@ -1515,28 +1513,28 @@ fn init_table<T: TbTable>(e: &T::Entry, name: &str) -> bool {
         data = align_slice(data, 2);
     }
 
-    for t in 0..num {
+    (0..num).for_each(|t| {
         tb.ei_mut(t, 0).precomp.as_mut().unwrap().index_table = slice(&mut data, size[t][0]);
         if split {
             tb.ei_mut(t, 1).precomp.as_mut().unwrap().index_table = slice(&mut data, size[t][3]);
         }
-    }
+    });
 
-    for t in 0..num {
+    (0..num).for_each(|t| {
         tb.ei_mut(t, 0).precomp.as_mut().unwrap().size_table = slice(&mut data, size[t][1]);
         if split {
             tb.ei_mut(t, 1).precomp.as_mut().unwrap().size_table = slice(&mut data, size[t][4]);
         }
-    }
+    });
 
-    for t in 0..num {
+    (0..num).for_each(|t| {
         data = align_slice(data, 64);
         tb.ei_mut(t, 0).precomp.as_mut().unwrap().data = slice(&mut data, size[t][2]);
         if split {
             data = align_slice(data, 64);
             tb.ei_mut(t, 1).precomp.as_mut().unwrap().data = slice(&mut data, size[t][5]);
         }
-    }
+    });
 
     if T::Type::TYPE == Dtm::TYPE
         && calc_key_from_pieces(&tb.ei(0, 0).pieces[0..e.num() as usize]) != e.key()
@@ -1613,9 +1611,9 @@ fn probe_helper<T: TbTable>(
     let mut p: [Square; TB_PIECES] = [Square(0); TB_PIECES];
     fill_squares(pos, tb.ei(t, bside).pieces, e.num() as usize, flip, &mut p);
     if T::Enc::ENC != PieceEnc::ENC && flip {
-        for i in 0..e.num() as usize {
+        (0..e.num() as usize).for_each(|i| {
             p[i] = !p[i];
-        }
+        });
     }
     let idx = encode::<T::Enc>(&mut p, tb.ei(t, bside), e);
 
@@ -2546,7 +2544,7 @@ fn pfactor<T: Encoding>(num: usize, s: usize) -> usize {
 }
 
 fn init_indices() {
-    for i in 0..7 {
+    (0..7).for_each(|i| {
         for j in 0..64 {
             let mut f = 1;
             let mut l = 1;
@@ -2558,7 +2556,7 @@ fn init_indices() {
                 BINOMIAL[i][j] = f / l;
             }
         }
-    }
+    });
 
     for i in 0..6 {
         let mut s = 0;
@@ -2632,26 +2630,26 @@ fn encode<T: Encoding>(p: &mut [Square; TB_PIECES], ei: &EncInfo, entry: &T::Ent
     }
 
     if p[0].0 & 0x04 != 0 {
-        for i in 0..n {
+        (0..n).for_each(|i| {
             p[i] = Square(p[i].0 ^ 0x07);
-        }
+        });
     }
 
     let mut i;
     let mut idx;
     if T::ENC == PieceEnc::ENC {
         if p[0].0 & 0x20 != 0 {
-            for i in 0..n {
+            (0..n).for_each(|i| {
                 p[i] = Square(p[i].0 ^ 0x38);
-            }
+            });
         }
 
         for i in 0..n {
             if is_off_diag(p[i]) {
                 if off_diag(p[i]) > 0 && i < (if entry.kk_enc() { 2 } else { 3 }) {
-                    for j in i..n {
+                    (i..n).for_each(|j| {
                         p[j] = flip_diag(p[j]);
-                    }
+                    });
                 }
                 break;
             }
@@ -2687,9 +2685,9 @@ fn encode<T: Encoding>(p: &mut [Square; TB_PIECES], ei: &EncInfo, entry: &T::Ent
     } else {
         let t = entry.pawns(0) as usize;
         idx = pawn_idx::<T>(t - 1, flap::<T>(p[0]));
-        for i in 1..t {
+        (1..t).for_each(|i| {
             idx += binomial(ptwist::<T>(p[i]), t - i);
-        }
+        });
         idx *= ei.factor[0];
 
         // remaining pawns
@@ -2707,9 +2705,9 @@ fn encode<T: Encoding>(p: &mut [Square; TB_PIECES], ei: &EncInfo, entry: &T::Ent
             for m in i..t {
                 let sq = p[m];
                 let mut skips = 0;
-                for k in 0..i {
+                (0..i).for_each(|k| {
                     skips += skip(sq, p[k]);
-                }
+                });
                 s += binomial(sq.0 as usize - skips - 8, m - i + 1);
             }
             idx += s * ei.factor[i];
@@ -2730,9 +2728,9 @@ fn encode<T: Encoding>(p: &mut [Square; TB_PIECES], ei: &EncInfo, entry: &T::Ent
         for m in i..i + t {
             let sq = p[m];
             let mut skips = 0;
-            for k in 0..i {
+            (0..i).for_each(|k| {
                 skips += skip(sq, p[k]);
-            }
+            });
             s += binomial(sq.0 as usize - skips, m - i + 1);
         }
         idx += s * ei.factor[i];
