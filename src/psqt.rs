@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 use crate::bitboard::Bitboard;
-use crate::types::{piece_value, Piece, Score, Square, EG, FILE_H, MG};
+use crate::types::{piece_value, Piece, Score, Square, EG, MG};
 
 macro_rules! S {
     ($x:expr, $y:expr) => {
@@ -91,7 +91,7 @@ pub fn init() {
             let v = Score::make(piece_value(MG, pc).0, piece_value(EG, pc).0);
 
             for s in Bitboard::ALL_SQUARES {
-                let f = std::cmp::min(s.file(), FILE_H - s.file());
+                let f = std::cmp::min(s.file(), Square::FILE_H - s.file());
                 PSQ[pc.0 as usize][s.0 as usize] =
                     v + BONUS[(pc.0 - 1) as usize][s.rank() as usize][f as usize];
                 PSQ[(!pc).0 as usize][(!s).0 as usize] = -PSQ[pc.0 as usize][s.0 as usize];

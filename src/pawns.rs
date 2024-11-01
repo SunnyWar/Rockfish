@@ -9,7 +9,7 @@ use crate::bitboard::{
 use crate::position::Position;
 use crate::types::{
     direction::Direction, key::Key, Black, CastlingRight, CastlingSide, Color, ColorTrait, File,
-    Piece, PieceType, Score, Square, Value, White, FILE_B, FILE_G, FILE_H, RANK_1, RANK_5,
+    Piece, PieceType, Score, Square, Value, White, 
 };
 
 macro_rules! V {
@@ -205,7 +205,7 @@ impl Entry {
             bitboard!(A6, C6, F6, H6)
         };
 
-        let center = ksq.file().clamp(FILE_B, FILE_G);
+        let center = ksq.file().clamp(Square::FILE_B, Square::FILE_G);
         let b = pos.pieces_p(PieceType::PAWN)
             & (forward_ranks_bb(us, ksq) | ksq.rank_bb())
             & (adjacent_files_bb(center) | file_bb(center));
@@ -218,21 +218,21 @@ impl Entry {
             let rk_us = if b != 0 {
                 backmost_sq(us, b).relative_rank(us)
             } else {
-                RANK_1
+                Square::RANK_1
             };
 
             let b = their_pawns & file_bb(f);
             let rk_them = if b != 0 {
                 frontmost_sq(them, b).relative_rank(us)
             } else {
-                RANK_1
+                Square::RANK_1
             };
 
-            let d = std::cmp::min(f, FILE_H - f);
+            let d = std::cmp::min(f, Square::FILE_H - f);
             safety -= SHELTER_WEAKNESS[usize::from(f == ksq.file())][d as usize][rk_us as usize]
                 + STORM_DANGER[if f == ksq.file() && rk_them == ksq.relative_rank(us) + 1 {
                     Self::BLOCKED_BY_KING
-                } else if rk_us == RANK_1 {
+                } else if rk_us == Square::RANK_1 {
                     Self::UNOPPOSED
                 } else if rk_them == rk_us + 1 {
                     Self::BLOCKED_BY_PAWN
@@ -395,7 +395,7 @@ fn evaluate<Us: ColorTrait>(pos: &Position, e: &mut Entry) -> Score {
 
         // A pawn is backward if it is behind all pawns of the same color on
         // the adjacent files and cannot be safely advanced.
-        let backward = if neighbours == 0 || lever != 0 || s.relative_rank(us) >= RANK_5 {
+        let backward = if neighbours == 0 || lever != 0 || s.relative_rank(us) >= Square::RANK_5 {
             false
         } else {
             // Find the backmost rank with neighbours or stoppers
@@ -418,7 +418,7 @@ fn evaluate<Us: ColorTrait>(pos: &Position, e: &mut Entry) -> Score {
             && popcount(phalanx) >= popcount(lever_push)
         {
             e.passed_pawns[us.0 as usize] |= s;
-        } else if stoppers ^ (s + up) == 0 && s.relative_rank(us) >= RANK_5 {
+        } else if stoppers ^ (s + up) == 0 && s.relative_rank(us) >= Square::RANK_5 {
             for sq in supported.shift(up) & !their_pawns {
                 if !more_than_one(their_pawns & pawn_attacks(us, sq)) {
                     e.passed_pawns[us.0 as usize] |= s;

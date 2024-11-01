@@ -318,23 +318,25 @@ pub type Rank = u32;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Square(pub u32);
 
-pub const FILE_A: File = 0;
-pub const FILE_B: File = 1;
-pub const FILE_C: File = 2;
-pub const FILE_D: File = 3;
-pub const FILE_E: File = 4;
-//pub const FILE_F: File = 5;
-pub const FILE_G: File = 6;
-pub const FILE_H: File = 7;
-
-pub const RANK_1: Rank = 0;
-pub const RANK_2: Rank = 1;
-pub const RANK_3: Rank = 2;
-pub const RANK_4: Rank = 3;
-pub const RANK_5: Rank = 4;
-pub const RANK_6: Rank = 5;
-pub const RANK_7: Rank = 6;
-pub const RANK_8: Rank = 7;
+impl Square {
+    pub const FILE_A: File = 0;
+    pub const FILE_B: File = 1;
+    pub const FILE_C: File = 2;
+    pub const FILE_D: File = 3;
+    pub const FILE_E: File = 4;
+    //pub const FILE_F: File = 5;
+    pub const FILE_G: File = 6;
+    pub const FILE_H: File = 7;
+    
+    pub const RANK_1: Rank = 0;
+    pub const RANK_2: Rank = 1;
+    pub const RANK_3: Rank = 2;
+    pub const RANK_4: Rank = 3;
+    pub const RANK_5: Rank = 4;
+    pub const RANK_6: Rank = 5;
+    pub const RANK_7: Rank = 6;
+    pub const RANK_8: Rank = 7;
+}
 
 pub fn relative_rank(c: Color, r: Rank) -> Rank {
     r ^ (c.0 * 7)
@@ -1120,18 +1122,18 @@ mod tests {
 
         #[test]
         fn test_file() {
-            assert_eq!(Square::A1.file(), FILE_A);
-            assert_eq!(Square::H1.file(), FILE_H);
-            assert_eq!(Square::A8.file(), FILE_A);
-            assert_eq!(Square::H8.file(), FILE_H);
+            assert_eq!(Square::A1.file(), Square::FILE_A);
+            assert_eq!(Square::H1.file(), Square::FILE_H);
+            assert_eq!(Square::A8.file(), Square::FILE_A);
+            assert_eq!(Square::H8.file(), Square::FILE_H);
         }
 
         #[test]
         fn test_rank() {
-            assert_eq!(Square::A1.rank(), RANK_1);
-            assert_eq!(Square::A8.rank(), RANK_8);
-            assert_eq!(Square::H1.rank(), RANK_1);
-            assert_eq!(Square::H8.rank(), RANK_8);
+            assert_eq!(Square::A1.rank(), Square::RANK_1);
+            assert_eq!(Square::A8.rank(), Square::RANK_8);
+            assert_eq!(Square::H1.rank(), Square::RANK_1);
+            assert_eq!(Square::H8.rank(), Square::RANK_8);
         }
 
         #[test]
@@ -1144,10 +1146,10 @@ mod tests {
 
         #[test]
         fn test_relative_rank() {
-            assert_eq!(Square::A1.relative_rank(Color::WHITE), RANK_1);
-            assert_eq!(Square::A1.relative_rank(Color::BLACK), RANK_8);
-            assert_eq!(Square::H1.relative_rank(Color::WHITE), RANK_1);
-            assert_eq!(Square::H1.relative_rank(Color::BLACK), RANK_8);
+            assert_eq!(Square::A1.relative_rank(Color::WHITE), Square::RANK_1);
+            assert_eq!(Square::A1.relative_rank(Color::BLACK), Square::RANK_8);
+            assert_eq!(Square::H1.relative_rank(Color::WHITE), Square::RANK_1);
+            assert_eq!(Square::H1.relative_rank(Color::BLACK), Square::RANK_8);
         }
 
         #[test]
@@ -1159,8 +1161,8 @@ mod tests {
 
         #[test]
         fn test_make() {
-            assert_eq!(Square::make(FILE_A, RANK_1), Square::A1);
-            assert_eq!(Square::make(FILE_H, RANK_8), Square::H8);
+            assert_eq!(Square::make(Square::FILE_A, Square::RANK_1), Square::A1);
+            assert_eq!(Square::make(Square::FILE_H, Square::RANK_8), Square::H8);
         }
 
         #[test]

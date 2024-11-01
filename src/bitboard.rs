@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use crate::types::{direction::Direction, Color, File, PieceType, Rank, Square, FILE_A, FILE_H};
+use crate::types::{direction::Direction, Color, File, PieceType, Rank, Square,};
 use crate::uci;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -612,12 +612,12 @@ pub fn init() {
     }
 
     for f in 0..8 {
-        let left = if f > FILE_A {
+        let left = if f > Square::FILE_A {
             file_bb(f - 1)
         } else {
             Bitboard(0)
         };
-        let right = if f < FILE_H {
+        let right = if f < Square::FILE_H {
             file_bb(f + 1)
         } else {
             Bitboard(0)

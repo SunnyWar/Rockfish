@@ -7,7 +7,7 @@ use crate::position::Position;
 use crate::search::RootMoves;
 use crate::types::{
     depth::Depth, key::Key, Color, Move, PawnValueEg, Piece, PieceType, Square, Value,
-    ANY_CASTLING, B_PAWN, ENPASSANT, FILE_A, FILE_B, FILE_C, FILE_D, MAX_MATE_PLY, NO_PIECE,
+    ANY_CASTLING, B_PAWN, ENPASSANT, MAX_MATE_PLY, NO_PIECE,
     PROMOTION, W_PAWN,
 };
 use crate::ucioption;
@@ -2609,11 +2609,11 @@ fn leading_pawn_table<T: Encoding>(pawns: Bitboard, flip: bool) -> u32 {
                 != 0,
             pawns & (Bitboard::FILEA_BB | Bitboard::FILEH_BB) != 0,
         ) {
-            (true, true) => FILE_A,
-            (true, false) => FILE_B,
+            (true, true) => Square::FILE_A,
+            (true, false) => Square::FILE_B,
             (false, _) => match pawns & (Bitboard::FILEC_BB | Bitboard::FILEF_BB) != 0 {
-                true => FILE_C,
-                false => FILE_D,
+                true => Square::FILE_C,
+                false => Square::FILE_D,
             },
         }
     } else {

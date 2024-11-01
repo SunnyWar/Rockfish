@@ -19,8 +19,7 @@ use crate::types::{
     piece_value, relative_rank, relative_square, BishopValueMg, Bool, CastlingRight, CastlingSide,
     Color, False, KnightValueMg, Move, PawnValueMg, Piece, PieceType, QueenValueMg, RookValueMg,
     Score, Square, SquareList, True, Value, ANY_CASTLING, BLACK_OO, BLACK_OOO, B_BISHOP, B_KING,
-    CASTLING, ENPASSANT, MG, NORMAL, NO_PIECE, PROMOTION, RANK_1, RANK_2, RANK_4, RANK_6, RANK_8,
-    WHITE_OO, WHITE_OOO, W_BISHOP, W_KING,
+    CASTLING, ENPASSANT, MG, NORMAL, NO_PIECE, PROMOTION, WHITE_OO, WHITE_OOO, W_BISHOP, W_KING,
 };
 use crate::uci;
 
@@ -366,7 +365,7 @@ impl Position {
 
     pub fn advanced_pawn_push(&self, m: Move) -> bool {
         self.moved_piece(m).piece_type() == PieceType::PAWN
-            && m.from().relative_rank(self.side_to_move()) > RANK_4
+            && m.from().relative_rank(self.side_to_move()) > Square::RANK_4
     }
 
     pub fn key(&self) -> Key {
@@ -550,7 +549,7 @@ impl Position {
                     }
                     'A'..='H' => {
                         let file = side.to_digit(18).unwrap() - 10;
-                        Square::make(file, relative_rank(color, RANK_1))
+                        Square::make(file, relative_rank(color, Square::RANK_1))
                     }
                     _ => continue,
                 };
@@ -807,7 +806,7 @@ impl Position {
             let f = castling_rook_square.file();
             let r = castling_rook_square.rank();
             let mut c = 65 + f;
-            if r == RANK_8 {
+            if r == Square::RANK_8 {
                 c += 32;
             }
             ss.push(char::from(c as u8));
@@ -935,14 +934,14 @@ impl Position {
         if pc.piece_type() == PieceType::PAWN {
             // We have already handled promotion moves, so destination
             // cannot be on the 8th/1st rank.
-            if to.rank() == relative_rank(us, RANK_8) {
+            if to.rank() == relative_rank(us, Square::RANK_8) {
                 return false;
             }
 
             if self.attacks_from_pawn(from, us) & self.pieces_c(!us) & to == 0
                 && !((from + pawn_push(us) == to) && self.empty(to))
                 && !(from + 2 * pawn_push(us) == to
-                    && from.rank() == relative_rank(us, RANK_2)
+                    && from.rank() == relative_rank(us, Square::RANK_2)
                     && self.empty(to)
                     && self.empty(to - pawn_push(us)))
             {
@@ -1138,7 +1137,7 @@ impl Position {
 
                     debug_assert!(pc == Piece::make(us, PieceType::PAWN));
                     debug_assert!(to == self.st_mut().ep_square);
-                    debug_assert!(to.relative_rank(us) == RANK_6);
+                    debug_assert!(to.relative_rank(us) == Square::RANK_6);
                     debug_assert!(self.piece_on(to) == NO_PIECE);
                     debug_assert!(self.piece_on(capsq) == Piece::make(them, PieceType::PAWN));
 
@@ -1206,7 +1205,7 @@ impl Position {
             } else if m.move_type() == PROMOTION {
                 let promotion = Piece::make(us, m.promotion_type());
 
-                debug_assert!(to.relative_rank(us) == RANK_8);
+                debug_assert!(to.relative_rank(us) == Square::RANK_8);
                 debug_assert!(
                     promotion.piece_type() >= PieceType::KNIGHT
                         && promotion.piece_type() <= PieceType::QUEEN
@@ -1281,7 +1280,7 @@ impl Position {
         debug_assert!(self.st().captured_piece.piece_type() != PieceType::KING);
 
         if m.move_type() == PROMOTION {
-            debug_assert!(to.relative_rank(us) == RANK_8);
+            debug_assert!(to.relative_rank(us) == Square::RANK_8);
             debug_assert!(pc.piece_type() == m.promotion_type());
             debug_assert!(
                 pc.piece_type() >= PieceType::KNIGHT && pc.piece_type() <= PieceType::QUEEN
@@ -1307,7 +1306,7 @@ impl Position {
                     capsq -= pawn_push(us);
 
                     debug_assert!(pc.piece_type() == PieceType::PAWN);
-                    debug_assert!(to.relative_rank(us) == RANK_6);
+                    debug_assert!(to.relative_rank(us) == Square::RANK_6);
                     debug_assert!(self.piece_on(capsq) == NO_PIECE);
                     debug_assert!(self.st().captured_piece == Piece::make(!us, PieceType::PAWN));
                 }
@@ -1619,7 +1618,7 @@ impl Position {
             || self.piece_on(self.square(Color::WHITE, PieceType::KING)) != W_KING
             || self.piece_on(self.square(Color::BLACK, PieceType::KING)) != B_KING
             || (self.ep_square() != Square::NONE
-                && self.ep_square().relative_rank(self.side_to_move()) != RANK_6)
+                && self.ep_square().relative_rank(self.side_to_move()) != Square::RANK_6)
         {
             panic!("pos: Default");
         }

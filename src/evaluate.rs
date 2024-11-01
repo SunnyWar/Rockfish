@@ -10,8 +10,8 @@ use crate::position::Position;
 use crate::types::{
     direction::pawn_push, direction::Direction, scale_factor::ScaleFactor, Bishop, BishopValueEg,
     BishopValueMg, Black, Color, ColorTrait, Knight, KnightValueMg, Piece, PieceType,
-    PieceTypeTrait, Queen, Rook, RookValueMg, Score, Square, Value, White, EG, FILE_A, FILE_E, MG,
-    PHASE_MIDGAME, RANK_1, RANK_5, RANK_7,
+    PieceTypeTrait, Queen, Rook, RookValueMg, Score, Square, Value, White, EG, MG,
+    PHASE_MIDGAME,
 };
 
 pub const TEMPO: Value = Value(20);
@@ -404,7 +404,7 @@ fn initialize<Us: ColorTrait>(pos: &Position, ei: &mut EvalInfo) {
     // Init out king safety tables only if we are going to use them
     if pos.non_pawn_material_c(them) >= RookValueMg + KnightValueMg {
         ei.king_ring[us.0 as usize] = b;
-        if pos.square(us, PieceType::KING).relative_rank(us) == RANK_1 {
+        if pos.square(us, PieceType::KING).relative_rank(us) == Square::RANK_1 {
             ei.king_ring[us.0 as usize] |= b.shift(up);
         }
 
@@ -505,7 +505,7 @@ fn evaluate_pieces<Us: ColorTrait, Pt: PieceTypeTrait>(pos: &Position, ei: &mut 
             }
 
             // Bonus when behind a pawn
-            if s.relative_rank(us) < RANK_5
+            if s.relative_rank(us) < Square::RANK_5
                 && pos.pieces_p(PieceType::PAWN) & (s + pawn_push(us)) != 0
             {
                 score += MINOR_BEHIND_PAWN;
@@ -532,7 +532,7 @@ fn evaluate_pieces<Us: ColorTrait, Pt: PieceTypeTrait>(pos: &Position, ei: &mut 
                 && (s == Square::A1.relative(us) || s == Square::H1.relative(us))
             {
                 let d = pawn_push(us)
-                    + (if s.file() == FILE_A {
+                    + (if s.file() == Square::FILE_A {
                         Direction::EAST
                     } else {
                         Direction::WEST
@@ -551,7 +551,7 @@ fn evaluate_pieces<Us: ColorTrait, Pt: PieceTypeTrait>(pos: &Position, ei: &mut 
 
         if pt == PieceType::ROOK {
             // Bonus for aligning with enemy pawns on the same rank/file
-            if s.relative_rank(us) >= RANK_5 {
+            if s.relative_rank(us) >= Square::RANK_5 {
                 score += ROOK_ON_PAWN
                     * (popcount(
                         pos.pieces_cp(them, PieceType::PAWN) & pseudo_attacks(PieceType::ROOK, s),
@@ -567,7 +567,7 @@ fn evaluate_pieces<Us: ColorTrait, Pt: PieceTypeTrait>(pos: &Position, ei: &mut 
             else if mob <= 3 {
                 let kf = pos.square(us, PieceType::KING).file();
 
-                if (kf < FILE_E) == (s.file() < kf) {
+                if (kf < Square::FILE_E) == (s.file() < kf) {
                     score -= (TRAPPED_ROOK - Score::make((mob as i32) * 22, 0))
                         * (1 + i32::from(!pos.can_castle(us)));
                 }
@@ -894,7 +894,7 @@ fn evaluate_passed_pawns<Us: ColorTrait>(pos: &Position, ei: &EvalInfo) -> Score
 
             ebonus += them_king_dist * 5 * rr - us_king_dist * 2 * rr;
 
-            if r != RANK_7 {
+            if r != Square::RANK_7 {
                 ebonus -= capped_distance(pos.square(us, PieceType::KING), block_sq + up) * rr;
             }
 

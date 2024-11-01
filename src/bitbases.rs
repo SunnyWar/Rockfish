@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 use crate::bitboard::{pawn_attacks, pseudo_attacks, Distance};
-use crate::types::{direction::Direction, Color, PieceType, Square, FILE_D, RANK_2, RANK_7};
+use crate::types::{direction::Direction, Color, PieceType, Square,};
 
 // There are 24 possible pawn squares: the first 4 files and ranks from 2 to 7
 const MAX_INDEX: usize = 2 * 24 * 64 * 64;
@@ -19,11 +19,11 @@ static KPK_BITBASE_INIT: Once = Once::new();
 // bit  0- 5: white king square (from A1 to H8)
 // bit  6-11: black king square (from A1 to H8)
 // bit    12: side to move (Color::WHITE or Color::BLACK)
-// bit 13-14: white pawn file (from FILE_A to FILE_D)
-// bit 15-17: white pawn RANK_7 - rank
-//            (from RANK_7 - RANK_7 to RANK_7 - RANK_2)
+// bit 13-14: white pawn file (from Square::FILE_A to Square::FILE_D)
+// bit 15-17: white pawn Square::RANK_7 - rank
+//            (from Square::RANK_7 - Square::RANK_7 to Square::RANK_7 - Square::RANK_2)
 fn index(us: Color, bksq: Square, wksq: Square, psq: Square) -> usize {
-    (wksq.0 | (bksq.0 << 6) | (us.0 << 12) | (psq.file() << 13) | ((RANK_7 - psq.rank()) << 15))
+    (wksq.0 | (bksq.0 << 6) | (us.0 << 12) | (psq.file() << 13) | ((Square::RANK_7 - psq.rank()) << 15))
         as usize
 }
 
@@ -43,7 +43,7 @@ impl KPKPosition {
     fn new(idx: u32) -> KPKPosition {
         let ksq = [Square(idx & 0x3f), Square((idx >> 6) & 0x3f)];
         let us = Color((idx >> 12) & 0x01);
-        let psq = Square::make((idx >> 13) & 0x03, RANK_7 - ((idx >> 15) & 0x07));
+        let psq = Square::make((idx >> 13) & 0x03, Square::RANK_7 - ((idx >> 15) & 0x07));
 
         let white_king = ksq[Color::WHITE.0 as usize];
         let black_king = ksq[Color::BLACK.0 as usize];
@@ -56,7 +56,7 @@ impl KPKPosition {
             black_king == psq, // Check if the black king is on the pawn's square
             us,
             white_pawn_attacks & black_king != 0, // Check if the white pawn is attacking the black king
-            psq.rank() == RANK_7,                 // Check if the pawn can be promoted
+            psq.rank() == Square::RANK_7,                 // Check if the pawn can be promoted
             white_king != psq + Direction::NORTH, // Ensure the white king is not blocking the pawn's promotion
             Square::distance(black_king, psq + Direction::NORTH) > 1, // Check if the black king is at least 2 squares away from the pawn's promotion square
             pseudo_attacks(PieceType::KING, white_king) & (psq + Direction::NORTH) != 0, // Check if the white king can defend the promotion square
@@ -126,7 +126,7 @@ impl KPKPosition {
 
         if us == Color::WHITE {
             match psq.rank() {
-                rank if rank < RANK_7 => {
+                rank if rank < Square::RANK_7 => {
                     r |= db[index(
                         them,
                         self.ksq[them.0 as usize],
@@ -135,7 +135,7 @@ impl KPKPosition {
                     )]
                     .result;
                 }
-                RANK_2 => {
+                Square::RANK_2 => {
                     if psq + Direction::NORTH != self.ksq[us.0 as usize]
                         && psq + Direction::NORTH != self.ksq[them.0 as usize]
                     {
@@ -199,7 +199,7 @@ pub fn init() {
 }
 
 pub fn probe(wksq: Square, wpsq: Square, bksq: Square, us: Color) -> bool {
-    debug_assert!(wpsq.file() <= FILE_D);
+    debug_assert!(wpsq.file() <= Square::FILE_D);
     let idx = index(us, bksq, wksq, wpsq);
     let byte = idx / 32;
     let bit = idx % 32;

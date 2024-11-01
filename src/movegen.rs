@@ -7,7 +7,7 @@ use crate::position::Position;
 use crate::types::{
     direction::Direction, relative_rank, relative_square, Bishop, Black, Bool, CastlingRightTrait,
     Color, ColorTrait, False, Knight, Move, PieceType, PieceTypeTrait, Queen, Rook, Square, True,
-    White, BLACK_OO, CASTLING, ENPASSANT, MAX_MOVES, RANK_6, WHITE_OO,
+    White, BLACK_OO, CASTLING, ENPASSANT, MAX_MOVES, WHITE_OO,
 };
 
 const CAPTURES: i32 = 0;
@@ -344,7 +344,7 @@ fn generate_pawn_moves<Us: ColorTrait, T: GenType>(
         }
 
         if pos.ep_square() != Square::NONE {
-            debug_assert!(pos.ep_square().rank() == relative_rank(us, RANK_6));
+            debug_assert!(pos.ep_square().rank() == relative_rank(us, Square::RANK_6));
 
             // An en passant capture can be an evasion only if the checking
             // piece is the double pushed pawn and so is in the target.

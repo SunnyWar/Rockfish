@@ -11,8 +11,7 @@ use crate::position::Position;
 use crate::types::{
     direction::pawn_push, direction::Direction, key::Key, opposite_colors,
     scale_factor::ScaleFactor, BishopValueMg, Color, KnightValueMg, PawnValueEg, Piece, PieceType,
-    QueenValueEg, QueenValueMg, RookValueEg, RookValueMg, Square, Value, FILE_A, FILE_B, FILE_D,
-    FILE_E, FILE_G, FILE_H, RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8,
+    QueenValueEg, QueenValueMg, RookValueEg, RookValueMg, Square, Value,
 };
 
 pub type EvalFn = fn(&Position, Color) -> Value;
@@ -189,7 +188,7 @@ fn verify_material(pos: &Position, c: Color, npm: Value, pawns_cnt: i32) -> bool
 fn normalize(pos: &Position, strong_side: Color, sq: Square) -> Square {
     debug_assert!(pos.count(strong_side, PieceType::PAWN) == 1);
 
-    let sq = if pos.square(strong_side, PieceType::PAWN).file() >= FILE_E {
+    let sq = if pos.square(strong_side, PieceType::PAWN).file() >= Square::FILE_E {
         Square(sq.0 ^ 7) // Mirror SQ_H1 -> SQ_A1
     } else {
         sq
@@ -328,7 +327,7 @@ fn evaluate_krkp(pos: &Position, strong_side: Color) -> Value {
     let bpsqdis = Square::distance(bksq, psq);
     let brsqdis = Square::distance(bksq, rsq);
 
-    let queening_sq = Square::make(psq.file(), RANK_1);
+    let queening_sq = Square::make(psq.file(), Square::RANK_1);
     let result;
 
     // If the strong side's king is in front of the pawn
@@ -341,9 +340,9 @@ fn evaluate_krkp(pos: &Position, strong_side: Color) -> Value {
     }
     // If the pawn is far advanced and supported by the defending king,
     // the position is drawish.
-    else if bksq.rank() <= RANK_3
+    else if bksq.rank() <= Square::RANK_3
         && bpsqdis == 1
-        && wksq.rank() >= RANK_4
+        && wksq.rank() >= Square::RANK_4
         && wpsqdis > 2 + u32::from(pos.side_to_move() == strong_side)
     {
         result = Value(80) - 8 * wpsqdis as i32;
@@ -414,7 +413,7 @@ fn evaluate_kqkp(pos: &Position, strong_side: Color) -> Value {
 
     let mut result = Value(PUSH_CLOSE[Square::distance(winner_ksq, loser_ksq) as usize]);
 
-    if pawn_sq.relative_rank(weak_side) != RANK_7
+    if pawn_sq.relative_rank(weak_side) != Square::RANK_7
         || Square::distance(loser_ksq, pawn_sq) != 1
         || (Bitboard::FILEA_BB | Bitboard::FILEC_BB | Bitboard::FILEF_BB | Bitboard::FILEH_BB)
             & pawn_sq
@@ -477,9 +476,9 @@ pub fn scale_kbpsk(pos: &Position, strong_side: Color) -> ScaleFactor {
     let pawns_file = lsb(pawns).file();
 
     // All pawns are on a single rook file?
-    if (pawns_file == FILE_A || pawns_file == FILE_H) && pawns & !file_bb(pawns_file) == 0 {
+    if (pawns_file == Square::FILE_A || pawns_file == Square::FILE_H) && pawns & !file_bb(pawns_file) == 0 {
         let bishop_sq = pos.square(strong_side, PieceType::BISHOP);
-        let queening_sq = Square::make(pawns_file, RANK_8).relative(strong_side);
+        let queening_sq = Square::make(pawns_file, Square::RANK_8).relative(strong_side);
         let king_sq = pos.square(weak_side, PieceType::KING);
 
         if opposite_colors(queening_sq, bishop_sq) && Square::distance(queening_sq, king_sq) <= 1 {
@@ -489,7 +488,7 @@ pub fn scale_kbpsk(pos: &Position, strong_side: Color) -> ScaleFactor {
 
     // If all the pawns are on the same B or G file, then it is potentially
     // a draw
-    if (pawns_file == FILE_B || pawns_file == FILE_G)
+    if (pawns_file == Square::FILE_B || pawns_file == Square::FILE_G)
         && pos.pieces_p(PieceType::PAWN) & !file_bb(pawns_file) == 0
         && pos.non_pawn_material_c(weak_side) == Value::ZERO
         && pos.count(weak_side, PieceType::PAWN) >= 1
@@ -503,7 +502,7 @@ pub fn scale_kbpsk(pos: &Position, strong_side: Color) -> ScaleFactor {
 
         // There is potentail for a draw if our pawn is blocked on the 7th
         // rank, the bishop cannot attack it or they only have one pawn left
-        if weak_pawn_sq.relative_rank(strong_side) == RANK_7
+        if weak_pawn_sq.relative_rank(strong_side) == Square::RANK_7
             && pos.pieces_cp(strong_side, PieceType::PAWN) & (weak_pawn_sq + pawn_push(weak_side))
                 != 0
             && (opposite_colors(bishop_sq, weak_pawn_sq)
@@ -518,7 +517,7 @@ pub fn scale_kbpsk(pos: &Position, strong_side: Color) -> ScaleFactor {
             // unreachable positions such as 5k1K/6p1/6P1/8/8/3B4/8/8 w
             // and positions where qsearch will immediately correct the
             // problem such as 8/4k1p1/6P1/1K6/3B4/8/8/8 w)
-            if weak_king_sq.relative_rank(strong_side) >= RANK_7
+            if weak_king_sq.relative_rank(strong_side) >= Square::RANK_7
                 && weak_king_dist <= 2
                 && weak_king_dist <= strong_king_dist
             {
@@ -542,12 +541,12 @@ pub fn scale_kqkrps(pos: &Position, strong_side: Color) -> ScaleFactor {
     let king_sq = pos.square(weak_side, PieceType::KING);
     let rsq = pos.square(weak_side, PieceType::ROOK);
 
-    if king_sq.relative_rank(weak_side) <= RANK_2
+    if king_sq.relative_rank(weak_side) <= Square::RANK_2
         && pos
             .square(strong_side, PieceType::KING)
             .relative_rank(weak_side)
-            >= RANK_4
-        && rsq.relative_rank(weak_side) == RANK_3
+            >= Square::RANK_4
+        && rsq.relative_rank(weak_side) == Square::RANK_3
         && pos.pieces_cp(weak_side, PieceType::PAWN)
             & pos.attacks_from(PieceType::KING, king_sq)
             & pos.attacks_from_pawn(rsq, strong_side)
@@ -580,32 +579,32 @@ fn scale_krpkr(pos: &Position, strong_side: Color) -> ScaleFactor {
 
     let f = wpsq.file();
     let r = wpsq.rank();
-    let queening_sq = Square::make(f, RANK_8);
+    let queening_sq = Square::make(f, Square::RANK_8);
     let tempo = u32::from(pos.side_to_move() == strong_side);
 
     // If the pawn is not too far advanced and the defending king defends
     // the queeining square, use the third-rank defence.
-    if r <= RANK_5
+    if r <= Square::RANK_5
         && Square::distance(bksq, queening_sq) <= 1
         && wksq.0 <= Square::H5.0
-        && (brsq.rank() == RANK_6 || (r <= RANK_3 && wrsq.rank() != RANK_6))
+        && (brsq.rank() == Square::RANK_6 || (r <= Square::RANK_3 && wrsq.rank() != Square::RANK_6))
     {
         return ScaleFactor::DRAW;
     }
 
     // The defending side saves a draw by checking from behind in case the
     // pawn has advanced to the 6th rank with the king behind.
-    if r == RANK_6
+    if r == Square::RANK_6
         && Square::distance(bksq, queening_sq) <= 1
-        && wksq.rank() + tempo <= RANK_6
-        && (brsq.rank() == RANK_1 || (tempo == 0 && u32::distance(brsq.file(), wpsq.file()) >= 3))
+        && wksq.rank() + tempo <= Square::RANK_6
+        && (brsq.rank() == Square::RANK_1 || (tempo == 0 && u32::distance(brsq.file(), wpsq.file()) >= 3))
     {
         return ScaleFactor::DRAW;
     }
 
-    if r >= RANK_6
+    if r >= Square::RANK_6
         && bksq == queening_sq
-        && brsq.rank() == RANK_1
+        && brsq.rank() == Square::RANK_1
         && (tempo == 0 || Square::distance(wksq, wpsq) >= 2)
     {
         return ScaleFactor::DRAW;
@@ -616,15 +615,15 @@ fn scale_krpkr(pos: &Position, strong_side: Color) -> ScaleFactor {
     if wpsq == Square::A7
         && wrsq == Square::A8
         && (bksq == Square::H7 || bksq == Square::G7)
-        && brsq.file() == FILE_A
-        && (brsq.rank() <= RANK_3 || wksq.file() >= FILE_D || wksq.rank() <= RANK_5)
+        && brsq.file() == Square::FILE_A
+        && (brsq.rank() <= Square::RANK_3 || wksq.file() >= Square::FILE_D || wksq.rank() <= Square::RANK_5)
     {
         return ScaleFactor::DRAW;
     }
 
     // If the defending king blocks the pawn and the attacking king is too
     // far away, it's a draw.
-    if r <= RANK_5
+    if r <= Square::RANK_5
         && bksq == wpsq + Direction::NORTH
         && Square::distance(wksq, wpsq) >= 2 + tempo
         && Square::distance(wksq, brsq) >= 2 + tempo
@@ -636,8 +635,8 @@ fn scale_krpkr(pos: &Position, strong_side: Color) -> ScaleFactor {
     // if the attacking king is closer to the queening square than the
     // defending king and the defending king cannot gain tempi by
     // threatening the attacking rook.
-    if r == RANK_7
-        && f != FILE_A
+    if r == Square::RANK_7
+        && f != Square::FILE_A
         && wrsq.file() == f
         && wrsq != queening_sq
         && Square::distance(wksq, queening_sq) + 2 < Square::distance(bksq, queening_sq) + tempo
@@ -647,7 +646,7 @@ fn scale_krpkr(pos: &Position, strong_side: Color) -> ScaleFactor {
     }
 
     // Similar to the above, but with the pawn further back
-    if f != FILE_A
+    if f != Square::FILE_A
         && wrsq.file() == f
         && wrsq.0 < wpsq.0
         && Square::distance(wksq, queening_sq) + 2 < Square::distance(bksq, queening_sq) + tempo
@@ -667,7 +666,7 @@ fn scale_krpkr(pos: &Position, strong_side: Color) -> ScaleFactor {
 
     // If the pawn is not far advanced and the defending king is somewhere
     // in the pawn's path, it's probably a draw.
-    if r <= RANK_4 && bksq > wpsq {
+    if r <= Square::RANK_4 && bksq > wpsq {
         if bksq.file() == wpsq.file() {
             return ScaleFactor(10);
         }
@@ -698,7 +697,7 @@ fn scale_krpkb(pos: &Position, strong_side: Color) -> ScaleFactor {
         // a fortress. Depending on the king position, give a moderate
         // reduction or a stronger one if the defending king is near the
         // corner but not trapped there.
-        if rk == RANK_5 && !opposite_colors(bsq, psq) {
+        if rk == Square::RANK_5 && !opposite_colors(bsq, psq) {
             let d = Square::distance(psq + 3 * push, ksq);
             if d <= 2 && !(d == 0 && ksq == pos.square(strong_side, PieceType::KING) + 2 * push) {
                 return ScaleFactor(24);
@@ -711,7 +710,7 @@ fn scale_krpkb(pos: &Position, strong_side: Color) -> ScaleFactor {
         // it's drawn if the bishop attacks the square in front of the pawn
         // from a reasonable distance and the defending king is near the
         // corner.
-        if rk == RANK_6
+        if rk == Square::RANK_6
             && Square::distance(psq + 2 * push, ksq) <= 1
             && pseudo_attacks(PieceType::BISHOP, bsq) & (psq + push) != 0
             && u32::distance(bsq.file(), psq.file()) >= 2
@@ -750,7 +749,7 @@ fn scale_krppkrp(pos: &Position, strong_side: Color) -> ScaleFactor {
         && u32::distance(bksq.file(), wpsq2.file()) <= 1
         && bksq.relative_rank(strong_side) > r
     {
-        debug_assert!(r > RANK_1 && r < RANK_7);
+        debug_assert!(r > Square::RANK_1 && r < Square::RANK_7);
         return ScaleFactor(KRPPKRP_SCALE_FACTORS[r as usize]);
     }
 
@@ -800,7 +799,7 @@ fn scale_kbpkb(pos: &Position, strong_side: Color) -> ScaleFactor {
     // Case 1: Defending king blocks the pawn, and cannot be driven away
     if wksq.file() == psq.file()
         && psq.relative_rank(strong_side) < wksq.relative_rank(strong_side)
-        && (opposite_colors(wksq, sbsq) || wksq.relative_rank(strong_side) <= RANK_6)
+        && (opposite_colors(wksq, sbsq) || wksq.relative_rank(strong_side) <= Square::RANK_6)
     {
         return ScaleFactor::DRAW;
     }
@@ -818,7 +817,7 @@ fn scale_kbpkb(pos: &Position, strong_side: Color) -> ScaleFactor {
         //  These rules are probably not perfect, but in practice they work
         //  reasonably well.
 
-        if psq.relative_rank(strong_side) <= RANK_5 {
+        if psq.relative_rank(strong_side) <= Square::RANK_5 {
             return ScaleFactor::DRAW;
         }
 
@@ -931,7 +930,7 @@ fn scale_kbpkn(pos: &Position, strong_side: Color) -> ScaleFactor {
 
     if wksq.file() == psq.file()
         && psq.relative_rank(strong_side) < wksq.relative_rank(strong_side)
-        && (opposite_colors(wksq, sbsq) || wksq.relative_rank(strong_side) <= RANK_6)
+        && (opposite_colors(wksq, sbsq) || wksq.relative_rank(strong_side) <= Square::RANK_6)
     {
         return ScaleFactor::DRAW;
     }
@@ -1000,7 +999,7 @@ pub fn scale_kpkp(pos: &Position, strong_side: Color) -> ScaleFactor {
 
     // If the pawn has advanced to the fifth rank or further and is not a
     // rook pawn, it's too dangerous to assuem that it's at least a draw.
-    if psq.rank() >= RANK_5 && psq.file() != FILE_A {
+    if psq.rank() >= Square::RANK_5 && psq.file() != Square::FILE_A {
         return ScaleFactor::NONE;
     }
 
