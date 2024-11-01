@@ -242,28 +242,28 @@ impl PieceTypeTrait for King {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Piece(pub u32);
 
-pub const NO_PIECE: Piece = Piece(0);
-pub const W_PAWN: Piece = Piece(1);
-pub const W_BISHOP: Piece = Piece(3);
-pub const W_KING: Piece = Piece(6);
-pub const B_PAWN: Piece = Piece(9);
-pub const B_BISHOP: Piece = Piece(11);
-pub const B_KING: Piece = Piece(14);
-
-#[allow(dead_code)]
-pub const W_KNIGHT: Piece = Piece(2);
-#[allow(dead_code)]
-pub const W_ROOK: Piece = Piece(4);
-#[allow(dead_code)]
-pub const W_QUEEN: Piece = Piece(5);
-#[allow(dead_code)]
-pub const B_KNIGHT: Piece = Piece(10);
-#[allow(dead_code)]
-pub const B_ROOK: Piece = Piece(12);
-#[allow(dead_code)]
-pub const B_QUEEN: Piece = Piece(13);
-
 impl Piece {
+    pub const NO_PIECE: Piece = Piece(0);
+    pub const W_PAWN: Piece = Piece(1);
+    pub const W_BISHOP: Piece = Piece(3);
+    pub const W_KING: Piece = Piece(6);
+    pub const B_PAWN: Piece = Piece(9);
+    pub const B_BISHOP: Piece = Piece(11);
+    pub const B_KING: Piece = Piece(14);
+
+    #[allow(dead_code)]
+    pub const W_KNIGHT: Piece = Piece(2);
+    #[allow(dead_code)]
+    pub const W_ROOK: Piece = Piece(4);
+    #[allow(dead_code)]
+    pub const W_QUEEN: Piece = Piece(5);
+    #[allow(dead_code)]
+    pub const B_KNIGHT: Piece = Piece(10);
+    #[allow(dead_code)]
+    pub const B_ROOK: Piece = Piece(12);
+    #[allow(dead_code)]
+    pub const B_QUEEN: Piece = Piece(13);
+
     pub fn piece_type(self) -> PieceType {
         PieceType(self.0 & 7)
     }
@@ -1072,61 +1072,61 @@ mod tests {
 
         #[test]
         fn test_piece_constants() {
-            assert_eq!(NO_PIECE, Piece(0));
-            assert_eq!(W_PAWN, Piece(1));
-            assert_eq!(W_KNIGHT, Piece(2));
-            assert_eq!(W_BISHOP, Piece(3));
-            assert_eq!(W_ROOK, Piece(4));
-            assert_eq!(W_QUEEN, Piece(5));
-            assert_eq!(W_KING, Piece(6));
-            assert_eq!(B_PAWN, Piece(9));
-            assert_eq!(B_KNIGHT, Piece(10));
-            assert_eq!(B_BISHOP, Piece(11));
-            assert_eq!(B_ROOK, Piece(12));
-            assert_eq!(B_QUEEN, Piece(13));
-            assert_eq!(B_KING, Piece(14));
+            assert_eq!(Piece::NO_PIECE, Piece(0));
+            assert_eq!(Piece::W_PAWN, Piece(1));
+            assert_eq!(Piece::W_KNIGHT, Piece(2));
+            assert_eq!(Piece::W_BISHOP, Piece(3));
+            assert_eq!(Piece::W_ROOK, Piece(4));
+            assert_eq!(Piece::W_QUEEN, Piece(5));
+            assert_eq!(Piece::W_KING, Piece(6));
+            assert_eq!(Piece::B_PAWN, Piece(9));
+            assert_eq!(Piece::B_KNIGHT, Piece(10));
+            assert_eq!(Piece::B_BISHOP, Piece(11));
+            assert_eq!(Piece::B_ROOK, Piece(12));
+            assert_eq!(Piece::B_QUEEN, Piece(13));
+            assert_eq!(Piece::B_KING, Piece(14));
         }
 
         #[test]
         fn test_piece_type() {
-            assert_eq!(W_PAWN.piece_type(), PieceType(1));
-            assert_eq!(W_KNIGHT.piece_type(), PieceType(2));
-            assert_eq!(W_BISHOP.piece_type(), PieceType(3));
+            assert_eq!(Piece::W_PAWN.piece_type(), PieceType(1));
+            assert_eq!(Piece::W_KNIGHT.piece_type(), PieceType(2));
+            assert_eq!(Piece::W_BISHOP.piece_type(), PieceType(3));
         }
 
         #[test]
         fn test_color() {
-            assert_eq!(W_PAWN.color(), Color::WHITE);
-            assert_eq!(B_PAWN.color(), Color::BLACK);
+            assert_eq!(Piece::W_PAWN.color(), Color::WHITE);
+            assert_eq!(Piece::B_PAWN.color(), Color::BLACK);
         }
 
         #[test]
         fn test_make() {
-            assert_eq!(Piece::make(Color::WHITE, PieceType(1)), W_PAWN);
-            assert_eq!(Piece::make(Color::BLACK, PieceType(1)), B_PAWN);
+            assert_eq!(Piece::make(Color::WHITE, PieceType(1)), Piece::W_PAWN);
+            assert_eq!(Piece::make(Color::BLACK, PieceType(1)), Piece::B_PAWN);
         }
 
         #[test]
         fn test_piece_into_iterator() {
-            let piece = W_PAWN;
+            let piece = Piece::W_PAWN;
             let mut iter = piece.into_iter();
-            assert_eq!(iter.next(), Some(W_PAWN));
-            assert_eq!(iter.next(), Some(W_KNIGHT));
-            assert_eq!(iter.next(), Some(W_BISHOP));
+            assert_eq!(iter.next(), Some(Piece::W_PAWN));
+            assert_eq!(iter.next(), Some(Piece::W_KNIGHT));
+            assert_eq!(iter.next(), Some(Piece::W_BISHOP));
         }
 
         #[test]
         fn test_not() {
-            assert_eq!(!W_PAWN, B_PAWN);
-            assert_eq!(!B_PAWN, W_PAWN);
+            assert_eq!(!Piece::W_PAWN, Piece::B_PAWN);
+            assert_eq!(!Piece::B_PAWN, Piece::W_PAWN);
         }
 
         #[test]
         fn test_bitxor() {
-            assert_eq!(W_PAWN ^ true, B_PAWN);
-            assert_eq!(B_PAWN ^ true, W_PAWN);
-            assert_eq!(W_PAWN ^ false, W_PAWN);
-            assert_eq!(B_PAWN ^ false, B_PAWN);
+            assert_eq!(Piece::W_PAWN ^ true, Piece::B_PAWN);
+            assert_eq!(Piece::B_PAWN ^ true, Piece::W_PAWN);
+            assert_eq!(Piece::W_PAWN ^ false, Piece::W_PAWN);
+            assert_eq!(Piece::B_PAWN ^ false, Piece::B_PAWN);
         }
     }
 

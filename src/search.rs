@@ -13,7 +13,7 @@ use crate::tt;
 use crate::types::{
     bound::Bound, depth::Depth, key::Key, mate_in, mated_in, piece_value, Bool, CastlingRight,
     Color, False, Move, PawnValueEg, PawnValueMg, Piece, Score, Square, True, Value, EG, ENPASSANT,
-    MAX_MATE_PLY, MAX_PLY, NORMAL, NO_PIECE,
+    MAX_MATE_PLY, MAX_PLY, NORMAL,
 };
 use crate::uci;
 use crate::ucioption;
@@ -629,7 +629,7 @@ fn clear_search(stack: &mut Vec<Stack>, pos: &mut Position) -> (Value, Value, Va
     for _ in 0..(MAX_PLY + 7) as usize {
         stack.push(Stack {
             pv: Vec::new(),
-            cont_history: pos.cont_history.get(NO_PIECE, Square(0)),
+            cont_history: pos.cont_history.get(Piece::NO_PIECE, Square(0)),
             ply: 0,
             current_move: Move::NONE,
             excluded_move: Move::NONE,
@@ -729,7 +729,7 @@ fn search<NT: NodeType>(
     ss[5].current_move = Move::NONE;
     ss[6].excluded_move = Move::NONE;
     let mut best_move = Move::NONE;
-    ss[5].cont_history = pos.cont_history.get(NO_PIECE, Square(0));
+    ss[5].cont_history = pos.cont_history.get(Piece::NO_PIECE, Square(0));
     ss[7].killers = [Move::NONE; 2];
     let prev_sq = ss[4].current_move.to();
     ss[7].stat_score = 0;
@@ -770,7 +770,7 @@ fn search<NT: NodeType>(
 
                 // Extra penalty for a quiet TT in previous ply when it gets
                 // refuted.
-                if ss[4].move_count == 1 && pos.captured_piece() == NO_PIECE {
+                if ss[4].move_count == 1 && pos.captured_piece() == Piece::NO_PIECE {
                     update_continuation_histories(
                         ss,
                         pos.piece_on(prev_sq),
@@ -966,7 +966,7 @@ fn search<NT: NodeType>(
                 * Depth::ONE;
 
             ss[5].current_move = Move::NULL;
-            ss[5].cont_history = pos.cont_history.get(NO_PIECE, Square(0));
+            ss[5].cont_history = pos.cont_history.get(Piece::NO_PIECE, Square(0));
 
             pos.do_null_move();
             let mut null_value = if depth - r < Depth::ONE {
@@ -1500,7 +1500,7 @@ fn search<NT: NodeType>(
 
         // Extra penalty for a quiet TT move in previous ply if it gets
         // refuted
-        if ss[4].move_count == 1 && pos.captured_piece() == NO_PIECE {
+        if ss[4].move_count == 1 && pos.captured_piece() == Piece::NO_PIECE {
             update_continuation_histories(
                 ss,
                 pos.piece_on(prev_sq),
@@ -1511,7 +1511,7 @@ fn search<NT: NodeType>(
     }
     // Bonus for prior countermove that caused the fail low
     else if depth >= Depth::THREE
-        && pos.captured_piece() == NO_PIECE
+        && pos.captured_piece() == Piece::NO_PIECE
         && ss[4].current_move.is_ok()
     {
         update_continuation_histories(ss, pos.piece_on(prev_sq), prev_sq, stat_bonus(depth));

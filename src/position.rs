@@ -18,8 +18,7 @@ use crate::types::{
     depth::Depth, direction::pawn_push, direction::Direction, key::Key, opposite_colors,
     piece_value, relative_rank, relative_square, BishopValueMg, Bool, CastlingRight, CastlingSide,
     Color, False, KnightValueMg, Move, PawnValueMg, Piece, PieceType, QueenValueMg, RookValueMg,
-    Score, Square, SquareList, True, Value, B_BISHOP, B_KING, CASTLING, ENPASSANT, MG, NORMAL,
-    NO_PIECE, PROMOTION, W_BISHOP, W_KING,
+    Score, Square, SquareList, True, Value, CASTLING, ENPASSANT, MG, NORMAL, PROMOTION,
 };
 use crate::uci;
 
@@ -126,7 +125,7 @@ impl StateInfo {
             ep_square: Square::NONE,
             key: Key(0),
             checkers_bb: Bitboard(0),
-            captured_piece: NO_PIECE,
+            captured_piece: Piece::NO_PIECE,
             blockers_for_king: [Bitboard(0); 2],
             pinners_for_king: [Bitboard(0); 2],
             check_squares: [Bitboard(0); 8],
@@ -180,7 +179,7 @@ pub struct Position {
 impl Position {
     pub fn new() -> Position {
         Position {
-            board: [NO_PIECE; 64],
+            board: [Piece::NO_PIECE; 64],
             by_color_bb: [Bitboard(0); 2],
             by_type_bb: [Bitboard(0); 8],
             piece_count: [0; 16],
@@ -237,7 +236,7 @@ impl Position {
     }
 
     pub fn empty(&self, s: Square) -> bool {
-        self.board[s.0 as usize] == NO_PIECE
+        self.board[s.0 as usize] == Piece::NO_PIECE
     }
 
     pub fn piece_on(&self, s: Square) -> Piece {
@@ -401,8 +400,8 @@ impl Position {
     }
 
     pub fn opposite_bishops(&self) -> bool {
-        self.piece_count[W_BISHOP.0 as usize] == 1
-            && self.piece_count[B_BISHOP.0 as usize] == 1
+        self.piece_count[Piece::W_BISHOP.0 as usize] == 1
+            && self.piece_count[Piece::B_BISHOP.0 as usize] == 1
             && opposite_colors(
                 self.square(Color::WHITE, PieceType::BISHOP),
                 self.square(Color::BLACK, PieceType::BISHOP),
@@ -489,7 +488,7 @@ impl Position {
         self.castling_rook_square
             .iter_mut()
             .for_each(|cr| *cr = Square::NONE);
-        self.board.iter_mut().for_each(|b| *b = NO_PIECE);
+        self.board.iter_mut().for_each(|b| *b = Piece::NO_PIECE);
         self.castling_rights_mask
             .iter_mut()
             .for_each(|crm| *crm = CastlingRight(0));
@@ -875,7 +874,7 @@ impl Position {
             debug_assert!(to == self.ep_square());
             debug_assert!(self.moved_piece(m) == Piece::make(us, PieceType::PAWN));
             debug_assert!(self.piece_on(capsq) == Piece::make(!us, PieceType::PAWN));
-            debug_assert!(self.piece_on(to) == NO_PIECE);
+            debug_assert!(self.piece_on(to) == Piece::NO_PIECE);
 
             return attacks_bb(PieceType::ROOK, ksq, occupied)
                 & self.pieces_cpp(!us, PieceType::QUEEN, PieceType::ROOK)
@@ -921,7 +920,7 @@ impl Position {
 
         // If the 'from' square is not occupied by a piece belonging to the
         // side to move, the move is obviously not legal.
-        if pc == NO_PIECE || pc.color() != us {
+        if pc == Piece::NO_PIECE || pc.color() != us {
             return false;
         }
 
@@ -1109,7 +1108,7 @@ impl Position {
 
         debug_assert!(pc.color() == us);
         debug_assert!(
-            captured == NO_PIECE
+            captured == Piece::NO_PIECE
                 || captured.color() == if m.move_type() != CASTLING { them } else { us }
         );
 
@@ -1123,10 +1122,10 @@ impl Position {
 
             self.st_mut().psq += psqt::psq(captured, rto) - psqt::psq(captured, rfrom);
             k ^= zobrist::psq(captured, rfrom) ^ zobrist::psq(captured, rto);
-            captured = NO_PIECE;
+            captured = Piece::NO_PIECE;
         }
 
-        if captured != NO_PIECE {
+        if captured != Piece::NO_PIECE {
             let mut capsq = to;
 
             // If the captured piece is a pawn, update pawn hash key, otherwise
@@ -1138,10 +1137,10 @@ impl Position {
                     debug_assert!(pc == Piece::make(us, PieceType::PAWN));
                     debug_assert!(to == self.st_mut().ep_square);
                     debug_assert!(to.relative_rank(us) == Square::RANK_6);
-                    debug_assert!(self.piece_on(to) == NO_PIECE);
+                    debug_assert!(self.piece_on(to) == Piece::NO_PIECE);
                     debug_assert!(self.piece_on(capsq) == Piece::make(them, PieceType::PAWN));
 
-                    self.board[capsq.0 as usize] = NO_PIECE;
+                    self.board[capsq.0 as usize] = Piece::NO_PIECE;
                 }
 
                 self.st_mut().pawn_key ^= zobrist::psq(captured, capsq);
@@ -1299,7 +1298,7 @@ impl Position {
             // Put the piece back at the source square
             self.move_piece(pc, to, from);
 
-            if self.st().captured_piece != NO_PIECE {
+            if self.st().captured_piece != Piece::NO_PIECE {
                 let mut capsq = to;
 
                 if m.move_type() == ENPASSANT {
@@ -1307,7 +1306,7 @@ impl Position {
 
                     debug_assert!(pc.piece_type() == PieceType::PAWN);
                     debug_assert!(to.relative_rank(us) == Square::RANK_6);
-                    debug_assert!(self.piece_on(capsq) == NO_PIECE);
+                    debug_assert!(self.piece_on(capsq) == Piece::NO_PIECE);
                     debug_assert!(self.st().captured_piece == Piece::make(!us, PieceType::PAWN));
                 }
 
@@ -1348,8 +1347,8 @@ impl Position {
             Piece::make(us, PieceType::ROOK),
             if Do::BOOL { *rfrom } else { *rto },
         );
-        self.board[(if Do::BOOL { from } else { *to }).0 as usize] = NO_PIECE;
-        self.board[(if Do::BOOL { *rfrom } else { *rto }).0 as usize] = NO_PIECE;
+        self.board[(if Do::BOOL { from } else { *to }).0 as usize] = Piece::NO_PIECE;
+        self.board[(if Do::BOOL { *rfrom } else { *rto }).0 as usize] = Piece::NO_PIECE;
         self.put_piece(
             Piece::make(us, PieceType::KING),
             if Do::BOOL { *to } else { from },
@@ -1603,7 +1602,7 @@ impl Position {
         self.by_type_bb[PieceType::ALL_PIECES.0 as usize] ^= from_to_bb;
         self.by_type_bb[pc.piece_type().0 as usize] ^= from_to_bb;
         self.by_color_bb[pc.color().0 as usize] ^= from_to_bb;
-        self.board[from.0 as usize] = NO_PIECE;
+        self.board[from.0 as usize] = Piece::NO_PIECE;
         self.board[to.0 as usize] = pc;
         self.index[to.0 as usize] = self.index[from.0 as usize];
         self.piece_list[pc.0 as usize][self.index[to.0 as usize] as usize] = to;
@@ -1615,8 +1614,8 @@ impl Position {
 
     pub fn is_ok(&self) -> bool {
         if self.side_to_move() != Color::WHITE && self.side_to_move != Color::BLACK
-            || self.piece_on(self.square(Color::WHITE, PieceType::KING)) != W_KING
-            || self.piece_on(self.square(Color::BLACK, PieceType::KING)) != B_KING
+            || self.piece_on(self.square(Color::WHITE, PieceType::KING)) != Piece::W_KING
+            || self.piece_on(self.square(Color::BLACK, PieceType::KING)) != Piece::B_KING
             || (self.ep_square() != Square::NONE
                 && self.ep_square().relative_rank(self.side_to_move()) != Square::RANK_6)
         {

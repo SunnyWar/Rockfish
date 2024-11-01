@@ -7,7 +7,7 @@ use crate::position::Position;
 use crate::search::RootMoves;
 use crate::types::{
     depth::Depth, key::Key, CastlingRight, Color, Move, PawnValueEg, Piece, PieceType, Square,
-    Value, B_PAWN, ENPASSANT, MAX_MATE_PLY, NO_PIECE, PROMOTION, W_PAWN,
+    Value, ENPASSANT, MAX_MATE_PLY, PROMOTION,
 };
 use crate::ucioption;
 
@@ -896,7 +896,7 @@ pub fn init_tb(name: &str) {
 
     let mut map = unsafe { Box::from_raw(TB_MAP) };
 
-    let tb_entry = if pcs[W_PAWN.0 as usize] + pcs[B_PAWN.0 as usize] == 0 {
+    let tb_entry = if pcs[Piece::W_PAWN.0 as usize] + pcs[Piece::B_PAWN.0 as usize] == 0 {
         let entry = PieceEntry {
             key,
             lock: Mutex::new(()),
@@ -932,8 +932,8 @@ pub fn init_tb(name: &str) {
         }
         TbHashEntry::Piece(unsafe { PIECE_ENTRIES.len() - 1 })
     } else {
-        let mut p0 = pcs[W_PAWN.0 as usize];
-        let mut p1 = pcs[B_PAWN.0 as usize];
+        let mut p0 = pcs[Piece::W_PAWN.0 as usize];
+        let mut p1 = pcs[Piece::B_PAWN.0 as usize];
         if p1 > 0 && (p0 == 0 || p0 > p1) {
             std::mem::swap(&mut p0, &mut p1);
         }
@@ -1657,7 +1657,7 @@ fn add_underprom_caps(pos: &Position, list: &mut [ExtMove], end: usize) -> usize
 
     for idx in 0..end {
         let m = list[idx].m;
-        if m.move_type() == PROMOTION && pos.piece_on(m.to()) != NO_PIECE {
+        if m.move_type() == PROMOTION && pos.piece_on(m.to()) != Piece::NO_PIECE {
             list[extra].m = Move(m.0 - (1 << 12));
             list[extra + 1].m = Move(m.0 - (2 << 12));
             list[extra + 2].m = Move(m.0 - (3 << 12));
