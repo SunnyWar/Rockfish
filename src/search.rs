@@ -11,8 +11,8 @@ use crate::threads;
 use crate::timeman;
 use crate::tt;
 use crate::types::{
-    bound::Bound, depth::Depth, key::Key, mate_in, mated_in, piece_value, Bool, Color, False, Move,
-    PawnValueEg, PawnValueMg, Piece, Score, Square, True, Value, ANY_CASTLING, EG, ENPASSANT,
+    bound::Bound, depth::Depth, key::Key, mate_in, mated_in, piece_value, Bool, CastlingRight,
+    Color, False, Move, PawnValueEg, PawnValueMg, Piece, Score, Square, True, Value, EG, ENPASSANT,
     MAX_MATE_PLY, MAX_PLY, NORMAL, NO_PIECE,
 };
 use crate::uci;
@@ -802,7 +802,7 @@ fn search<NT: NodeType>(
         if pieces_cnt <= tb::cardinality()
             && (pieces_cnt < tb::cardinality() || depth >= tb::probe_depth())
             && pos.rule50_count() == 0
-            && !pos.has_castling_right(ANY_CASTLING)
+            && !pos.has_castling_right(CastlingRight::ANY_CASTLING)
         {
             let mut found = 1;
             let wdl = tb::probe_wdl(pos, &mut found);

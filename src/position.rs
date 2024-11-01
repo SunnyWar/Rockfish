@@ -18,8 +18,8 @@ use crate::types::{
     depth::Depth, direction::pawn_push, direction::Direction, key::Key, opposite_colors,
     piece_value, relative_rank, relative_square, BishopValueMg, Bool, CastlingRight, CastlingSide,
     Color, False, KnightValueMg, Move, PawnValueMg, Piece, PieceType, QueenValueMg, RookValueMg,
-    Score, Square, SquareList, True, Value, ANY_CASTLING, BLACK_OO, BLACK_OOO, B_BISHOP, B_KING,
-    CASTLING, ENPASSANT, MG, NORMAL, NO_PIECE, PROMOTION, WHITE_OO, WHITE_OOO, W_BISHOP, W_KING,
+    Score, Square, SquareList, True, Value, B_BISHOP, B_KING, CASTLING, ENPASSANT, MG, NORMAL,
+    NO_PIECE, PROMOTION, W_BISHOP, W_KING,
 };
 use crate::uci;
 
@@ -460,7 +460,7 @@ impl Position {
         );
 
         if tb::max_cardinality() >= popcount(self.pieces())
-            && !self.has_castling_right(ANY_CASTLING)
+            && !self.has_castling_right(CastlingRight::ANY_CASTLING)
         {
             let mut s1 = 1;
             let mut s2 = 1;
@@ -769,12 +769,12 @@ impl Position {
             _ => " b ",
         });
 
-        self.castle_helper(&mut ss, WHITE_OO, 'K');
-        self.castle_helper(&mut ss, WHITE_OOO, 'Q');
-        self.castle_helper(&mut ss, BLACK_OO, 'k');
-        self.castle_helper(&mut ss, BLACK_OOO, 'q');
+        self.castle_helper(&mut ss, CastlingRight::WHITE_OO, 'K');
+        self.castle_helper(&mut ss, CastlingRight::WHITE_OOO, 'Q');
+        self.castle_helper(&mut ss, CastlingRight::BLACK_OO, 'k');
+        self.castle_helper(&mut ss, CastlingRight::BLACK_OOO, 'q');
 
-        if !self.has_castling_right(ANY_CASTLING) {
+        if !self.has_castling_right(CastlingRight::ANY_CASTLING) {
             ss.push('-');
         }
 

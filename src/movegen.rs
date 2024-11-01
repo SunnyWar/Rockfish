@@ -5,9 +5,9 @@ use crate::bitboard::{
 };
 use crate::position::Position;
 use crate::types::{
-    direction::Direction, relative_rank, relative_square, Bishop, Black, Bool, CastlingRightTrait,
-    Color, ColorTrait, False, Knight, Move, PieceType, PieceTypeTrait, Queen, Rook, Square, True,
-    White, BLACK_OO, CASTLING, ENPASSANT, MAX_MOVES, WHITE_OO,
+    direction::Direction, relative_rank, relative_square, Bishop, Black, Bool, CastlingRight,
+    CastlingRightTrait, Color, ColorTrait, False, Knight, Move, PieceType, PieceTypeTrait, Queen,
+    Rook, Square, True, White, CASTLING, ENPASSANT, MAX_MOVES,
 };
 
 const CAPTURES: i32 = 0;
@@ -117,7 +117,7 @@ fn generate_castling<Cr: CastlingRightTrait, Checks: Bool, Chess960: Bool>(
     idx: usize,
     us: Color,
 ) -> usize {
-    let king_side = Cr::CR == WHITE_OO || Cr::CR == BLACK_OO;
+    let king_side = Cr::CR == CastlingRight::WHITE_OO || Cr::CR == CastlingRight::BLACK_OO;
 
     if pos.castling_impeded(Cr::CR) || !pos.has_castling_right(Cr::CR) {
         return idx;

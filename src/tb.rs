@@ -6,8 +6,8 @@ use crate::position::zobrist::material;
 use crate::position::Position;
 use crate::search::RootMoves;
 use crate::types::{
-    depth::Depth, key::Key, Color, Move, PawnValueEg, Piece, PieceType, Square, Value,
-    ANY_CASTLING, B_PAWN, ENPASSANT, MAX_MATE_PLY, NO_PIECE, PROMOTION, W_PAWN,
+    depth::Depth, key::Key, CastlingRight, Color, Move, PawnValueEg, Piece, PieceType, Square,
+    Value, B_PAWN, ENPASSANT, MAX_MATE_PLY, NO_PIECE, PROMOTION, W_PAWN,
 };
 use crate::ucioption;
 
@@ -2321,7 +2321,9 @@ pub fn rank_root_moves(pos: &mut Position, root_moves: &mut RootMoves) {
     let mut dtz_available = true;
     let mut dtm_available = false;
 
-    if cardinality() >= popcount(pos.pieces()) && !pos.has_castling_right(ANY_CASTLING) {
+    if cardinality() >= popcount(pos.pieces())
+        && !pos.has_castling_right(CastlingRight::ANY_CASTLING)
+    {
         // Try to rank moves using DTZ tables
         root_in_tb = root_probe_dtz(pos, root_moves);
 

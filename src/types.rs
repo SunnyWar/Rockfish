@@ -87,13 +87,15 @@ pub enum CastlingSide {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CastlingRight(pub u32);
 
-#[allow(dead_code)]
-pub const NO_CASTLING: CastlingRight = CastlingRight(0);
-pub const WHITE_OO: CastlingRight = CastlingRight(1);
-pub const WHITE_OOO: CastlingRight = CastlingRight(2);
-pub const BLACK_OO: CastlingRight = CastlingRight(4);
-pub const BLACK_OOO: CastlingRight = CastlingRight(8);
-pub const ANY_CASTLING: CastlingRight = CastlingRight(15);
+impl CastlingRight {
+    #[allow(dead_code)]
+    pub const NO_CASTLING: CastlingRight = CastlingRight(0);
+    pub const WHITE_OO: CastlingRight = CastlingRight(1);
+    pub const WHITE_OOO: CastlingRight = CastlingRight(2);
+    pub const BLACK_OO: CastlingRight = CastlingRight(4);
+    pub const BLACK_OOO: CastlingRight = CastlingRight(8);
+    pub const ANY_CASTLING: CastlingRight = CastlingRight(15);
+}
 
 pub trait CastlingRightTrait {
     const CR: CastlingRight;
@@ -105,28 +107,28 @@ pub struct BlackOO;
 pub struct BlackOOO;
 
 impl CastlingRightTrait for WhiteOO {
-    const CR: CastlingRight = WHITE_OO;
+    const CR: CastlingRight = CastlingRight::WHITE_OO;
 }
 
 impl CastlingRightTrait for WhiteOOO {
-    const CR: CastlingRight = WHITE_OOO;
+    const CR: CastlingRight = CastlingRight::WHITE_OOO;
 }
 
 impl CastlingRightTrait for BlackOO {
-    const CR: CastlingRight = BLACK_OO;
+    const CR: CastlingRight = CastlingRight::BLACK_OO;
 }
 
 impl CastlingRightTrait for BlackOOO {
-    const CR: CastlingRight = BLACK_OOO;
+    const CR: CastlingRight = CastlingRight::BLACK_OOO;
 }
 
 impl CastlingRight {
     pub fn make(c: Color, cs: CastlingSide) -> CastlingRight {
         match (c, cs) {
-            (Color::WHITE, CastlingSide::KING) => WHITE_OO,
-            (Color::WHITE, _) => WHITE_OOO,
-            (_, CastlingSide::KING) => BLACK_OO,
-            (_, _) => BLACK_OOO,
+            (Color::WHITE, CastlingSide::KING) => CastlingRight::WHITE_OO,
+            (Color::WHITE, _) => CastlingRight::WHITE_OOO,
+            (_, CastlingSide::KING) => CastlingRight::BLACK_OO,
+            (_, _) => CastlingRight::BLACK_OOO,
         }
     }
 }
@@ -919,11 +921,23 @@ mod tests {
             type W = crate::types::White;
             type B = crate::types::Black;
 
-            assert_eq!(<W as crate::types::ColorTrait>::KingSide::CR, WHITE_OO);
-            assert_eq!(<W as crate::types::ColorTrait>::QueenSide::CR, WHITE_OOO);
+            assert_eq!(
+                <W as crate::types::ColorTrait>::KingSide::CR,
+                CastlingRight::WHITE_OO
+            );
+            assert_eq!(
+                <W as crate::types::ColorTrait>::QueenSide::CR,
+                CastlingRight::WHITE_OOO
+            );
 
-            assert_eq!(<B as crate::types::ColorTrait>::KingSide::CR, BLACK_OO);
-            assert_eq!(<B as crate::types::ColorTrait>::QueenSide::CR, BLACK_OOO);
+            assert_eq!(
+                <B as crate::types::ColorTrait>::KingSide::CR,
+                CastlingRight::BLACK_OO
+            );
+            assert_eq!(
+                <B as crate::types::ColorTrait>::QueenSide::CR,
+                CastlingRight::BLACK_OOO
+            );
         }
     }
 
@@ -932,62 +946,68 @@ mod tests {
 
         #[test]
         fn test_values() {
-            assert_eq!(NO_CASTLING, CastlingRight(0));
-            assert_eq!(WHITE_OO, CastlingRight(1));
-            assert_eq!(WHITE_OOO, CastlingRight(2));
-            assert_eq!(BLACK_OO, CastlingRight(4));
-            assert_eq!(BLACK_OOO, CastlingRight(8));
-            assert_eq!(ANY_CASTLING, CastlingRight(15));
+            assert_eq!(CastlingRight::NO_CASTLING, CastlingRight(0));
+            assert_eq!(CastlingRight::WHITE_OO, CastlingRight(1));
+            assert_eq!(CastlingRight::WHITE_OOO, CastlingRight(2));
+            assert_eq!(CastlingRight::BLACK_OO, CastlingRight(4));
+            assert_eq!(CastlingRight::BLACK_OOO, CastlingRight(8));
+            assert_eq!(CastlingRight::ANY_CASTLING, CastlingRight(15));
         }
 
         #[test]
         fn test_trait() {
-            assert_eq!(WhiteOO::CR, WHITE_OO);
-            assert_eq!(WhiteOOO::CR, WHITE_OOO);
-            assert_eq!(BlackOO::CR, BLACK_OO);
-            assert_eq!(BlackOOO::CR, BLACK_OOO);
+            assert_eq!(WhiteOO::CR, CastlingRight::WHITE_OO);
+            assert_eq!(WhiteOOO::CR, CastlingRight::WHITE_OOO);
+            assert_eq!(BlackOO::CR, CastlingRight::BLACK_OO);
+            assert_eq!(BlackOOO::CR, CastlingRight::BLACK_OOO);
         }
 
         #[test]
         fn test_make() {
             assert_eq!(
                 CastlingRight::make(Color::WHITE, CastlingSide::KING),
-                WHITE_OO
+                CastlingRight::WHITE_OO
             );
             assert_eq!(
                 CastlingRight::make(Color::WHITE, CastlingSide::QUEEN),
-                WHITE_OOO
+                CastlingRight::WHITE_OOO
             );
             assert_eq!(
                 CastlingRight::make(Color::BLACK, CastlingSide::KING),
-                BLACK_OO
+                CastlingRight::BLACK_OO
             );
             assert_eq!(
                 CastlingRight::make(Color::BLACK, CastlingSide::QUEEN),
-                BLACK_OOO
+                CastlingRight::BLACK_OOO
             );
         }
 
         #[test]
         fn test_bit_ops() {
-            assert_eq!(Color::WHITE | crate::types::CastlingSide::KING, WHITE_OO);
-            assert_eq!(Color::BLACK | crate::types::CastlingSide::QUEEN, BLACK_OOO);
+            assert_eq!(
+                Color::WHITE | crate::types::CastlingSide::KING,
+                CastlingRight::WHITE_OO
+            );
+            assert_eq!(
+                Color::BLACK | crate::types::CastlingSide::QUEEN,
+                CastlingRight::BLACK_OOO
+            );
 
-            let cr1 = WHITE_OO;
-            let cr2 = BLACK_OO;
+            let cr1 = CastlingRight::WHITE_OO;
+            let cr2 = CastlingRight::BLACK_OO;
             let mut combined = cr1 | cr2;
             assert_eq!(combined, CastlingRight(5));
 
-            combined &= WHITE_OO;
-            assert_eq!(combined, WHITE_OO);
+            combined &= CastlingRight::WHITE_OO;
+            assert_eq!(combined, CastlingRight::WHITE_OO);
 
-            combined |= BLACK_OOO;
+            combined |= CastlingRight::BLACK_OOO;
             assert_eq!(combined, CastlingRight(9));
         }
 
         #[test]
         fn test_not() {
-            assert_eq!(!NO_CASTLING, CastlingRight(!0));
+            assert_eq!(!CastlingRight::NO_CASTLING, CastlingRight(!0));
         }
 
         #[test]
