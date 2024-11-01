@@ -17,8 +17,8 @@ use crate::threads::ThreadCtrl;
 use crate::types::{
     depth::Depth, direction::pawn_push, direction::Direction, key::Key, opposite_colors,
     piece_value, relative_rank, relative_square, BishopValueMg, Bool, CastlingRight, CastlingSide,
-    Color, False, KnightValueMg, Move, PawnValueMg, Piece, PieceType, QueenValueMg, RookValueMg,
-    Score, Square, SquareList, True, Value, CASTLING, ENPASSANT, MG, NORMAL, PROMOTION,
+    Color, False, KnightValueMg, Move, MoveType, PawnValueMg, Piece, PieceType, QueenValueMg,
+    RookValueMg, Score, Square, SquareList, True, Value, MG,
 };
 use crate::uci;
 
@@ -415,8 +415,8 @@ impl Position {
     pub fn capture_or_promotion(&self, m: Move) -> bool {
         debug_assert!(m.is_ok());
         match m.move_type() {
-            NORMAL => !self.empty(m.to()),
-            CASTLING => false,
+            MoveType::NORMAL => !self.empty(m.to()),
+            MoveType::CASTLING => false,
             _ => true,
         }
     }
@@ -424,8 +424,8 @@ impl Position {
     pub fn capture(&self, m: Move) -> bool {
         debug_assert!(m.is_ok());
         match m.move_type() {
-            CASTLING => false,
-            ENPASSANT => true,
+            MoveType::CASTLING => false,
+            MoveType::ENPASSANT => true,
             _ => !self.empty(m.to()),
         }
     }
@@ -865,7 +865,7 @@ impl Position {
         // En passant captures are a tricky special case. Because they are
         // uncommon, we do it simply by testing whether the king is attacked
         // after the move is made.
-        if m.move_type() == ENPASSANT {
+        if m.move_type() == MoveType::ENPASSANT {
             let ksq = self.square(us, PieceType::KING);
             let to = m.to();
             let capsq = to - pawn_push(us);
@@ -888,7 +888,7 @@ impl Position {
         // square is attacked by the opponent. Castling moves are checked
         // for legality during move generation.
         if self.piece_on(from).piece_type() == PieceType::KING {
-            return m.move_type() == CASTLING
+            return m.move_type() == MoveType::CASTLING
                 || self.attackers_to(m.to()) & self.pieces_c(!us) == 0;
         }
 
@@ -909,7 +909,7 @@ impl Position {
         let pc = self.moved_piece(m);
 
         // Use a slower but simpler function for uncommon cases
-        if m.move_type() != NORMAL {
+        if m.move_type() != MoveType::NORMAL {
             return MoveList::new::<Legal>(self).contains(m);
         }
 
@@ -1002,9 +1002,9 @@ impl Position {
         }
 
         match m.move_type() {
-            NORMAL => false,
+            MoveType::NORMAL => false,
 
-            PROMOTION => {
+            MoveType::PROMOTION => {
                 attacks_bb(m.promotion_type(), to, self.pieces() ^ from)
                     & self.square(!self.side_to_move(), PieceType::KING)
                     != 0
@@ -1014,7 +1014,7 @@ impl Position {
             // case of direct checks and ordinary discovered check, so the
             // only case we need to handle is the unusual case of a
             // discovered check through the captured pawn.
-            ENPASSANT => {
+            MoveType::ENPASSANT => {
                 let capsq = Square::make(to.file(), from.rank());
                 let b = (self.pieces() ^ from ^ capsq) | to;
 
@@ -1035,7 +1035,7 @@ impl Position {
                     != 0
             }
 
-            CASTLING => {
+            MoveType::CASTLING => {
                 let kfrom = from;
                 let rfrom = to; // Castling is encoded as king captures rook
                 let kto = relative_square(
@@ -1100,7 +1100,7 @@ impl Position {
         let from = m.from();
         let mut to = m.to();
         let pc = self.piece_on(from);
-        let mut captured = if m.move_type() == ENPASSANT {
+        let mut captured = if m.move_type() == MoveType::ENPASSANT {
             Piece::make(them, PieceType::PAWN)
         } else {
             self.piece_on(to)
@@ -1109,10 +1109,15 @@ impl Position {
         debug_assert!(pc.color() == us);
         debug_assert!(
             captured == Piece::NO_PIECE
-                || captured.color() == if m.move_type() != CASTLING { them } else { us }
+                || captured.color()
+                    == if m.move_type() != MoveType::CASTLING {
+                        them
+                    } else {
+                        us
+                    }
         );
 
-        if m.move_type() == CASTLING {
+        if m.move_type() == MoveType::CASTLING {
             debug_assert!(pc == Piece::make(us, PieceType::KING));
             debug_assert!(captured == Piece::make(us, PieceType::ROOK));
 
@@ -1131,7 +1136,7 @@ impl Position {
             // If the captured piece is a pawn, update pawn hash key, otherwise
             // update non-pawn material.
             if captured.piece_type() == PieceType::PAWN {
-                if m.move_type() == ENPASSANT {
+                if m.move_type() == MoveType::ENPASSANT {
                     capsq -= pawn_push(us);
 
                     debug_assert!(pc == Piece::make(us, PieceType::PAWN));
@@ -1187,7 +1192,7 @@ impl Position {
         }
 
         // Move the piece. The tricky Chess960 castling is handled earlier
-        if m.move_type() != CASTLING {
+        if m.move_type() != MoveType::CASTLING {
             self.move_piece(pc, from, to);
         }
 
@@ -1201,7 +1206,7 @@ impl Position {
             {
                 self.st_mut().ep_square = to - pawn_push(us);
                 k ^= zobrist::enpassant(self.st().ep_square.file());
-            } else if m.move_type() == PROMOTION {
+            } else if m.move_type() == MoveType::PROMOTION {
                 let promotion = Piece::make(us, m.promotion_type());
 
                 debug_assert!(to.relative_rank(us) == Square::RANK_8);
@@ -1275,10 +1280,10 @@ impl Position {
         let mut to = m.to();
         let mut pc = self.piece_on(to);
 
-        debug_assert!(self.empty(from) || m.move_type() == CASTLING);
+        debug_assert!(self.empty(from) || m.move_type() == MoveType::CASTLING);
         debug_assert!(self.st().captured_piece.piece_type() != PieceType::KING);
 
-        if m.move_type() == PROMOTION {
+        if m.move_type() == MoveType::PROMOTION {
             debug_assert!(to.relative_rank(us) == Square::RANK_8);
             debug_assert!(pc.piece_type() == m.promotion_type());
             debug_assert!(
@@ -1290,7 +1295,7 @@ impl Position {
             self.put_piece(pc, to);
         }
 
-        if m.move_type() == CASTLING {
+        if m.move_type() == MoveType::CASTLING {
             let mut rfrom = Square(0);
             let mut rto = Square(0);
             self.do_castling::<False>(us, from, &mut to, &mut rfrom, &mut rto);
@@ -1301,7 +1306,7 @@ impl Position {
             if self.st().captured_piece != Piece::NO_PIECE {
                 let mut capsq = to;
 
-                if m.move_type() == ENPASSANT {
+                if m.move_type() == MoveType::ENPASSANT {
                     capsq -= pawn_push(us);
 
                     debug_assert!(pc.piece_type() == PieceType::PAWN);
@@ -1401,7 +1406,7 @@ impl Position {
         debug_assert!(m.is_ok());
 
         // Only deal with normal moves, assume others pass a simple see
-        if m.move_type() != NORMAL {
+        if m.move_type() != MoveType::NORMAL {
             return Value::ZERO >= value;
         }
 

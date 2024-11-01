@@ -6,8 +6,8 @@ use crate::position::zobrist::material;
 use crate::position::Position;
 use crate::search::RootMoves;
 use crate::types::{
-    depth::Depth, key::Key, CastlingRight, Color, Move, PawnValueEg, Piece, PieceType, Square,
-    Value, ENPASSANT, MAX_MATE_PLY, PROMOTION,
+    depth::Depth, key::Key, CastlingRight, Color, Move, MoveType, PawnValueEg, Piece, PieceType,
+    Square, Value, MAX_MATE_PLY,
 };
 use crate::ucioption;
 
@@ -1657,7 +1657,7 @@ fn add_underprom_caps(pos: &Position, list: &mut [ExtMove], end: usize) -> usize
 
     for idx in 0..end {
         let m = list[idx].m;
-        if m.move_type() == PROMOTION && pos.piece_on(m.to()) != Piece::NO_PIECE {
+        if m.move_type() == MoveType::PROMOTION && pos.piece_on(m.to()) != Piece::NO_PIECE {
             list[extra].m = Move(m.0 - (1 << 12));
             list[extra + 1].m = Move(m.0 - (2 << 12));
             list[extra + 2].m = Move(m.0 - (3 << 12));
@@ -1762,7 +1762,7 @@ pub fn probe_wdl(pos: &mut Position, success: &mut i32) -> i32 {
                 *success = 2;
                 return 2;
             }
-            if m.m.move_type() != ENPASSANT {
+            if m.m.move_type() != MoveType::ENPASSANT {
                 best_cap = v;
             } else if v > best_ep {
                 best_ep = v;
@@ -1805,14 +1805,14 @@ pub fn probe_wdl(pos: &mut Position, success: &mut i32) -> i32 {
     if best_ep > -3 && v == 0 {
         // Check for stalemate in the position without ep captures.
         for &m in &list[0..end] {
-            if m.m.move_type() != ENPASSANT && pos.legal(m.m) {
+            if m.m.move_type() != MoveType::ENPASSANT && pos.legal(m.m) {
                 return v;
             }
         }
         if pos.checkers() == 0 {
             end = generate::<Quiets>(pos, &mut list, 0);
             for &m in &list[0..end] {
-                if m.m.move_type() != ENPASSANT && pos.legal(m.m) {
+                if m.m.move_type() != MoveType::ENPASSANT && pos.legal(m.m) {
                     return v;
                 }
             }
@@ -1846,7 +1846,7 @@ fn probe_dtm_loss(pos: &mut Position, success: &mut i32) -> Value {
         if !pos.capture(m.m) || !pos.legal(m.m) {
             continue;
         }
-        if m.m.move_type() == ENPASSANT {
+        if m.m.move_type() == MoveType::ENPASSANT {
             num_ep += 1;
         }
 

@@ -549,10 +549,12 @@ pub fn opposite_colors(s1: Square, s2: Square) -> bool {
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct MoveType(pub u32);
 
-pub const NORMAL: MoveType = MoveType(0);
-pub const PROMOTION: MoveType = MoveType(1 << 14);
-pub const ENPASSANT: MoveType = MoveType(2 << 14);
-pub const CASTLING: MoveType = MoveType(3 << 14);
+impl MoveType {
+    pub const NORMAL: MoveType = MoveType(0);
+    pub const PROMOTION: MoveType = MoveType(1 << 14);
+    pub const ENPASSANT: MoveType = MoveType(2 << 14);
+    pub const CASTLING: MoveType = MoveType(3 << 14);
+}
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Move(pub u32);
@@ -590,7 +592,7 @@ impl Move {
     }
 
     pub fn make_prom(from: Square, to: Square, pt: PieceType) -> Move {
-        Move(PROMOTION.0 + ((pt.0 - PieceType::KNIGHT.0) << 12) + (from.0 << 6) + to.0)
+        Move(MoveType::PROMOTION.0 + ((pt.0 - PieceType::KNIGHT.0) << 12) + (from.0 << 6) + to.0)
     }
 
     pub fn make_special(mt: MoveType, from: Square, to: Square) -> Move {

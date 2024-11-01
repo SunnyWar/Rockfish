@@ -12,8 +12,8 @@ use crate::timeman;
 use crate::tt;
 use crate::types::{
     bound::Bound, depth::Depth, key::Key, mate_in, mated_in, piece_value, Bool, CastlingRight,
-    Color, False, Move, PawnValueEg, PawnValueMg, Piece, Score, Square, True, Value, EG, ENPASSANT,
-    MAX_MATE_PLY, MAX_PLY, NORMAL,
+    Color, False, Move, MoveType, PawnValueEg, PawnValueMg, Piece, Score, Square, True, Value, EG,
+    MAX_MATE_PLY, MAX_PLY,
 };
 use crate::uci;
 use crate::ucioption;
@@ -1158,7 +1158,7 @@ fn search<NT: NodeType>(
         let moved_piece = pos.moved_piece(m);
 
         let gives_check = match m.move_type() {
-            NORMAL
+            MoveType::NORMAL
                 if pos.blockers_for_king(!pos.side_to_move())
                     & pos.pieces_c(pos.side_to_move())
                     == 0 =>
@@ -1309,7 +1309,7 @@ fn search<NT: NodeType>(
                 // Decrease reduction for moves that escape a capture. Filter
                 // out castling moves, because they are coded as "king captures
                 // rook" and hence break do_move().
-                else if m.move_type() == NORMAL
+                else if m.move_type() == MoveType::NORMAL
                     && !pos.see_ge(Move::make(m.to(), m.from()), Value::ZERO)
                 {
                     r -= 2 * Depth::ONE;
@@ -1692,7 +1692,7 @@ fn qsearch<NT: NodeType, InCheck: Bool>(
 
         debug_assert!(m.is_ok());
 
-        let move_type_normal = m.move_type() == NORMAL;
+        let move_type_normal = m.move_type() == MoveType::NORMAL;
         let no_blockers =
             pos.blockers_for_king(!pos.side_to_move()) & pos.pieces_c(pos.side_to_move()) == 0;
 
@@ -1710,7 +1710,7 @@ fn qsearch<NT: NodeType, InCheck: Bool>(
             && futility_base > -Value::KNOWN_WIN
             && !pos.advanced_pawn_push(m)
         {
-            debug_assert!(m.move_type() != ENPASSANT);
+            debug_assert!(m.move_type() != MoveType::ENPASSANT);
 
             let futility_value = futility_base + piece_value(EG, pos.piece_on(m.to()));
             if futility_value <= alpha {

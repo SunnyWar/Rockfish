@@ -6,8 +6,8 @@ use crate::bitboard::{
 use crate::position::Position;
 use crate::types::{
     direction::Direction, relative_rank, relative_square, Bishop, Black, Bool, CastlingRight,
-    CastlingRightTrait, Color, ColorTrait, False, Knight, Move, PieceType, PieceTypeTrait, Queen,
-    Rook, Square, True, White, CASTLING, ENPASSANT, MAX_MOVES,
+    CastlingRightTrait, Color, ColorTrait, False, Knight, Move, MoveType, PieceType,
+    PieceTypeTrait, Queen, Rook, Square, True, White, MAX_MOVES,
 };
 
 const CAPTURES: i32 = 0;
@@ -158,7 +158,7 @@ fn generate_castling<Cr: CastlingRightTrait, Checks: Bool, Chess960: Bool>(
         return idx;
     }
 
-    let m = Move::make_special(CASTLING, kfrom, rfrom);
+    let m = Move::make_special(MoveType::CASTLING, kfrom, rfrom);
 
     if Checks::BOOL && !pos.gives_check(m) {
         return idx;
@@ -359,7 +359,7 @@ fn generate_pawn_moves<Us: ColorTrait, T: GenType>(
             debug_assert!(b1 != 0);
 
             for to in b1 {
-                list[idx].m = Move::make_special(ENPASSANT, to, pos.ep_square());
+                list[idx].m = Move::make_special(MoveType::ENPASSANT, to, pos.ep_square());
                 idx += 1;
             }
         }
@@ -531,7 +531,8 @@ fn generate_legal(pos: &Position, list: &mut [ExtMove], idx: usize) -> usize {
     let mut legal = idx;
     for i in idx..pseudo {
         let m = list[i].m;
-        if (pinned == 0 && m.from() != ksq && m.move_type() != ENPASSANT) || pos.legal(m) {
+        if (pinned == 0 && m.from() != ksq && m.move_type() != MoveType::ENPASSANT) || pos.legal(m)
+        {
             list[legal].m = m;
             legal += 1;
         }

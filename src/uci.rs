@@ -6,7 +6,7 @@ use crate::movegen::{Legal, MoveList};
 use crate::position::Position;
 use crate::search;
 use crate::threads;
-use crate::types::{Color, Move, PawnValueEg, Square, Value, CASTLING, MAX_PLY, PROMOTION};
+use crate::types::{Color, Move, MoveType, PawnValueEg, Square, Value, MAX_PLY};
 use crate::ucioption;
 use threads::PosData;
 
@@ -296,7 +296,7 @@ pub fn move_str(m: Move, chess960: bool) -> String {
         return String::from("0000");
     }
 
-    if m.move_type() == CASTLING && !chess960 {
+    if m.move_type() == MoveType::CASTLING && !chess960 {
         to = Square::make(
             if to > from {
                 Square::FILE_G
@@ -310,7 +310,7 @@ pub fn move_str(m: Move, chess960: bool) -> String {
     let mut move_str = square(from);
     move_str.push_str(&square(to));
 
-    if m.move_type() == PROMOTION {
+    if m.move_type() == MoveType::PROMOTION {
         move_str.push(
             " pnbrqk"
                 .chars()
