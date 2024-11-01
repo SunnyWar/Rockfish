@@ -15,8 +15,7 @@ use crate::search;
 use crate::tb;
 use crate::threads::ThreadCtrl;
 use crate::types::{
-    depth::Depth, direction::pawn_push, direction::EAST, direction::SOUTH, direction::WEST,
-    key::Key, opposite_colors, piece_value, relative_rank, relative_square, BishopValueMg, Bool,
+    depth::Depth, direction::pawn_push, direction::Direction, key::Key, opposite_colors, piece_value, relative_rank, relative_square, BishopValueMg, Bool,
     CastlingRight, CastlingSide, Color, False, KnightValueMg, Move, PawnValueMg, Piece, PieceType,
     QueenValueMg, RookValueMg, Score, Square, SquareList, True, Value, ALL_PIECES, ANY_CASTLING,
     BISHOP, BLACK, BLACK_OO, BLACK_OOO, B_BISHOP, B_KING, CASTLING, ENPASSANT, KING, KNIGHT, MG,
@@ -498,12 +497,12 @@ impl Position {
         let mut sq = Square::A8;
         for c in pieces.chars() {
             if let Some(d) = c.to_digit(10) {
-                sq += (d as i32) * EAST; // Advance the given number of files
+                sq += (d as i32) * Direction::EAST; // Advance the given number of files
             } else if c == '/' {
-                sq += 2 * SOUTH;
+                sq += 2 * Direction::SOUTH;
             } else if let Some(idx) = Position::PIECE_TO_CHAR.find(c) {
                 self.put_piece(Piece(idx as u32), sq);
-                sq += EAST;
+                sq += Direction::EAST;
             }
         }
 
@@ -522,14 +521,14 @@ impl Position {
                     'K' => {
                         let mut square = Square::H1.relative(color);
                         while self.piece_on(square) != rook {
-                            square += WEST;
+                            square += Direction::WEST;
                         }
                         square
                     }
                     'Q' => {
                         let mut square = Square::A1.relative(color);
                         while self.piece_on(square) != rook {
-                            square += EAST;
+                            square += Direction::EAST;
                         }
                         square
                     }
@@ -611,7 +610,7 @@ impl Position {
             if s != kfrom && s != rfrom {
                 self.castling_path[cr.0 as usize] |= s;
             }
-            s += EAST;
+            s += Direction::EAST;
         }
 
         let mut s = std::cmp::min(kfrom, kto);
@@ -619,7 +618,7 @@ impl Position {
             if s != kfrom && s != rfrom {
                 self.castling_path[cr.0 as usize] |= s;
             }
-            s += EAST;
+            s += Direction::EAST;
         }
     }
 

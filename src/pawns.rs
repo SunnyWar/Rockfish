@@ -8,8 +8,7 @@ use crate::bitboard::{
 };
 use crate::position::Position;
 use crate::types::{
-    direction::NORTH, direction::NORTH_EAST, direction::NORTH_WEST, direction::SOUTH,
-    direction::SOUTH_EAST, direction::SOUTH_WEST, key::Key, Black, CastlingRight, CastlingSide,
+    direction::Direction, key::Key, Black, CastlingRight, CastlingSide,
     Color, ColorTrait, File, Piece, Score, Square, Value, White, BLACK, FILE_B, FILE_G, FILE_H,
     PAWN, RANK_1, RANK_5, WHITE,
 };
@@ -341,8 +340,8 @@ pub fn probe(pos: &Position) -> &mut Entry {
 fn evaluate<Us: ColorTrait>(pos: &Position, e: &mut Entry) -> Score {
     let us = Us::COLOR;
     let (them, up, right, left) = match us {
-        WHITE => (BLACK, NORTH, NORTH_EAST, NORTH_WEST),
-        _ => (WHITE, SOUTH, SOUTH_WEST, SOUTH_EAST),
+        WHITE => (BLACK, Direction::NORTH, Direction::NORTH_EAST, Direction::NORTH_WEST),
+        _ => (WHITE, Direction::SOUTH, Direction::SOUTH_WEST, Direction::SOUTH_EAST),
     };
 
     let mut score = Score::ZERO;

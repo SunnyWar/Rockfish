@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 use crate::types::{
-    direction::Direction, direction::EAST, direction::NORTH, direction::NORTH_EAST,
-    direction::NORTH_WEST, direction::SOUTH, direction::SOUTH_EAST, direction::SOUTH_WEST,
-    direction::WEST, Color, File, PieceType, Rank, Square, BISHOP, BLACK, FILE_A, FILE_H, KING,
+    direction::Direction, Color, File, PieceType, Rank, Square, BISHOP, BLACK, FILE_A, FILE_H, KING,
     KNIGHT, PAWN, QUEEN, ROOK, WHITE,
 };
 use crate::uci;
@@ -487,12 +485,12 @@ macro_rules! bitboard {
 impl Bitboard {
     pub fn shift(self, d: Direction) -> Bitboard {
         match d {
-            NORTH => self << 8,
-            SOUTH => self >> 8,
-            NORTH_EAST => (self & !FILEH_BB) << 9,
-            SOUTH_EAST => (self & !FILEH_BB) >> 7,
-            NORTH_WEST => (self & !FILEA_BB) << 7,
-            SOUTH_WEST => (self & !FILEA_BB) >> 9,
+            Direction::NORTH => self << 8,
+            Direction::SOUTH => self >> 8,
+            Direction::NORTH_EAST => (self & !FILEH_BB) << 9,
+            Direction::SOUTH_EAST => (self & !FILEH_BB) >> 7,
+            Direction::NORTH_WEST => (self & !FILEA_BB) << 7,
+            Direction::SOUTH_WEST => (self & !FILEA_BB) >> 9,
             _ => Bitboard(0),
         }
     }
@@ -712,8 +710,8 @@ pub fn init() {
         }
     }
 
-    let rook_dirs = [NORTH, EAST, SOUTH, WEST];
-    let bishop_dirs = [NORTH_EAST, SOUTH_EAST, SOUTH_WEST, NORTH_WEST];
+    let rook_dirs = [Direction::NORTH, Direction::EAST, Direction::SOUTH, Direction::WEST];
+    let bishop_dirs = [Direction::NORTH_EAST, Direction::SOUTH_EAST, Direction::SOUTH_WEST, Direction::NORTH_WEST];
 
     unsafe {
         init_magics(&mut ROOK_MAGICS, &ROOK_INIT, rook_dirs, index_rook);

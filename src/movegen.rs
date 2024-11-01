@@ -6,9 +6,7 @@ use crate::bitboard::{
 };
 use crate::position::Position;
 use crate::types::{
-    direction::Direction, direction::EAST, direction::NORTH, direction::NORTH_EAST,
-    direction::NORTH_WEST, direction::SOUTH, direction::SOUTH_EAST, direction::SOUTH_WEST,
-    direction::WEST, relative_rank, relative_square, Bishop, Black, Bool, CastlingRightTrait,
+    direction::Direction, relative_rank, relative_square, Bishop, Black, Bool, CastlingRightTrait,
     Color, ColorTrait, False, Knight, Move, PieceTypeTrait, Queen, Rook, Square, True, White,
     BISHOP, BLACK_OO, CASTLING, ENPASSANT, KING, KNIGHT, MAX_MOVES, PAWN, QUEEN, RANK_6, ROOK,
     WHITE, WHITE_OO,
@@ -137,10 +135,10 @@ fn generate_castling<Cr: CastlingRightTrait, Checks: Bool, Chess960: Bool>(
     debug_assert!(pos.checkers() == 0);
 
     let direction = match (Chess960::BOOL, kto > kfrom, king_side) {
-        (true, true, _) => WEST,
-        (true, false, _) => EAST,
-        (false, _, true) => WEST,
-        (false, _, false) => EAST,
+        (true, true, _) => Direction::WEST,
+        (true, false, _) => Direction::EAST,
+        (false, _, true) => Direction::WEST,
+        (false, _, false) => Direction::EAST,
     };
     
     let mut s = kto;
@@ -211,9 +209,9 @@ fn generate_pawn_moves<Us: ColorTrait, T: GenType>(
     let trank_8bb = if us == WHITE { RANK8_BB } else { RANK1_BB };
     let trank_7bb = if us == WHITE { RANK7_BB } else { RANK2_BB };
     let trank_3bb = if us == WHITE { RANK3_BB } else { RANK6_BB };
-    let up = if us == WHITE { NORTH } else { SOUTH };
-    let right = if us == WHITE { NORTH_EAST } else { SOUTH_WEST };
-    let left = if us == WHITE { NORTH_WEST } else { SOUTH_EAST };
+    let up = if us == WHITE { Direction::NORTH } else { Direction::SOUTH };
+    let right = if us == WHITE { Direction::NORTH_EAST } else { Direction::SOUTH_WEST };
+    let left = if us == WHITE { Direction::NORTH_WEST } else { Direction::SOUTH_EAST };
 
     let mut empty_squares = Bitboard(0);
 

@@ -9,7 +9,7 @@ use crate::movegen::{Legal, MoveList};
 use crate::position::zobrist;
 use crate::position::Position;
 use crate::types::{
-    direction::pawn_push, direction::NORTH, direction::SOUTH, key::Key, opposite_colors,
+    direction::pawn_push, direction::Direction, key::Key, opposite_colors,
     scale_factor::ScaleFactor, BishopValueMg, Color, KnightValueMg, PawnValueEg, Piece,
     QueenValueEg, QueenValueMg, RookValueEg, RookValueMg, Square, Value, BISHOP, BLACK, FILE_A,
     FILE_B, FILE_D, FILE_E, FILE_G, FILE_H, KING, KNIGHT, PAWN, QUEEN, RANK_1, RANK_2, RANK_3,
@@ -344,8 +344,8 @@ fn evaluate_krkp(pos: &Position, strong_side: Color) -> Value {
         result = Value(80) - 8 * wpsqdis as i32;
     } else {
         result = Value(200)
-            - 8 * (Square::distance(wksq, psq + SOUTH) as i32
-                - Square::distance(bksq, psq + SOUTH) as i32
+            - 8 * (Square::distance(wksq, psq + Direction::SOUTH) as i32
+                - Square::distance(bksq, psq + Direction::SOUTH) as i32
                 - Square::distance(psq, queening_sq) as i32);
     }
 
@@ -613,7 +613,7 @@ fn scale_krpkr(pos: &Position, strong_side: Color) -> ScaleFactor {
     // If the defending king blocks the pawn and the attacking king is too
     // far away, it's a draw.
     if r <= RANK_5
-        && bksq == wpsq + NORTH
+        && bksq == wpsq + Direction::NORTH
         && Square::distance(wksq, wpsq) >= 2 + tempo
         && Square::distance(wksq, brsq) >= 2 + tempo
     {
@@ -639,10 +639,10 @@ fn scale_krpkr(pos: &Position, strong_side: Color) -> ScaleFactor {
         && wrsq.file() == f
         && wrsq.0 < wpsq.0
         && Square::distance(wksq, queening_sq) + 2 < Square::distance(bksq, queening_sq) + tempo
-        && Square::distance(wksq, wpsq + NORTH) + 2 < Square::distance(bksq, wpsq + NORTH) + tempo
+        && Square::distance(wksq, wpsq + Direction::NORTH) + 2 < Square::distance(bksq, wpsq + Direction::NORTH) + tempo
         && (Square::distance(bksq, wrsq) + tempo >= 3
             || (Square::distance(wksq, queening_sq) < Square::distance(bksq, wrsq) + tempo
-                && Square::distance(wksq, wpsq + NORTH) < Square::distance(bksq, wrsq) + tempo))
+                && Square::distance(wksq, wpsq + Direction::NORTH) < Square::distance(bksq, wrsq) + tempo))
     {
         return ScaleFactor(
             ScaleFactor::MAX.0

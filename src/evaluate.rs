@@ -9,9 +9,7 @@ use crate::material;
 use crate::pawns;
 use crate::position::Position;
 use crate::types::{
-    direction::pawn_push, direction::EAST, direction::NORTH, direction::NORTH_EAST,
-    direction::NORTH_WEST, direction::SOUTH, direction::SOUTH_EAST, direction::SOUTH_WEST,
-    direction::WEST, scale_factor::ScaleFactor, Bishop, BishopValueEg, BishopValueMg, Black,
+    direction::pawn_push, direction::Direction, scale_factor::ScaleFactor, Bishop, BishopValueEg, BishopValueMg, Black,
     ColorTrait, Knight, KnightValueMg, Piece, PieceTypeTrait, Queen, Rook, RookValueMg, Score,
     Square, Value, White, ALL_PIECES, BISHOP, BLACK, EG, FILE_A, FILE_E, KING, KNIGHT, MG, PAWN,
     PHASE_MIDGAME, QUEEN, QUEEN_DIAGONAL, RANK_1, RANK_5, RANK_7, ROOK, WHITE,
@@ -367,8 +365,8 @@ const SPACE_THRESHOLD: Value = Value(12222);
 fn initialize<Us: ColorTrait>(pos: &Position, ei: &mut EvalInfo) {
     let us = Us::COLOR;
     let them = if us == WHITE { BLACK } else { WHITE };
-    let up = if us == WHITE { NORTH } else { SOUTH };
-    let down = if us == WHITE { SOUTH } else { NORTH };
+    let up = if us == WHITE { Direction::NORTH } else { Direction::SOUTH };
+    let down = if us == WHITE { Direction::SOUTH } else { Direction::NORTH };
     let low_ranks = if us == WHITE {
         RANK2_BB | RANK3_BB
     } else {
@@ -507,7 +505,7 @@ fn evaluate_pieces<Us: ColorTrait, Pt: PieceTypeTrait>(pos: &Position, ei: &mut 
                 && pos.is_chess960()
                 && (s == Square::A1.relative(us) || s == Square::H1.relative(us))
             {
-                let d = pawn_push(us) + (if s.file() == FILE_A { EAST } else { WEST });
+                let d = pawn_push(us) + (if s.file() == FILE_A { Direction::EAST } else { Direction::WEST });
                 if pos.piece_on(s + d) == Piece::make(us, PAWN) {
                     score -= if !pos.empty(s + d + pawn_push(us)) {
                         TRAPPED_BISHOP_A1H1 * 4
@@ -679,9 +677,9 @@ fn evaluate_king<Us: ColorTrait>(pos: &Position, ei: &mut EvalInfo) -> Score {
 fn evaluate_threats<Us: ColorTrait>(pos: &Position, ei: &EvalInfo) -> Score {
     let us = Us::COLOR;
     let them = if us == WHITE { BLACK } else { WHITE };
-    let up = if us == WHITE { NORTH } else { SOUTH };
-    let left = if us == WHITE { NORTH_WEST } else { SOUTH_EAST };
-    let right = if us == WHITE { NORTH_EAST } else { SOUTH_WEST };
+    let up = if us == WHITE { Direction::NORTH } else { Direction::SOUTH };
+    let left = if us == WHITE { Direction::NORTH_WEST } else { Direction::SOUTH_EAST };
+    let right = if us == WHITE { Direction::NORTH_EAST } else { Direction::SOUTH_WEST };
     let trank3bb = if us == WHITE { RANK3_BB } else { RANK6_BB };
     let mut score = Score::ZERO;
 
@@ -788,7 +786,7 @@ fn capped_distance(s1: Square, s2: Square) -> i32 {
 fn evaluate_passed_pawns<Us: ColorTrait>(pos: &Position, ei: &EvalInfo) -> Score {
     let us = Us::COLOR;
     let them = if us == WHITE { BLACK } else { WHITE };
-    let up = if us == WHITE { NORTH } else { SOUTH };
+    let up = if us == WHITE { Direction::NORTH } else { Direction::SOUTH };
     let mut score = Score::ZERO;
 
     for s in ei.pe.passed_pawns(us) {

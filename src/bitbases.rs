@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 use crate::bitboard::{pawn_attacks, pseudo_attacks, Distance};
-use crate::types::{direction::NORTH, Color, Square, BLACK, FILE_D, KING, RANK_2, RANK_7, WHITE};
+use crate::types::{direction::Direction, Color, Square, BLACK, FILE_D, KING, RANK_2, RANK_7, WHITE};
 
 // There are 24 possible pawn squares: the first 4 files and ranks from 2 to 7
 const MAX_INDEX: usize = 2 * 24 * 64 * 64;
@@ -57,9 +57,9 @@ impl KPKPosition {
             us,
             white_pawn_attacks & black_king != 0, // Check if the white pawn is attacking the black king
             psq.rank() == RANK_7,                 // Check if the pawn can be promoted
-            white_king != psq + NORTH, // Ensure the white king is not blocking the pawn's promotion
-            Square::distance(black_king, psq + NORTH) > 1, // Check if the black king is at least 2 squares away from the pawn's promotion square
-            pseudo_attacks(KING, white_king) & (psq + NORTH) != 0, // Check if the white king can defend the promotion square
+            white_king != psq + Direction::NORTH, // Ensure the white king is not blocking the pawn's promotion
+            Square::distance(black_king, psq + Direction::NORTH) > 1, // Check if the black king is at least 2 squares away from the pawn's promotion square
+            pseudo_attacks(KING, white_king) & (psq + Direction::NORTH) != 0, // Check if the white king can defend the promotion square
             pseudo_attacks(KING, black_king)
                 & !(pseudo_attacks(KING, white_king) | black_pawn_attacks)
                 == 0, // Check if the black king is stalemated or if white is attacking
@@ -125,19 +125,19 @@ impl KPKPosition {
                         them,
                         self.ksq[them.0 as usize],
                         self.ksq[us.0 as usize],
-                        psq + NORTH,
+                        psq + Direction::NORTH,
                     )]
                     .result;
                 }
                 RANK_2 => {
-                    if psq + NORTH != self.ksq[us.0 as usize]
-                        && psq + NORTH != self.ksq[them.0 as usize]
+                    if psq + Direction::NORTH != self.ksq[us.0 as usize]
+                        && psq + Direction::NORTH != self.ksq[them.0 as usize]
                     {
                         r |= db[index(
                             them,
                             self.ksq[them.0 as usize],
                             self.ksq[us.0 as usize],
-                            psq + 2 * NORTH,
+                            psq + 2 * Direction::NORTH,
                         )]
                         .result;
                     }
