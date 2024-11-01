@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 use crate::types::{
-    direction::Direction, Color, File, PieceType, Rank, Square, BISHOP, BLACK, FILE_A, FILE_H, KING,
-    KNIGHT, PAWN, QUEEN, ROOK, WHITE,
+    direction::Direction, Color, File, PieceType, Rank, Square, BLACK, FILE_A, FILE_H, WHITE,
 };
 use crate::uci;
 
@@ -678,11 +677,11 @@ pub fn init() {
     }
 
     for &color in &[WHITE, BLACK] {
-        for &piece_type in &[PAWN, KNIGHT, KING] {
+        for &piece_type in &[PieceType::PAWN, PieceType::KNIGHT, PieceType::KING] {
             for square in &ALL_SQUARES {
                 let steps: &[i32] = match piece_type {
-                    PAWN => &[7, 9],
-                    KNIGHT => &[6, 10, 15, 17],
+                    PieceType::PAWN => &[7, 9],
+                    PieceType::KNIGHT => &[6, 10, 15, 17],
                     _ => &[1, 7, 8, 9],
                 };
 
@@ -697,7 +696,7 @@ pub fn init() {
 
                     if to_square.is_ok() && Square::distance(square, to_square) < 3 {
                         unsafe {
-                            if piece_type == PAWN {
+                            if piece_type == PieceType::PAWN {
                                 PAWN_ATTACKS[color.0 as usize][square.0 as usize] |= to_square;
                             } else {
                                 PSEUDO_ATTACKS[piece_type.0 as usize][square.0 as usize] |=
@@ -710,8 +709,18 @@ pub fn init() {
         }
     }
 
-    let rook_dirs = [Direction::NORTH, Direction::EAST, Direction::SOUTH, Direction::WEST];
-    let bishop_dirs = [Direction::NORTH_EAST, Direction::SOUTH_EAST, Direction::SOUTH_WEST, Direction::NORTH_WEST];
+    let rook_dirs = [
+        Direction::NORTH,
+        Direction::EAST,
+        Direction::SOUTH,
+        Direction::WEST,
+    ];
+    let bishop_dirs = [
+        Direction::NORTH_EAST,
+        Direction::SOUTH_EAST,
+        Direction::SOUTH_WEST,
+        Direction::NORTH_WEST,
+    ];
 
     unsafe {
         init_magics(&mut ROOK_MAGICS, &ROOK_INIT, rook_dirs, index_rook);
@@ -719,16 +728,17 @@ pub fn init() {
     }
 
     for s1 in &ALL_SQUARES {
-        let bishop_attacks = attacks_bb(BISHOP, s1, Bitboard(0));
-        let rook_attacks = attacks_bb(ROOK, s1, Bitboard(0));
+        let bishop_attacks = attacks_bb(PieceType::BISHOP, s1, Bitboard(0));
+        let rook_attacks = attacks_bb(PieceType::ROOK, s1, Bitboard(0));
 
         unsafe {
-            PSEUDO_ATTACKS[BISHOP.0 as usize][s1.0 as usize] = bishop_attacks;
-            PSEUDO_ATTACKS[ROOK.0 as usize][s1.0 as usize] = rook_attacks;
-            PSEUDO_ATTACKS[QUEEN.0 as usize][s1.0 as usize] = bishop_attacks | rook_attacks;
+            PSEUDO_ATTACKS[PieceType::BISHOP.0 as usize][s1.0 as usize] = bishop_attacks;
+            PSEUDO_ATTACKS[PieceType::ROOK.0 as usize][s1.0 as usize] = rook_attacks;
+            PSEUDO_ATTACKS[PieceType::QUEEN.0 as usize][s1.0 as usize] =
+                bishop_attacks | rook_attacks;
         }
 
-        for &piece_type in &[BISHOP, ROOK] {
+        for &piece_type in &[PieceType::BISHOP, PieceType::ROOK] {
             let s1_attacks = attacks_bb(piece_type, s1, Bitboard(0));
 
             for s2 in &ALL_SQUARES {
@@ -805,9 +815,9 @@ fn init_magics(
 
 pub fn attacks_bb(pt: PieceType, s: Square, occupied: Bitboard) -> Bitboard {
     match pt {
-        BISHOP => attacks_bb_bishop(s, occupied),
-        ROOK => attacks_bb_rook(s, occupied),
-        QUEEN => attacks_bb_bishop(s, occupied) | attacks_bb_rook(s, occupied),
+        PieceType::BISHOP => attacks_bb_bishop(s, occupied),
+        PieceType::ROOK => attacks_bb_rook(s, occupied),
+        PieceType::QUEEN => attacks_bb_bishop(s, occupied) | attacks_bb_rook(s, occupied),
         _ => pseudo_attacks(pt, s),
     }
 }

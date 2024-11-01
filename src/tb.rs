@@ -8,9 +8,9 @@ use crate::position::zobrist::material;
 use crate::position::Position;
 use crate::search::RootMoves;
 use crate::types::{
-    depth::Depth, key::Key, Color, Move, PawnValueEg, Piece, PieceType, Square,
-    Value, ANY_CASTLING, BISHOP, BLACK, B_PAWN, ENPASSANT, FILE_A, FILE_B, FILE_C, FILE_D, KING,
-    KNIGHT, MAX_MATE_PLY, NO_PIECE, PAWN, PROMOTION, QUEEN, ROOK, WHITE, W_PAWN,
+    depth::Depth, key::Key, Color, Move, PawnValueEg, Piece, PieceType, Square, Value,
+    ANY_CASTLING, BLACK, B_PAWN, ENPASSANT, FILE_A, FILE_B, FILE_C, FILE_D, MAX_MATE_PLY, NO_PIECE,
+    PROMOTION, WHITE, W_PAWN,
 };
 use crate::ucioption;
 
@@ -355,7 +355,7 @@ impl TbTable for DtzPiece {
         } else {
             res
         };
-    
+
         if self.flags & PA_FLAGS[(wdl + 2) as usize] == 0 || wdl & 1 != 0 {
             mapped_res * 2
         } else {
@@ -539,10 +539,10 @@ impl TbTable for DtmPawn {
         if self.loss_only {
             return res;
         }
-    
+
         let idx = self.map_idx[t][bside][usize::from(won)];
         i32::from(u16::from_le(self.map[idx as usize + res as usize]))
-    }   
+    }
     fn set_switched(&mut self) {
         self.switched = true;
     }
@@ -603,13 +603,13 @@ impl TbTable for DtzPawn {
         } else {
             res
         };
-    
+
         if self.flags[t] & PA_FLAGS[(wdl + 2) as usize] == 0 || wdl & 1 != 0 {
             mapped_res * 2
         } else {
             mapped_res
         }
-    }   
+    }
     fn set_switched(&mut self) {}
     fn switched(&self) -> bool {
         false
@@ -873,12 +873,12 @@ pub fn init_tb(name: &str) {
     let mut color = 0;
     for c in name.chars() {
         match c {
-            'P' => pcs[PAWN.0 as usize | color] += 1,
-            'N' => pcs[KNIGHT.0 as usize | color] += 1,
-            'B' => pcs[BISHOP.0 as usize | color] += 1,
-            'R' => pcs[ROOK.0 as usize | color] += 1,
-            'Q' => pcs[QUEEN.0 as usize | color] += 1,
-            'K' => pcs[KING.0 as usize | color] += 1,
+            'P' => pcs[PieceType::PAWN.0 as usize | color] += 1,
+            'N' => pcs[PieceType::KNIGHT.0 as usize | color] += 1,
+            'B' => pcs[PieceType::BISHOP.0 as usize | color] += 1,
+            'R' => pcs[PieceType::ROOK.0 as usize | color] += 1,
+            'Q' => pcs[PieceType::QUEEN.0 as usize | color] += 1,
+            'K' => pcs[PieceType::KING.0 as usize | color] += 1,
             'v' => color = 8,
             _ => {}
         }
@@ -1602,7 +1602,7 @@ fn probe_helper<T: TbTable>(
 
     let t = if T::Enc::ENC != PieceEnc::ENC {
         let color = Piece(u32::from(tb.ei(0, 0).pieces[0])).color();
-        let b = pos.pieces_cp(color ^ flip, PAWN);
+        let b = pos.pieces_cp(color ^ flip, PieceType::PAWN);
         leading_pawn_table::<T::Enc>(b, flip) as usize
     } else {
         0
@@ -1627,7 +1627,7 @@ fn probe_table<T: TbType>(pos: &Position, s: T::Select, success: &mut i32) -> i3
     let key = pos.material_key();
 
     // Test for KvK
-    if T::TYPE == Wdl::TYPE && pos.pieces() == pos.pieces_p(KING) {
+    if T::TYPE == Wdl::TYPE && pos.pieces() == pos.pieces_p(PieceType::KING) {
         return 0;
     }
 
@@ -1993,7 +1993,10 @@ pub fn probe_dtz(pos: &mut Position, success: &mut i32) -> i32 {
         };
 
         for &m in &list[0..end] {
-            if pos.moved_piece(m.m).piece_type() != PAWN || pos.capture(m.m) || !pos.legal(m.m) {
+            if pos.moved_piece(m.m).piece_type() != PieceType::PAWN
+                || pos.capture(m.m)
+                || !pos.legal(m.m)
+            {
                 continue;
             }
             let gives_check = pos.gives_check(m.m);
@@ -2044,7 +2047,10 @@ pub fn probe_dtz(pos: &mut Position, success: &mut i32) -> i32 {
         // We can skip pawn moves and captures.
         // If wdl > 0, we already caught them. If wdl < 0, the initial
         // value of best already takes account of them.
-        if pos.capture(m.m) || pos.moved_piece(m.m).piece_type() == PAWN || !pos.legal(m.m) {
+        if pos.capture(m.m)
+            || pos.moved_piece(m.m).piece_type() == PieceType::PAWN
+            || !pos.legal(m.m)
+        {
             continue;
         }
         let gives_check = pos.gives_check(m.m);

@@ -122,9 +122,9 @@ impl CastlingRight {
     pub fn make(c: Color, cs: CastlingSide) -> CastlingRight {
         use crate::types::CastlingSide::KING;
         match (c, cs) {
-            (WHITE, KING) => WHITE_OO,
+            (WHITE, CastlingSide::KING) => WHITE_OO,
             (WHITE, _) => WHITE_OOO,
-            (_, KING) => BLACK_OO,
+            (_, CastlingSide::KING) => BLACK_OO,
             (_, _) => BLACK_OOO,
         }
     }
@@ -188,19 +188,18 @@ pub const EG: usize = 1;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct PieceType(pub u32);
 
-#[allow(dead_code)]
-pub const NO_PIECE_TYPE: PieceType = PieceType(0);
-
-pub const PAWN: PieceType = PieceType(1);
-pub const KNIGHT: PieceType = PieceType(2);
-pub const BISHOP: PieceType = PieceType(3);
-pub const ROOK: PieceType = PieceType(4);
-pub const QUEEN: PieceType = PieceType(5);
-pub const KING: PieceType = PieceType(6);
-
-pub const QUEEN_DIAGONAL: PieceType = PieceType(7);
-
-pub const ALL_PIECES: PieceType = PieceType(0);
+impl PieceType {
+    #[allow(dead_code)]
+    pub const NO_PIECE_TYPE: PieceType = PieceType(0);
+    pub const PAWN: PieceType = PieceType(1);
+    pub const KNIGHT: PieceType = PieceType(2);
+    pub const BISHOP: PieceType = PieceType(3);
+    pub const ROOK: PieceType = PieceType(4);
+    pub const QUEEN: PieceType = PieceType(5);
+    pub const KING: PieceType = PieceType(6);
+    pub const QUEEN_DIAGONAL: PieceType = PieceType(7);
+    pub const ALL_PIECES: PieceType = PieceType(0);
+}
 
 pub struct Pawn;
 pub struct Knight;
@@ -214,27 +213,27 @@ pub trait PieceTypeTrait {
 }
 
 impl PieceTypeTrait for Pawn {
-    const TYPE: PieceType = PAWN;
+    const TYPE: PieceType = PieceType::PAWN;
 }
 
 impl PieceTypeTrait for Knight {
-    const TYPE: PieceType = KNIGHT;
+    const TYPE: PieceType = PieceType::KNIGHT;
 }
 
 impl PieceTypeTrait for Bishop {
-    const TYPE: PieceType = BISHOP;
+    const TYPE: PieceType = PieceType::BISHOP;
 }
 
 impl PieceTypeTrait for Rook {
-    const TYPE: PieceType = ROOK;
+    const TYPE: PieceType = PieceType::ROOK;
 }
 
 impl PieceTypeTrait for Queen {
-    const TYPE: PieceType = QUEEN;
+    const TYPE: PieceType = PieceType::QUEEN;
 }
 
 impl PieceTypeTrait for King {
-    const TYPE: PieceType = KING;
+    const TYPE: PieceType = PieceType::KING;
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -574,7 +573,7 @@ impl Move {
     }
 
     pub fn promotion_type(self) -> PieceType {
-        PieceType(((self.0 >> 12) & 3) + KNIGHT.0)
+        PieceType(((self.0 >> 12) & 3) + PieceType::KNIGHT.0)
     }
 
     pub fn is_ok(self) -> bool {
@@ -586,7 +585,7 @@ impl Move {
     }
 
     pub fn make_prom(from: Square, to: Square, pt: PieceType) -> Move {
-        Move(PROMOTION.0 + ((pt.0 - KNIGHT.0) << 12) + (from.0 << 6) + to.0)
+        Move(PROMOTION.0 + ((pt.0 - PieceType::KNIGHT.0) << 12) + (from.0 << 6) + to.0)
     }
 
     pub fn make_special(mt: MoveType, from: Square, to: Square) -> Move {
@@ -948,12 +947,12 @@ mod tests {
 
         #[test]
         fn test_make() {
-            use crate::types::CastlingSide::{KING, QUEEN};
+            use crate::types::CastlingSide::{PieceType::QUEEN, KING};
 
-            assert_eq!(CastlingRight::make(WHITE, KING), WHITE_OO);
-            assert_eq!(CastlingRight::make(WHITE, QUEEN), WHITE_OOO);
-            assert_eq!(CastlingRight::make(BLACK, KING), BLACK_OO);
-            assert_eq!(CastlingRight::make(BLACK, QUEEN), BLACK_OOO);
+            assert_eq!(CastlingRight::make(WHITE, PieceType::KING), WHITE_OO);
+            assert_eq!(CastlingRight::make(WHITE, PieceType::QUEEN), WHITE_OOO);
+            assert_eq!(CastlingRight::make(BLACK, PieceType::KING), BLACK_OO);
+            assert_eq!(CastlingRight::make(BLACK, PieceType::QUEEN), BLACK_OOO);
         }
 
         #[test]
@@ -990,46 +989,46 @@ mod tests {
 
         #[test]
         fn test_piece_type_constants() {
-            assert_eq!(NO_PIECE_TYPE, PieceType(0));
-            assert_eq!(PAWN, PieceType(1));
-            assert_eq!(KNIGHT, PieceType(2));
-            assert_eq!(BISHOP, PieceType(3));
-            assert_eq!(ROOK, PieceType(4));
-            assert_eq!(QUEEN, PieceType(5));
-            assert_eq!(KING, PieceType(6));
-            assert_eq!(QUEEN_DIAGONAL, PieceType(7));
-            assert_eq!(ALL_PIECES, PieceType(0));
+            assert_eq!(PieceType::NO_PIECE_TYPE, PieceType(0));
+            assert_eq!(PieceType::PAWN, PieceType(1));
+            assert_eq!(PieceType::KNIGHT, PieceType(2));
+            assert_eq!(PieceType::BISHOP, PieceType(3));
+            assert_eq!(PieceType::ROOK, PieceType(4));
+            assert_eq!(PieceType::QUEEN, PieceType(5));
+            assert_eq!(PieceType::KING, PieceType(6));
+            assert_eq!(PieceType::QUEEN_DIAGONAL, PieceType(7));
+            assert_eq!(PieceType::ALL_PIECES, PieceType(0));
         }
 
         #[test]
         fn test_piece_type_trait() {
-            assert_eq!(Pawn::TYPE, PAWN);
-            assert_eq!(Knight::TYPE, KNIGHT);
-            assert_eq!(Bishop::TYPE, BISHOP);
-            assert_eq!(Rook::TYPE, ROOK);
-            assert_eq!(Queen::TYPE, QUEEN);
-            assert_eq!(King::TYPE, KING);
+            assert_eq!(Pawn::TYPE, PieceType::PAWN);
+            assert_eq!(Knight::TYPE, PieceType::KNIGHT);
+            assert_eq!(Bishop::TYPE, PieceType::BISHOP);
+            assert_eq!(Rook::TYPE, PieceType::ROOK);
+            assert_eq!(Queen::TYPE, PieceType::QUEEN);
+            assert_eq!(King::TYPE, PieceType::KING);
         }
 
         #[test]
         fn test_clone() {
-            let pt = PAWN;
+            let pt = PieceType::PAWN;
             let cloned = pt;
             assert_eq!(pt, cloned);
         }
 
         #[test]
         fn test_copy() {
-            let pt = QUEEN;
+            let pt = PieceType::QUEEN;
             let copied = pt;
             assert_eq!(pt, copied);
         }
 
         #[test]
         fn test_partial_eq() {
-            let pt1 = KNIGHT;
-            let pt2 = KNIGHT;
-            let pt3 = BISHOP;
+            let pt1 = PieceType::KNIGHT;
+            let pt2 = PieceType::KNIGHT;
+            let pt3 = PieceType::BISHOP;
             assert_eq!(pt1, pt2);
             assert_ne!(pt1, pt3);
         }

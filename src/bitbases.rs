@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 use crate::bitboard::{pawn_attacks, pseudo_attacks, Distance};
-use crate::types::{direction::Direction, Color, Square, BLACK, FILE_D, KING, RANK_2, RANK_7, WHITE};
+use crate::types::{
+    direction::Direction, Color, PieceType, Square, BLACK, FILE_D, RANK_2, RANK_7, WHITE,
+};
 
 // There are 24 possible pawn squares: the first 4 files and ranks from 2 to 7
 const MAX_INDEX: usize = 2 * 24 * 64 * 64;
@@ -59,11 +61,14 @@ impl KPKPosition {
             psq.rank() == RANK_7,                 // Check if the pawn can be promoted
             white_king != psq + Direction::NORTH, // Ensure the white king is not blocking the pawn's promotion
             Square::distance(black_king, psq + Direction::NORTH) > 1, // Check if the black king is at least 2 squares away from the pawn's promotion square
-            pseudo_attacks(KING, white_king) & (psq + Direction::NORTH) != 0, // Check if the white king can defend the promotion square
-            pseudo_attacks(KING, black_king)
-                & !(pseudo_attacks(KING, white_king) | black_pawn_attacks)
+            pseudo_attacks(PieceType::KING, white_king) & (psq + Direction::NORTH) != 0, // Check if the white king can defend the promotion square
+            pseudo_attacks(PieceType::KING, black_king)
+                & !(pseudo_attacks(PieceType::KING, white_king) | black_pawn_attacks)
                 == 0, // Check if the black king is stalemated or if white is attacking
-            pseudo_attacks(KING, black_king) & psq & !pseudo_attacks(KING, white_king) != 0, // Check if the black king can capture the pawn
+            pseudo_attacks(PieceType::KING, black_king)
+                & psq
+                & !pseudo_attacks(PieceType::KING, white_king)
+                != 0, // Check if the black king can capture the pawn
         ) {
             // If the kings are adjacent, or a king is on the pawn's square, or the white pawn is attacking the black king
             (true, _, _, _, _, _, _, _, _, _, _)
@@ -111,7 +116,7 @@ impl KPKPosition {
 
         let mut r = INVALID;
 
-        for s in pseudo_attacks(KING, self.ksq[us.0 as usize]) {
+        for s in pseudo_attacks(PieceType::KING, self.ksq[us.0 as usize]) {
             r |= match us {
                 WHITE => db[index(them, self.ksq[them.0 as usize], s, psq)].result,
                 _ => db[index(them, s, self.ksq[them.0 as usize], psq)].result,

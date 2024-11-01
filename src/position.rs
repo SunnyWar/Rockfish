@@ -15,12 +15,12 @@ use crate::search;
 use crate::tb;
 use crate::threads::ThreadCtrl;
 use crate::types::{
-    depth::Depth, direction::pawn_push, direction::Direction, key::Key, opposite_colors, piece_value, relative_rank, relative_square, BishopValueMg, Bool,
-    CastlingRight, CastlingSide, Color, False, KnightValueMg, Move, PawnValueMg, Piece, PieceType,
-    QueenValueMg, RookValueMg, Score, Square, SquareList, True, Value, ALL_PIECES, ANY_CASTLING,
-    BISHOP, BLACK, BLACK_OO, BLACK_OOO, B_BISHOP, B_KING, CASTLING, ENPASSANT, KING, KNIGHT, MG,
-    NORMAL, NO_PIECE, PAWN, PROMOTION, QUEEN, RANK_1, RANK_2, RANK_4, RANK_6, RANK_8, ROOK, WHITE,
-    WHITE_OO, WHITE_OOO, W_BISHOP, W_KING,
+    depth::Depth, direction::pawn_push, direction::Direction, key::Key, opposite_colors,
+    piece_value, relative_rank, relative_square, BishopValueMg, Bool, CastlingRight, CastlingSide,
+    Color, False, KnightValueMg, Move, PawnValueMg, Piece, PieceType, QueenValueMg, RookValueMg,
+    Score, Square, SquareList, True, Value, ANY_CASTLING, BLACK, BLACK_OO, BLACK_OOO, B_BISHOP,
+    B_KING, CASTLING, ENPASSANT, MG, NORMAL, NO_PIECE, PROMOTION, RANK_1, RANK_2, RANK_4, RANK_6,
+    RANK_8, WHITE, WHITE_OO, WHITE_OOO, W_BISHOP, W_KING,
 };
 use crate::uci;
 
@@ -250,7 +250,7 @@ impl Position {
     }
 
     pub fn pieces(&self) -> Bitboard {
-        self.by_type_bb[ALL_PIECES.0 as usize]
+        self.by_type_bb[PieceType::ALL_PIECES.0 as usize]
     }
 
     pub fn pieces_p(&self, pt: PieceType) -> Bitboard {
@@ -318,25 +318,29 @@ impl Position {
     }
 
     pub fn attacks_from(&self, pt: PieceType, s: Square) -> Bitboard {
-        debug_assert!(pt != PAWN);
+        debug_assert!(pt != PieceType::PAWN);
         match pt {
-            BISHOP | ROOK => attacks_bb(pt, s, self.pieces()),
-            QUEEN => self.attacks_from(ROOK, s) | self.attacks_from(BISHOP, s),
+            PieceType::BISHOP | PieceType::ROOK => attacks_bb(pt, s, self.pieces()),
+            PieceType::QUEEN => {
+                self.attacks_from(PieceType::ROOK, s) | self.attacks_from(PieceType::BISHOP, s)
+            }
             _ => pseudo_attacks(pt, s),
         }
     }
 
     pub fn attackers_to_occ(&self, s: Square, occ: Bitboard) -> Bitboard {
-        (self.attacks_from_pawn(s, BLACK) & self.pieces_cp(WHITE, PAWN))
-            | (self.attacks_from_pawn(s, WHITE) & self.pieces_cp(BLACK, PAWN))
-            | (self.attacks_from(KNIGHT, s) & self.pieces_p(KNIGHT))
-            | (attacks_bb(ROOK, s, occ) & self.pieces_pp(ROOK, QUEEN))
-            | (attacks_bb(BISHOP, s, occ) & self.pieces_pp(BISHOP, QUEEN))
-            | (self.attacks_from(KING, s) & self.pieces_p(KING))
+        (self.attacks_from_pawn(s, BLACK) & self.pieces_cp(WHITE, PieceType::PAWN))
+            | (self.attacks_from_pawn(s, WHITE) & self.pieces_cp(BLACK, PieceType::PAWN))
+            | (self.attacks_from(PieceType::KNIGHT, s) & self.pieces_p(PieceType::KNIGHT))
+            | (attacks_bb(PieceType::ROOK, s, occ)
+                & self.pieces_pp(PieceType::ROOK, PieceType::QUEEN))
+            | (attacks_bb(PieceType::BISHOP, s, occ)
+                & self.pieces_pp(PieceType::BISHOP, PieceType::QUEEN))
+            | (self.attacks_from(PieceType::KING, s) & self.pieces_p(PieceType::KING))
     }
 
     pub fn attackers_to(&self, s: Square) -> Bitboard {
-        self.attackers_to_occ(s, self.by_type_bb[ALL_PIECES.0 as usize])
+        self.attackers_to_occ(s, self.by_type_bb[PieceType::ALL_PIECES.0 as usize])
     }
 
     pub fn checkers(&self) -> Bitboard {
@@ -356,11 +360,11 @@ impl Position {
     }
 
     pub fn pawn_passed(&self, c: Color, s: Square) -> bool {
-        self.pieces_cp(!c, PAWN) & passed_pawn_mask(c, s) == 0
+        self.pieces_cp(!c, PieceType::PAWN) & passed_pawn_mask(c, s) == 0
     }
 
     pub fn advanced_pawn_push(&self, m: Move) -> bool {
-        self.moved_piece(m).piece_type() == PAWN
+        self.moved_piece(m).piece_type() == PieceType::PAWN
             && m.from().relative_rank(self.side_to_move()) > RANK_4
     }
 
@@ -399,7 +403,10 @@ impl Position {
     pub fn opposite_bishops(&self) -> bool {
         self.piece_count[W_BISHOP.0 as usize] == 1
             && self.piece_count[B_BISHOP.0 as usize] == 1
-            && opposite_colors(self.square(WHITE, BISHOP), self.square(BLACK, BISHOP))
+            && opposite_colors(
+                self.square(WHITE, PieceType::BISHOP),
+                self.square(BLACK, PieceType::BISHOP),
+            )
     }
 
     pub fn is_chess960(&self) -> bool {
@@ -515,7 +522,7 @@ impl Position {
         if castling != "-" {
             for c in castling.chars() {
                 let color = if c.is_lowercase() { BLACK } else { WHITE };
-                let rook = Piece::make(color, ROOK);
+                let rook = Piece::make(color, PieceType::ROOK);
                 let side = c.to_uppercase().next().unwrap();
                 let rsq = match side {
                     'K' => {
@@ -549,8 +556,8 @@ impl Position {
             let file = enpassant.chars().nth(0).unwrap().to_digit(18).unwrap() - 10;
             let rank = if self.side_to_move == WHITE { 5 } else { 2 };
             let ep_sq = Square::make(file, rank);
-            if self.attackers_to(ep_sq) & self.pieces_cp(self.side_to_move, PAWN) != 0
-                && self.pieces_cp(!self.side_to_move, PAWN)
+            if self.attackers_to(ep_sq) & self.pieces_cp(self.side_to_move, PieceType::PAWN) != 0
+                && self.pieces_cp(!self.side_to_move, PieceType::PAWN)
                     & (ep_sq + pawn_push(!self.side_to_move))
                     != 0
             {
@@ -575,7 +582,7 @@ impl Position {
     // given the corresponding color and the rook starting square.
 
     fn set_castling_right(&mut self, c: Color, rfrom: Square) {
-        let kfrom = self.square(c, KING);
+        let kfrom = self.square(c, PieceType::KING);
         let cs = if kfrom < rfrom {
             CastlingSide::KING
         } else {
@@ -626,23 +633,33 @@ impl Position {
 
     fn set_check_info(&mut self) {
         let mut pinners = Bitboard(0);
-        self.st_mut().blockers_for_king[WHITE.0 as usize] =
-            self.slider_blockers(self.pieces_c(BLACK), self.square(WHITE, KING), &mut pinners);
+        self.st_mut().blockers_for_king[WHITE.0 as usize] = self.slider_blockers(
+            self.pieces_c(BLACK),
+            self.square(WHITE, PieceType::KING),
+            &mut pinners,
+        );
         self.st_mut().pinners_for_king[WHITE.0 as usize] = pinners;
-        self.st_mut().blockers_for_king[BLACK.0 as usize] =
-            self.slider_blockers(self.pieces_c(WHITE), self.square(BLACK, KING), &mut pinners);
+        self.st_mut().blockers_for_king[BLACK.0 as usize] = self.slider_blockers(
+            self.pieces_c(WHITE),
+            self.square(BLACK, PieceType::KING),
+            &mut pinners,
+        );
         self.st_mut().pinners_for_king[BLACK.0 as usize] = pinners;
 
-        let ksq = self.square(!self.side_to_move(), KING);
+        let ksq = self.square(!self.side_to_move(), PieceType::KING);
 
-        self.st_mut().check_squares[PAWN.0 as usize] =
+        self.st_mut().check_squares[PieceType::PAWN.0 as usize] =
             self.attacks_from_pawn(ksq, !self.side_to_move);
-        self.st_mut().check_squares[KNIGHT.0 as usize] = self.attacks_from(KNIGHT, ksq);
-        self.st_mut().check_squares[BISHOP.0 as usize] = self.attacks_from(BISHOP, ksq);
-        self.st_mut().check_squares[ROOK.0 as usize] = self.attacks_from(ROOK, ksq);
-        self.st_mut().check_squares[QUEEN.0 as usize] =
-            self.st().check_squares[BISHOP.0 as usize] | self.st().check_squares[ROOK.0 as usize];
-        self.st_mut().check_squares[KING.0 as usize] = Bitboard(0);
+        self.st_mut().check_squares[PieceType::KNIGHT.0 as usize] =
+            self.attacks_from(PieceType::KNIGHT, ksq);
+        self.st_mut().check_squares[PieceType::BISHOP.0 as usize] =
+            self.attacks_from(PieceType::BISHOP, ksq);
+        self.st_mut().check_squares[PieceType::ROOK.0 as usize] =
+            self.attacks_from(PieceType::ROOK, ksq);
+        self.st_mut().check_squares[PieceType::QUEEN.0 as usize] = self.st().check_squares
+            [PieceType::BISHOP.0 as usize]
+            | self.st().check_squares[PieceType::ROOK.0 as usize];
+        self.st_mut().check_squares[PieceType::KING.0 as usize] = Bitboard(0);
     }
 
     // set_state() computes the hash keys of the position, and other data
@@ -657,7 +674,8 @@ impl Position {
         self.st_mut().non_pawn_material[WHITE.0 as usize] = Value::ZERO;
         self.st_mut().non_pawn_material[BLACK.0 as usize] = Value::ZERO;
         self.st_mut().psq = Score::ZERO;
-        self.st_mut().checkers_bb = self.attackers_to(self.square(self.side_to_move, KING))
+        self.st_mut().checkers_bb = self
+            .attackers_to(self.square(self.side_to_move, PieceType::KING))
             & self.pieces_c(!self.side_to_move);
 
         self.set_check_info();
@@ -682,7 +700,7 @@ impl Position {
             self.st_mut().key ^= tmp;
         }
 
-        for s in self.pieces_p(PAWN) {
+        for s in self.pieces_p(PieceType::PAWN) {
             let tmp = zobrist::psq(self.piece_on(s), s);
             self.st_mut().pawn_key ^= tmp;
         }
@@ -801,8 +819,10 @@ impl Position {
         *pinners = Bitboard(0);
 
         // Snipers are sliders that attack 's' when a piece is removed
-        let snipers = ((pseudo_attacks(ROOK, s) & self.pieces_pp(QUEEN, ROOK))
-            | (pseudo_attacks(BISHOP, s) & self.pieces_pp(QUEEN, BISHOP)))
+        let snipers = ((pseudo_attacks(PieceType::ROOK, s)
+            & self.pieces_pp(PieceType::QUEEN, PieceType::ROOK))
+            | (pseudo_attacks(PieceType::BISHOP, s)
+                & self.pieces_pp(PieceType::QUEEN, PieceType::BISHOP)))
             & sliders;
 
         for sniper_sq in snipers {
@@ -827,37 +847,44 @@ impl Position {
         let from = m.from();
 
         debug_assert!(self.moved_piece(m).color() == us);
-        debug_assert!(self.piece_on(self.square(us, KING)) == Piece::make(us, KING));
+        debug_assert!(
+            self.piece_on(self.square(us, PieceType::KING)) == Piece::make(us, PieceType::KING)
+        );
 
         // En passant captures are a tricky special case. Because they are
         // uncommon, we do it simply by testing whether the king is attacked
         // after the move is made.
         if m.move_type() == ENPASSANT {
-            let ksq = self.square(us, KING);
+            let ksq = self.square(us, PieceType::KING);
             let to = m.to();
             let capsq = to - pawn_push(us);
             let occupied = (self.pieces() ^ from ^ capsq) | to;
 
             debug_assert!(to == self.ep_square());
-            debug_assert!(self.moved_piece(m) == Piece::make(us, PAWN));
-            debug_assert!(self.piece_on(capsq) == Piece::make(!us, PAWN));
+            debug_assert!(self.moved_piece(m) == Piece::make(us, PieceType::PAWN));
+            debug_assert!(self.piece_on(capsq) == Piece::make(!us, PieceType::PAWN));
             debug_assert!(self.piece_on(to) == NO_PIECE);
 
-            return attacks_bb(ROOK, ksq, occupied) & self.pieces_cpp(!us, QUEEN, ROOK) == 0
-                && attacks_bb(BISHOP, ksq, occupied) & self.pieces_cpp(!us, QUEEN, BISHOP) == 0;
+            return attacks_bb(PieceType::ROOK, ksq, occupied)
+                & self.pieces_cpp(!us, PieceType::QUEEN, PieceType::ROOK)
+                == 0
+                && attacks_bb(PieceType::BISHOP, ksq, occupied)
+                    & self.pieces_cpp(!us, PieceType::QUEEN, PieceType::BISHOP)
+                    == 0;
         }
 
         // If the moving piece is a king, check whether the destination
         // square is attacked by the opponent. Castling moves are checked
         // for legality during move generation.
-        if self.piece_on(from).piece_type() == KING {
+        if self.piece_on(from).piece_type() == PieceType::KING {
             return m.move_type() == CASTLING
                 || self.attackers_to(m.to()) & self.pieces_c(!us) == 0;
         }
 
         // A non-king move is legal if and only if it is not pinned or it
         // is moving along the ray towards or away from the king.
-        self.blockers_for_king(us) & from == 0 || aligned(from, m.to(), self.square(us, KING))
+        self.blockers_for_king(us) & from == 0
+            || aligned(from, m.to(), self.square(us, PieceType::KING))
     }
 
     // pseudo_legal() takes a random move and tests whether the move is
@@ -876,7 +903,7 @@ impl Position {
         }
 
         // It is not a promotion, so promotion piece must be empty
-        if m.promotion_type() != KNIGHT {
+        if m.promotion_type() != PieceType::KNIGHT {
             return false;
         }
 
@@ -892,7 +919,7 @@ impl Position {
         }
 
         // Handle the special case of a pawn move
-        if pc.piece_type() == PAWN {
+        if pc.piece_type() == PieceType::PAWN {
             // We have already handled promotion moves, so destination
             // cannot be on the 8th/1st rank.
             if to.rank() == relative_rank(us, RANK_8) {
@@ -916,7 +943,7 @@ impl Position {
         // illegal moves and legal() relies on this. We therefore have to take
         // care that the same kind of moves are filtered out here.
         if self.checkers() != 0 {
-            if pc.piece_type() != KING {
+            if pc.piece_type() != PieceType::KING {
                 // Double check? In this case a king move is required
                 if more_than_one(self.checkers()) {
                     return false;
@@ -924,7 +951,9 @@ impl Position {
 
                 // Our move must be a blocking evasion or a capture of the
                 // checking piece
-                if (between_bb(lsb(self.checkers()), self.square(us, KING)) | self.checkers()) & to
+                if (between_bb(lsb(self.checkers()), self.square(us, PieceType::KING))
+                    | self.checkers())
+                    & to
                     == 0
                 {
                     return false;
@@ -956,7 +985,7 @@ impl Position {
 
         // Is there a discovered check?
         if self.blockers_for_king(!self.side_to_move()) & from != 0
-            && !aligned(from, to, self.square(!self.side_to_move(), KING))
+            && !aligned(from, to, self.square(!self.side_to_move(), PieceType::KING))
         {
             return true;
         }
@@ -966,7 +995,7 @@ impl Position {
 
             PROMOTION => {
                 attacks_bb(m.promotion_type(), to, self.pieces() ^ from)
-                    & self.square(!self.side_to_move(), KING)
+                    & self.square(!self.side_to_move(), PieceType::KING)
                     != 0
             }
 
@@ -978,10 +1007,20 @@ impl Position {
                 let capsq = Square::make(to.file(), from.rank());
                 let b = (self.pieces() ^ from ^ capsq) | to;
 
-                (attacks_bb(ROOK, self.square(!self.side_to_move(), KING), b)
-                    & self.pieces_cpp(self.side_to_move(), QUEEN, ROOK))
-                    | (attacks_bb(BISHOP, self.square(!self.side_to_move(), KING), b)
-                        & self.pieces_cpp(self.side_to_move(), QUEEN, BISHOP))
+                (attacks_bb(
+                    PieceType::ROOK,
+                    self.square(!self.side_to_move(), PieceType::KING),
+                    b,
+                ) & self.pieces_cpp(self.side_to_move(), PieceType::QUEEN, PieceType::ROOK))
+                    | (attacks_bb(
+                        PieceType::BISHOP,
+                        self.square(!self.side_to_move(), PieceType::KING),
+                        b,
+                    ) & self.pieces_cpp(
+                        self.side_to_move(),
+                        PieceType::QUEEN,
+                        PieceType::BISHOP,
+                    ))
                     != 0
             }
 
@@ -1005,9 +1044,14 @@ impl Position {
                     },
                 );
 
-                (pseudo_attacks(ROOK, rto) & self.square(!self.side_to_move(), KING)) != 0
-                    && (attacks_bb(ROOK, rto, (self.pieces() ^ kfrom ^ rfrom) | rto | kto)
-                        & self.square(!self.side_to_move(), KING))
+                (pseudo_attacks(PieceType::ROOK, rto)
+                    & self.square(!self.side_to_move(), PieceType::KING))
+                    != 0
+                    && (attacks_bb(
+                        PieceType::ROOK,
+                        rto,
+                        (self.pieces() ^ kfrom ^ rfrom) | rto | kto,
+                    ) & self.square(!self.side_to_move(), PieceType::KING))
                         != 0
             }
 
@@ -1046,7 +1090,7 @@ impl Position {
         let mut to = m.to();
         let pc = self.piece_on(from);
         let mut captured = if m.move_type() == ENPASSANT {
-            Piece::make(them, PAWN)
+            Piece::make(them, PieceType::PAWN)
         } else {
             self.piece_on(to)
         };
@@ -1058,8 +1102,8 @@ impl Position {
         );
 
         if m.move_type() == CASTLING {
-            debug_assert!(pc == Piece::make(us, KING));
-            debug_assert!(captured == Piece::make(us, ROOK));
+            debug_assert!(pc == Piece::make(us, PieceType::KING));
+            debug_assert!(captured == Piece::make(us, PieceType::ROOK));
 
             let mut rfrom = Square::A1;
             let mut rto = Square::A1;
@@ -1075,15 +1119,15 @@ impl Position {
 
             // If the captured piece is a pawn, update pawn hash key, otherwise
             // update non-pawn material.
-            if captured.piece_type() == PAWN {
+            if captured.piece_type() == PieceType::PAWN {
                 if m.move_type() == ENPASSANT {
                     capsq -= pawn_push(us);
 
-                    debug_assert!(pc == Piece::make(us, PAWN));
+                    debug_assert!(pc == Piece::make(us, PieceType::PAWN));
                     debug_assert!(to == self.st_mut().ep_square);
                     debug_assert!(to.relative_rank(us) == RANK_6);
                     debug_assert!(self.piece_on(to) == NO_PIECE);
-                    debug_assert!(self.piece_on(capsq) == Piece::make(them, PAWN));
+                    debug_assert!(self.piece_on(capsq) == Piece::make(them, PieceType::PAWN));
 
                     self.board[capsq.0 as usize] = NO_PIECE;
                 }
@@ -1137,10 +1181,12 @@ impl Position {
         }
 
         // If the moving piece is a pawn do some special extra work
-        if pc.piece_type() == PAWN {
+        if pc.piece_type() == PieceType::PAWN {
             // Set en-passant square if the moved pawn can be captured
             if to.0 ^ from.0 == 16
-                && self.attacks_from_pawn(to - pawn_push(us), us) & self.pieces_cp(them, PAWN) != 0
+                && self.attacks_from_pawn(to - pawn_push(us), us)
+                    & self.pieces_cp(them, PieceType::PAWN)
+                    != 0
             {
                 self.st_mut().ep_square = to - pawn_push(us);
                 k ^= zobrist::enpassant(self.st().ep_square.file());
@@ -1148,7 +1194,10 @@ impl Position {
                 let promotion = Piece::make(us, m.promotion_type());
 
                 debug_assert!(to.relative_rank(us) == RANK_8);
-                debug_assert!(promotion.piece_type() >= KNIGHT && promotion.piece_type() <= QUEEN);
+                debug_assert!(
+                    promotion.piece_type() >= PieceType::KNIGHT
+                        && promotion.piece_type() <= PieceType::QUEEN
+                );
 
                 self.remove_piece(pc, to);
                 self.put_piece(promotion, to);
@@ -1189,7 +1238,7 @@ impl Position {
 
         // Calculate checkers bitboard (if move gives check)
         self.st_mut().checkers_bb = if gives_check {
-            self.attackers_to(self.square(them, KING)) & self.pieces_c(us)
+            self.attackers_to(self.square(them, PieceType::KING)) & self.pieces_c(us)
         } else {
             Bitboard(0)
         };
@@ -1216,15 +1265,17 @@ impl Position {
         let mut pc = self.piece_on(to);
 
         debug_assert!(self.empty(from) || m.move_type() == CASTLING);
-        debug_assert!(self.st().captured_piece.piece_type() != KING);
+        debug_assert!(self.st().captured_piece.piece_type() != PieceType::KING);
 
         if m.move_type() == PROMOTION {
             debug_assert!(to.relative_rank(us) == RANK_8);
             debug_assert!(pc.piece_type() == m.promotion_type());
-            debug_assert!(pc.piece_type() >= KNIGHT && pc.piece_type() <= QUEEN);
+            debug_assert!(
+                pc.piece_type() >= PieceType::KNIGHT && pc.piece_type() <= PieceType::QUEEN
+            );
 
             self.remove_piece(pc, to);
-            pc = Piece::make(us, PAWN);
+            pc = Piece::make(us, PieceType::PAWN);
             self.put_piece(pc, to);
         }
 
@@ -1242,10 +1293,10 @@ impl Position {
                 if m.move_type() == ENPASSANT {
                     capsq -= pawn_push(us);
 
-                    debug_assert!(pc.piece_type() == PAWN);
+                    debug_assert!(pc.piece_type() == PieceType::PAWN);
                     debug_assert!(to.relative_rank(us) == RANK_6);
                     debug_assert!(self.piece_on(capsq) == NO_PIECE);
-                    debug_assert!(self.st().captured_piece == Piece::make(!us, PAWN));
+                    debug_assert!(self.st().captured_piece == Piece::make(!us, PieceType::PAWN));
                 }
 
                 // Restore the captured piece
@@ -1277,12 +1328,24 @@ impl Position {
         *to = relative_square(us, if king_side { Square::G1 } else { Square::C1 });
 
         // Remove both pieces first since squares could overlap in Chess960
-        self.remove_piece(Piece::make(us, KING), if Do::BOOL { from } else { *to });
-        self.remove_piece(Piece::make(us, ROOK), if Do::BOOL { *rfrom } else { *rto });
+        self.remove_piece(
+            Piece::make(us, PieceType::KING),
+            if Do::BOOL { from } else { *to },
+        );
+        self.remove_piece(
+            Piece::make(us, PieceType::ROOK),
+            if Do::BOOL { *rfrom } else { *rto },
+        );
         self.board[(if Do::BOOL { from } else { *to }).0 as usize] = NO_PIECE;
         self.board[(if Do::BOOL { *rfrom } else { *rto }).0 as usize] = NO_PIECE;
-        self.put_piece(Piece::make(us, KING), if Do::BOOL { *to } else { from });
-        self.put_piece(Piece::make(us, ROOK), if Do::BOOL { *rto } else { *rfrom });
+        self.put_piece(
+            Piece::make(us, PieceType::KING),
+            if Do::BOOL { *to } else { from },
+        );
+        self.put_piece(
+            Piece::make(us, PieceType::ROOK),
+            if Do::BOOL { *rto } else { *rfrom },
+        );
     }
 
     // do(undo)_null_move() is used to do(undo) a "null move": it flips the
@@ -1371,17 +1434,18 @@ impl Position {
                 break;
             }
             res = Value(res.0 ^ 1);
-            let bb = stm_attackers & self.pieces_p(PAWN);
+            let bb = stm_attackers & self.pieces_p(PieceType::PAWN);
             if bb != 0 {
                 swap = PawnValueMg - swap;
                 if swap < res {
                     break;
                 }
                 occ ^= bb & -bb;
-                attackers |= attacks_bb(BISHOP, to, occ) & self.pieces_pp(BISHOP, QUEEN);
+                attackers |= attacks_bb(PieceType::BISHOP, to, occ)
+                    & self.pieces_pp(PieceType::BISHOP, PieceType::QUEEN);
                 continue;
             }
-            let bb = stm_attackers & self.pieces_p(KNIGHT);
+            let bb = stm_attackers & self.pieces_p(PieceType::KNIGHT);
             if bb != 0 {
                 swap = KnightValueMg - swap;
                 if swap < res {
@@ -1390,35 +1454,39 @@ impl Position {
                 occ ^= bb & -bb;
                 continue;
             }
-            let bb = stm_attackers & self.pieces_p(BISHOP);
+            let bb = stm_attackers & self.pieces_p(PieceType::BISHOP);
             if bb != 0 {
                 swap = BishopValueMg - swap;
                 if swap < res {
                     break;
                 }
                 occ ^= bb & -bb;
-                attackers |= attacks_bb(BISHOP, to, occ) & self.pieces_pp(BISHOP, QUEEN);
+                attackers |= attacks_bb(PieceType::BISHOP, to, occ)
+                    & self.pieces_pp(PieceType::BISHOP, PieceType::QUEEN);
                 continue;
             }
-            let bb = stm_attackers & self.pieces_p(ROOK);
+            let bb = stm_attackers & self.pieces_p(PieceType::ROOK);
             if bb != 0 {
                 swap = RookValueMg - swap;
                 if swap < res {
                     break;
                 }
                 occ ^= bb & -bb;
-                attackers |= attacks_bb(ROOK, to, occ) & self.pieces_pp(ROOK, QUEEN);
+                attackers |= attacks_bb(PieceType::ROOK, to, occ)
+                    & self.pieces_pp(PieceType::ROOK, PieceType::QUEEN);
                 continue;
             }
-            let bb = stm_attackers & self.pieces_p(QUEEN);
+            let bb = stm_attackers & self.pieces_p(PieceType::QUEEN);
             if bb != 0 {
                 swap = QueenValueMg - swap;
                 if swap < res {
                     break;
                 }
                 occ ^= bb & -bb;
-                attackers |= (attacks_bb(BISHOP, to, occ) & self.pieces_pp(BISHOP, QUEEN))
-                    | (attacks_bb(ROOK, to, occ) & self.pieces_pp(ROOK, QUEEN));
+                attackers |= (attacks_bb(PieceType::BISHOP, to, occ)
+                    & self.pieces_pp(PieceType::BISHOP, PieceType::QUEEN))
+                    | (attacks_bb(PieceType::ROOK, to, occ)
+                        & self.pieces_pp(PieceType::ROOK, PieceType::QUEEN));
                 continue;
             }
             if attackers & !self.pieces_c(stm) != 0 {
@@ -1497,17 +1565,17 @@ impl Position {
 
     fn put_piece(&mut self, pc: Piece, s: Square) {
         self.board[s.0 as usize] = pc;
-        self.by_type_bb[ALL_PIECES.0 as usize] |= s;
+        self.by_type_bb[PieceType::ALL_PIECES.0 as usize] |= s;
         self.by_type_bb[pc.piece_type().0 as usize] |= s;
         self.by_color_bb[pc.color().0 as usize] |= s;
         self.index[s.0 as usize] = self.piece_count[pc.0 as usize];
         self.piece_count[pc.0 as usize] += 1;
         self.piece_list[pc.0 as usize][self.index[s.0 as usize] as usize] = s;
-        self.piece_count[Piece::make(pc.color(), ALL_PIECES).0 as usize] += 1;
+        self.piece_count[Piece::make(pc.color(), PieceType::ALL_PIECES).0 as usize] += 1;
     }
 
     fn remove_piece(&mut self, pc: Piece, s: Square) {
-        self.by_type_bb[ALL_PIECES.0 as usize] ^= s;
+        self.by_type_bb[PieceType::ALL_PIECES.0 as usize] ^= s;
         self.by_type_bb[pc.piece_type().0 as usize] ^= s;
         self.by_color_bb[pc.color().0 as usize] ^= s;
         self.piece_count[pc.0 as usize] -= 1;
@@ -1515,12 +1583,12 @@ impl Position {
         self.index[last_square.0 as usize] = self.index[s.0 as usize];
         self.piece_list[pc.0 as usize][self.index[last_square.0 as usize] as usize] = last_square;
         self.piece_list[pc.0 as usize][self.piece_count[pc.0 as usize] as usize] = Square::NONE;
-        self.piece_count[Piece::make(pc.color(), ALL_PIECES).0 as usize] -= 1;
+        self.piece_count[Piece::make(pc.color(), PieceType::ALL_PIECES).0 as usize] -= 1;
     }
 
     fn move_piece(&mut self, pc: Piece, from: Square, to: Square) {
         let from_to_bb = from.bb() ^ to.bb();
-        self.by_type_bb[ALL_PIECES.0 as usize] ^= from_to_bb;
+        self.by_type_bb[PieceType::ALL_PIECES.0 as usize] ^= from_to_bb;
         self.by_type_bb[pc.piece_type().0 as usize] ^= from_to_bb;
         self.by_color_bb[pc.color().0 as usize] ^= from_to_bb;
         self.board[from.0 as usize] = NO_PIECE;
@@ -1535,26 +1603,26 @@ impl Position {
 
     pub fn is_ok(&self) -> bool {
         if self.side_to_move() != WHITE && self.side_to_move != BLACK
-            || self.piece_on(self.square(WHITE, KING)) != W_KING
-            || self.piece_on(self.square(BLACK, KING)) != B_KING
+            || self.piece_on(self.square(WHITE, PieceType::KING)) != W_KING
+            || self.piece_on(self.square(BLACK, PieceType::KING)) != B_KING
             || (self.ep_square() != Square::NONE
                 && self.ep_square().relative_rank(self.side_to_move()) != RANK_6)
         {
             panic!("pos: Default");
         }
 
-        if self.count(WHITE, KING) != 1
-            || self.count(BLACK, KING) != 1
-            || self.attackers_to(self.square(!self.side_to_move(), KING))
+        if self.count(WHITE, PieceType::KING) != 1
+            || self.count(BLACK, PieceType::KING) != 1
+            || self.attackers_to(self.square(!self.side_to_move(), PieceType::KING))
                 & self.pieces_c(self.side_to_move())
                 != 0
         {
             panic!("pos_is_ok: Kings");
         }
 
-        if self.pieces_p(PAWN) & (RANK1_BB | RANK8_BB) != 0
-            || self.count(WHITE, PAWN) > 8
-            || self.count(BLACK, PAWN) > 8
+        if self.pieces_p(PieceType::PAWN) & (RANK1_BB | RANK8_BB) != 0
+            || self.count(WHITE, PieceType::PAWN) > 8
+            || self.count(BLACK, PieceType::PAWN) > 8
         {
             panic!("pos_is_ok: Pawns");
         }

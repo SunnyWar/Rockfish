@@ -9,7 +9,7 @@ impl Direction {
     pub const EAST: Direction = Direction(1);
     pub const SOUTH: Direction = Direction(-8);
     pub const WEST: Direction = Direction(-1);
-    
+
     pub const NORTH_EAST: Direction = Direction(9);
     pub const NORTH_WEST: Direction = Direction(7);
     pub const SOUTH_EAST: Direction = Direction(-7);

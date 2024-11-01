@@ -4,8 +4,7 @@ use crate::movegen::{generate, Captures, Evasions, ExtMove, QuietChecks, Quiets}
 use crate::position::Position;
 use crate::search;
 use crate::types::{
-    depth::Depth, piece_value, Color, Move, Piece, PieceType, Square, Value,
-    MAX_MOVES, MG,
+    depth::Depth, piece_value, Color, Move, Piece, PieceType, Square, Value, MAX_MOVES, MG,
 };
 
 use std::cell::Cell;
@@ -191,11 +190,9 @@ fn score_captures(pos: &Position, list: &mut [ExtMove]) {
     for m in list.iter_mut() {
         let x = pos.piece_on(m.m.to());
         m.value = piece_value(MG, x).0
-            + pos.capture_history.get(
-                pos.moved_piece(m.m),
-                m.m.to(),
-                x.piece_type(),
-            );
+            + pos
+                .capture_history
+                .get(pos.moved_piece(m.m), m.m.to(), x.piece_type());
     }
 }
 

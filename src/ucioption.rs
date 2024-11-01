@@ -226,7 +226,6 @@ pub fn get_u16(key: &str) -> u16 {
     0 // Default return value if no match found
 }
 
-
 pub fn get_bool(key: &str) -> bool {
     let opts = unsafe { Box::from_raw(OPTIONS) };
     let val = {

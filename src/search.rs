@@ -11,9 +11,9 @@ use crate::threads;
 use crate::timeman;
 use crate::tt;
 use crate::types::{
-    bound::Bound, depth::Depth, key::Key, mate_in, mated_in, piece_value, Bool,
-    False, Move, PawnValueEg, PawnValueMg, Piece, Score, Square, True, Value, ANY_CASTLING, BLACK,
-    EG, ENPASSANT, MAX_MATE_PLY, MAX_PLY, NORMAL, NO_PIECE, WHITE,
+    bound::Bound, depth::Depth, key::Key, mate_in, mated_in, piece_value, Bool, False, Move,
+    PawnValueEg, PawnValueMg, Piece, Score, Square, True, Value, ANY_CASTLING, BLACK, EG,
+    ENPASSANT, MAX_MATE_PLY, MAX_PLY, NORMAL, NO_PIECE, WHITE,
 };
 use crate::uci;
 use crate::ucioption;
@@ -578,8 +578,7 @@ pub fn thread_search(pos: &mut Position, _th: &threads::ThreadCtrl) {
                 i32::from(pos.failed_low),
                 (best_value - pos.previous_score).0,
             ];
-            let improving_factor =
-                (306 + 119 * f[0] - 6 * f[1]).clamp(246, 832);
+            let improving_factor = (306 + 119 * f[0] - 6 * f[1]).clamp(246, 832);
 
             let mut unstable_pv_factor = 1. + pos.best_move_changes;
 
@@ -1217,7 +1216,8 @@ fn search<NT: NodeType>(
                 let lmr_depth = std::cmp::max(
                     new_depth - reduction::<NT>(improving, depth, move_count),
                     Depth::ZERO,
-                ).value();
+                )
+                .value();
 
                 // Countermoves based pruning
                 if lmr_depth < 3
@@ -1270,7 +1270,10 @@ fn search<NT: NodeType>(
         // be re-searched at full depth.
         let do_full_depth_search;
 
-        if depth >= 3 * Depth::ONE && move_count > 1 && (!capture_or_promotion || move_count_pruning) {
+        if depth >= 3 * Depth::ONE
+            && move_count > 1
+            && (!capture_or_promotion || move_count_pruning)
+        {
             let mut r = reduction::<NT>(improving, depth, move_count);
 
             if capture_or_promotion {
@@ -1503,7 +1506,9 @@ fn search<NT: NodeType>(
         }
     }
     // Bonus for prior countermove that caused the fail low
-    else if depth >= Depth::THREE && pos.captured_piece() == NO_PIECE && ss[4].current_move.is_ok()
+    else if depth >= Depth::THREE
+        && pos.captured_piece() == NO_PIECE
+        && ss[4].current_move.is_ok()
     {
         update_continuation_histories(ss, pos.piece_on(prev_sq), prev_sq, stat_bonus(depth));
     }

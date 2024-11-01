@@ -10,10 +10,10 @@ use crate::position::zobrist;
 use crate::position::Position;
 use crate::types::{
     direction::pawn_push, direction::Direction, key::Key, opposite_colors,
-    scale_factor::ScaleFactor, BishopValueMg, Color, KnightValueMg, PawnValueEg, Piece,
-    QueenValueEg, QueenValueMg, RookValueEg, RookValueMg, Square, Value, BISHOP, BLACK, FILE_A,
-    FILE_B, FILE_D, FILE_E, FILE_G, FILE_H, KING, KNIGHT, PAWN, QUEEN, RANK_1, RANK_2, RANK_3,
-    RANK_4, RANK_5, RANK_6, RANK_7, RANK_8, ROOK, WHITE,
+    scale_factor::ScaleFactor, BishopValueMg, Color, KnightValueMg, PawnValueEg, Piece, PieceType,
+    QueenValueEg, QueenValueMg, RookValueEg, RookValueMg, Square, Value, BLACK, FILE_A, FILE_B,
+    FILE_D, FILE_E, FILE_G, FILE_H, RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8,
+    WHITE,
 };
 
 pub type EvalFn = fn(&Position, Color) -> Value;
@@ -182,15 +182,15 @@ pub fn init() {
 }
 
 fn verify_material(pos: &Position, c: Color, npm: Value, pawns_cnt: i32) -> bool {
-    pos.non_pawn_material_c(c) == npm && pos.count(c, PAWN) == pawns_cnt
+    pos.non_pawn_material_c(c) == npm && pos.count(c, PieceType::PAWN) == pawns_cnt
 }
 
 // Map the square as if strong_side is white and strong_side's only pawn
 // is on the left half of the baord.
 fn normalize(pos: &Position, strong_side: Color, sq: Square) -> Square {
-    debug_assert!(pos.count(strong_side, PAWN) == 1);
+    debug_assert!(pos.count(strong_side, PieceType::PAWN) == 1);
 
-    let sq = if pos.square(strong_side, PAWN).file() >= FILE_E {
+    let sq = if pos.square(strong_side, PieceType::PAWN).file() >= FILE_E {
         Square(sq.0 ^ 7) // Mirror SQ_H1 -> SQ_A1
     } else {
         sq
@@ -218,17 +218,18 @@ pub fn evaluate_kxk(pos: &Position, strong_side: Color) -> Value {
         return Value::DRAW;
     }
 
-    let winner_ksq = pos.square(strong_side, KING);
-    let loser_ksq = pos.square(weak_side, KING);
+    let winner_ksq = pos.square(strong_side, PieceType::KING);
+    let loser_ksq = pos.square(weak_side, PieceType::KING);
 
     let mut result = pos.non_pawn_material_c(strong_side)
-        + pos.count(strong_side, PAWN) * PawnValueEg
+        + pos.count(strong_side, PieceType::PAWN) * PawnValueEg
         + PUSH_TO_EDGES[loser_ksq.0 as usize]
         + PUSH_CLOSE[Square::distance(winner_ksq, loser_ksq) as usize];
 
-    if pos.pieces_pp(QUEEN, ROOK) != 0
-        || (pos.pieces_p(BISHOP) != 0 && pos.pieces_p(KNIGHT) != 0)
-        || (pos.pieces_p(BISHOP) & !DARK_SQUARES != 0 && pos.pieces_p(BISHOP) & DARK_SQUARES != 0)
+    if pos.pieces_pp(PieceType::QUEEN, PieceType::ROOK) != 0
+        || (pos.pieces_p(PieceType::BISHOP) != 0 && pos.pieces_p(PieceType::KNIGHT) != 0)
+        || (pos.pieces_p(PieceType::BISHOP) & !DARK_SQUARES != 0
+            && pos.pieces_p(PieceType::BISHOP) & DARK_SQUARES != 0)
     {
         result = std::cmp::min(result + Value::KNOWN_WIN, Value::MATE_IN_MAX_PLY - 1);
     }
@@ -253,9 +254,9 @@ fn evaluate_kbnk(pos: &Position, strong_side: Color) -> Value {
     ));
     debug_assert!(verify_material(pos, weak_side, Value::ZERO, 0));
 
-    let mut winner_ksq = pos.square(strong_side, KING);
-    let mut loser_ksq = pos.square(weak_side, KING);
-    let bishop_sq = pos.square(strong_side, BISHOP);
+    let mut winner_ksq = pos.square(strong_side, PieceType::KING);
+    let mut loser_ksq = pos.square(weak_side, PieceType::KING);
+    let bishop_sq = pos.square(strong_side, PieceType::BISHOP);
 
     // PUSH_TO_CORNERS[] tries to drive towards corners A1 or H8. If we
     // have a bishop taht cannot reach A1 or H8, we flip the kings in
@@ -290,9 +291,9 @@ fn evaluate_kpk(pos: &Position, strong_side: Color) -> Value {
         BLACK
     };
 
-    let wksq = normalize(pos, strong_side, pos.square(strong_side, KING));
-    let bksq = normalize(pos, strong_side, pos.square(weak_side, KING));
-    let psq = normalize(pos, strong_side, pos.square(strong_side, PAWN));
+    let wksq = normalize(pos, strong_side, pos.square(strong_side, PieceType::KING));
+    let bksq = normalize(pos, strong_side, pos.square(weak_side, PieceType::KING));
+    let psq = normalize(pos, strong_side, pos.square(strong_side, PieceType::PAWN));
     if !bitbases::probe(wksq, psq, bksq, us) {
         return Value::DRAW;
     }
@@ -315,10 +316,14 @@ fn evaluate_krkp(pos: &Position, strong_side: Color) -> Value {
     debug_assert!(verify_material(pos, strong_side, RookValueMg, 0));
     debug_assert!(verify_material(pos, weak_side, Value::ZERO, 1));
 
-    let wksq = pos.square(strong_side, KING).relative(strong_side);
-    let bksq = pos.square(weak_side, KING).relative(strong_side);
-    let rsq = pos.square(strong_side, ROOK).relative(strong_side);
-    let psq = pos.square(weak_side, PAWN).relative(strong_side);
+    let wksq = pos
+        .square(strong_side, PieceType::KING)
+        .relative(strong_side);
+    let bksq = pos.square(weak_side, PieceType::KING).relative(strong_side);
+    let rsq = pos
+        .square(strong_side, PieceType::ROOK)
+        .relative(strong_side);
+    let psq = pos.square(weak_side, PieceType::PAWN).relative(strong_side);
 
     let wpsqdis = Square::distance(wksq, psq);
     let bpsqdis = Square::distance(bksq, psq);
@@ -330,8 +335,9 @@ fn evaluate_krkp(pos: &Position, strong_side: Color) -> Value {
     // If the strong side's king is in front of the pawn
     // or  If the weaker side's king is too far from the pawn and the rook,
     // it is a win.
-    if wksq.0 < psq.0 && wksq.file() == psq.file() || (bpsqdis >= 3 + u32::from(pos.side_to_move() == weak_side)
-    && brsqdis >= 3){
+    if wksq.0 < psq.0 && wksq.file() == psq.file()
+        || (bpsqdis >= 3 + u32::from(pos.side_to_move() == weak_side) && brsqdis >= 3)
+    {
         result = RookValueEg - wpsqdis as i32;
     }
     // If the pawn is far advanced and supported by the defending king,
@@ -364,7 +370,7 @@ fn evaluate_krkb(pos: &Position, strong_side: Color) -> Value {
     debug_assert!(verify_material(pos, strong_side, RookValueMg, 0));
     debug_assert!(verify_material(pos, weak_side, BishopValueMg, 0));
 
-    let result = Value(PUSH_TO_EDGES[pos.square(weak_side, KING).0 as usize]);
+    let result = Value(PUSH_TO_EDGES[pos.square(weak_side, PieceType::KING).0 as usize]);
 
     if strong_side == pos.side_to_move() {
         result
@@ -381,8 +387,8 @@ fn evaluate_krkn(pos: &Position, strong_side: Color) -> Value {
     debug_assert!(verify_material(pos, strong_side, RookValueMg, 0));
     debug_assert!(verify_material(pos, weak_side, KnightValueMg, 0));
 
-    let bksq = pos.square(weak_side, KING);
-    let bnsq = pos.square(weak_side, KNIGHT);
+    let bksq = pos.square(weak_side, PieceType::KING);
+    let bnsq = pos.square(weak_side, PieceType::KNIGHT);
     let result =
         Value(PUSH_TO_EDGES[bksq.0 as usize] + PUSH_AWAY[Square::distance(bksq, bnsq) as usize]);
 
@@ -403,9 +409,9 @@ fn evaluate_kqkp(pos: &Position, strong_side: Color) -> Value {
     debug_assert!(verify_material(pos, strong_side, QueenValueMg, 0));
     debug_assert!(verify_material(pos, weak_side, Value::ZERO, 1));
 
-    let winner_ksq = pos.square(strong_side, KING);
-    let loser_ksq = pos.square(weak_side, KING);
-    let pawn_sq = pos.square(weak_side, PAWN);
+    let winner_ksq = pos.square(strong_side, PieceType::KING);
+    let loser_ksq = pos.square(weak_side, PieceType::KING);
+    let pawn_sq = pos.square(weak_side, PieceType::PAWN);
 
     let mut result = Value(PUSH_CLOSE[Square::distance(winner_ksq, loser_ksq) as usize]);
 
@@ -434,8 +440,8 @@ fn evaluate_kqkr(pos: &Position, strong_side: Color) -> Value {
     debug_assert!(verify_material(pos, strong_side, QueenValueMg, 0));
     debug_assert!(verify_material(pos, weak_side, RookValueMg, 0));
 
-    let winner_ksq = pos.square(strong_side, KING);
-    let loser_ksq = pos.square(weak_side, KING);
+    let winner_ksq = pos.square(strong_side, PieceType::KING);
+    let loser_ksq = pos.square(weak_side, PieceType::KING);
 
     let result = QueenValueEg - RookValueEg
         + PUSH_TO_EDGES[loser_ksq.0 as usize]
@@ -461,19 +467,19 @@ pub fn scale_kbpsk(pos: &Position, strong_side: Color) -> ScaleFactor {
     let weak_side = !strong_side;
 
     debug_assert!(pos.non_pawn_material_c(strong_side) == BishopValueMg);
-    debug_assert!(pos.count(strong_side, PAWN) >= 1);
+    debug_assert!(pos.count(strong_side, PieceType::PAWN) >= 1);
 
     // No assertions about the material of weak_side, because we want draws
     // to be detected even when the weaker side has some pawns.
 
-    let pawns = pos.pieces_cp(strong_side, PAWN);
+    let pawns = pos.pieces_cp(strong_side, PieceType::PAWN);
     let pawns_file = lsb(pawns).file();
 
     // All pawns are on a single rook file?
     if (pawns_file == FILE_A || pawns_file == FILE_H) && pawns & !file_bb(pawns_file) == 0 {
-        let bishop_sq = pos.square(strong_side, BISHOP);
+        let bishop_sq = pos.square(strong_side, PieceType::BISHOP);
         let queening_sq = Square::make(pawns_file, RANK_8).relative(strong_side);
-        let king_sq = pos.square(weak_side, KING);
+        let king_sq = pos.square(weak_side, PieceType::KING);
 
         if opposite_colors(queening_sq, bishop_sq) && Square::distance(queening_sq, king_sq) <= 1 {
             return ScaleFactor::DRAW;
@@ -483,22 +489,24 @@ pub fn scale_kbpsk(pos: &Position, strong_side: Color) -> ScaleFactor {
     // If all the pawns are on the same B or G file, then it is potentially
     // a draw
     if (pawns_file == FILE_B || pawns_file == FILE_G)
-        && pos.pieces_p(PAWN) & !file_bb(pawns_file) == 0
+        && pos.pieces_p(PieceType::PAWN) & !file_bb(pawns_file) == 0
         && pos.non_pawn_material_c(weak_side) == Value::ZERO
-        && pos.count(weak_side, PAWN) >= 1
+        && pos.count(weak_side, PieceType::PAWN) >= 1
     {
         // Get weak_side pawn that is closest to the home rank
-        let weak_pawn_sq = backmost_sq(weak_side, pos.pieces_cp(weak_side, PAWN));
+        let weak_pawn_sq = backmost_sq(weak_side, pos.pieces_cp(weak_side, PieceType::PAWN));
 
-        let strong_king_sq = pos.square(strong_side, KING);
-        let weak_king_sq = pos.square(weak_side, KING);
-        let bishop_sq = pos.square(strong_side, BISHOP);
+        let strong_king_sq = pos.square(strong_side, PieceType::KING);
+        let weak_king_sq = pos.square(weak_side, PieceType::KING);
+        let bishop_sq = pos.square(strong_side, PieceType::BISHOP);
 
         // There is potentail for a draw if our pawn is blocked on the 7th
         // rank, the bishop cannot attack it or they only have one pawn left
         if weak_pawn_sq.relative_rank(strong_side) == RANK_7
-            && pos.pieces_cp(strong_side, PAWN) & (weak_pawn_sq + pawn_push(weak_side)) != 0
-            && (opposite_colors(bishop_sq, weak_pawn_sq) || pos.count(strong_side, PAWN) == 1)
+            && pos.pieces_cp(strong_side, PieceType::PAWN) & (weak_pawn_sq + pawn_push(weak_side))
+                != 0
+            && (opposite_colors(bishop_sq, weak_pawn_sq)
+                || pos.count(strong_side, PieceType::PAWN) == 1)
         {
             let strong_king_dist = Square::distance(weak_pawn_sq, strong_king_sq);
             let weak_king_dist = Square::distance(weak_pawn_sq, weak_king_sq);
@@ -527,17 +535,20 @@ pub fn scale_kqkrps(pos: &Position, strong_side: Color) -> ScaleFactor {
     let weak_side = !strong_side;
 
     debug_assert!(verify_material(pos, strong_side, QueenValueMg, 0));
-    debug_assert!(pos.count(weak_side, ROOK) == 1);
-    debug_assert!(pos.count(weak_side, PAWN) >= 1);
+    debug_assert!(pos.count(weak_side, PieceType::ROOK) == 1);
+    debug_assert!(pos.count(weak_side, PieceType::PAWN) >= 1);
 
-    let king_sq = pos.square(weak_side, KING);
-    let rsq = pos.square(weak_side, ROOK);
+    let king_sq = pos.square(weak_side, PieceType::KING);
+    let rsq = pos.square(weak_side, PieceType::ROOK);
 
     if king_sq.relative_rank(weak_side) <= RANK_2
-        && pos.square(strong_side, KING).relative_rank(weak_side) >= RANK_4
+        && pos
+            .square(strong_side, PieceType::KING)
+            .relative_rank(weak_side)
+            >= RANK_4
         && rsq.relative_rank(weak_side) == RANK_3
-        && pos.pieces_cp(weak_side, PAWN)
-            & pos.attacks_from(KING, king_sq)
+        && pos.pieces_cp(weak_side, PieceType::PAWN)
+            & pos.attacks_from(PieceType::KING, king_sq)
             & pos.attacks_from_pawn(rsq, strong_side)
             != 0
     {
@@ -560,11 +571,11 @@ fn scale_krpkr(pos: &Position, strong_side: Color) -> ScaleFactor {
     debug_assert!(verify_material(pos, weak_side, RookValueMg, 0));
 
     // Assume strong_side is white and the pawn is on files A-D
-    let wksq = normalize(pos, strong_side, pos.square(strong_side, KING));
-    let bksq = normalize(pos, strong_side, pos.square(weak_side, KING));
-    let wrsq = normalize(pos, strong_side, pos.square(strong_side, ROOK));
-    let wpsq = normalize(pos, strong_side, pos.square(strong_side, PAWN));
-    let brsq = normalize(pos, strong_side, pos.square(weak_side, ROOK));
+    let wksq = normalize(pos, strong_side, pos.square(strong_side, PieceType::KING));
+    let bksq = normalize(pos, strong_side, pos.square(weak_side, PieceType::KING));
+    let wrsq = normalize(pos, strong_side, pos.square(strong_side, PieceType::ROOK));
+    let wpsq = normalize(pos, strong_side, pos.square(strong_side, PieceType::PAWN));
+    let brsq = normalize(pos, strong_side, pos.square(weak_side, PieceType::ROOK));
 
     let f = wpsq.file();
     let r = wpsq.rank();
@@ -639,10 +650,12 @@ fn scale_krpkr(pos: &Position, strong_side: Color) -> ScaleFactor {
         && wrsq.file() == f
         && wrsq.0 < wpsq.0
         && Square::distance(wksq, queening_sq) + 2 < Square::distance(bksq, queening_sq) + tempo
-        && Square::distance(wksq, wpsq + Direction::NORTH) + 2 < Square::distance(bksq, wpsq + Direction::NORTH) + tempo
+        && Square::distance(wksq, wpsq + Direction::NORTH) + 2
+            < Square::distance(bksq, wpsq + Direction::NORTH) + tempo
         && (Square::distance(bksq, wrsq) + tempo >= 3
             || (Square::distance(wksq, queening_sq) < Square::distance(bksq, wrsq) + tempo
-                && Square::distance(wksq, wpsq + Direction::NORTH) < Square::distance(bksq, wrsq) + tempo))
+                && Square::distance(wksq, wpsq + Direction::NORTH)
+                    < Square::distance(bksq, wrsq) + tempo))
     {
         return ScaleFactor(
             ScaleFactor::MAX.0
@@ -672,10 +685,10 @@ fn scale_krpkb(pos: &Position, strong_side: Color) -> ScaleFactor {
     debug_assert!(verify_material(pos, weak_side, BishopValueMg, 0));
 
     // Test for a rook pawn
-    if pos.pieces_p(PAWN) & (FILEA_BB | FILEH_BB) != 0 {
-        let ksq = pos.square(weak_side, KING);
-        let bsq = pos.square(weak_side, BISHOP);
-        let psq = pos.square(strong_side, PAWN);
+    if pos.pieces_p(PieceType::PAWN) & (FILEA_BB | FILEH_BB) != 0 {
+        let ksq = pos.square(weak_side, PieceType::KING);
+        let bsq = pos.square(weak_side, PieceType::BISHOP);
+        let psq = pos.square(strong_side, PieceType::PAWN);
         let rk = psq.relative_rank(strong_side);
         let push = pawn_push(strong_side);
 
@@ -686,7 +699,7 @@ fn scale_krpkb(pos: &Position, strong_side: Color) -> ScaleFactor {
         // corner but not trapped there.
         if rk == RANK_5 && !opposite_colors(bsq, psq) {
             let d = Square::distance(psq + 3 * push, ksq);
-            if d <= 2 && !(d == 0 && ksq == pos.square(strong_side, KING) + 2 * push) {
+            if d <= 2 && !(d == 0 && ksq == pos.square(strong_side, PieceType::KING) + 2 * push) {
                 return ScaleFactor(24);
             } else {
                 return ScaleFactor(48);
@@ -699,7 +712,7 @@ fn scale_krpkb(pos: &Position, strong_side: Color) -> ScaleFactor {
         // corner.
         if rk == RANK_6
             && Square::distance(psq + 2 * push, ksq) <= 1
-            && pseudo_attacks(BISHOP, bsq) & (psq + push) != 0
+            && pseudo_attacks(PieceType::BISHOP, bsq) & (psq + push) != 0
             && u32::distance(bsq.file(), psq.file()) >= 2
         {
             return ScaleFactor(8);
@@ -718,9 +731,9 @@ fn scale_krppkrp(pos: &Position, strong_side: Color) -> ScaleFactor {
     debug_assert!(verify_material(pos, strong_side, RookValueMg, 2));
     debug_assert!(verify_material(pos, weak_side, RookValueMg, 1));
 
-    let wpsq1 = pos.squares(strong_side, PAWN)[0];
-    let wpsq2 = pos.squares(strong_side, PAWN)[1];
-    let bksq = pos.square(weak_side, KING);
+    let wpsq1 = pos.squares(strong_side, PieceType::PAWN)[0];
+    let wpsq2 = pos.squares(strong_side, PieceType::PAWN)[1];
+    let bksq = pos.square(weak_side, PieceType::KING);
 
     // Does the stronger side have a passed pawn?
     if pos.pawn_passed(strong_side, wpsq1) || pos.pawn_passed(strong_side, wpsq2) {
@@ -750,11 +763,11 @@ pub fn scale_kpsk(pos: &Position, strong_side: Color) -> ScaleFactor {
     let weak_side = !strong_side;
 
     debug_assert!(pos.non_pawn_material_c(strong_side) == Value::ZERO);
-    debug_assert!(pos.count(strong_side, PAWN) >= 2);
+    debug_assert!(pos.count(strong_side, PieceType::PAWN) >= 2);
     debug_assert!(verify_material(pos, weak_side, Value::ZERO, 0));
 
-    let ksq = pos.square(weak_side, KING);
-    let pawns = pos.pieces_cp(strong_side, PAWN);
+    let ksq = pos.square(weak_side, PieceType::KING);
+    let pawns = pos.pieces_cp(strong_side, PieceType::PAWN);
 
     // If all pawns are ahead of the king, on a single rook file and
     // the king is within one file of the pawns, it's a draw.
@@ -778,10 +791,10 @@ fn scale_kbpkb(pos: &Position, strong_side: Color) -> ScaleFactor {
     debug_assert!(verify_material(pos, strong_side, BishopValueMg, 1));
     debug_assert!(verify_material(pos, weak_side, BishopValueMg, 0));
 
-    let psq = pos.square(strong_side, PAWN);
-    let sbsq = pos.square(strong_side, BISHOP);
-    let wbsq = pos.square(weak_side, BISHOP);
-    let wksq = pos.square(weak_side, KING);
+    let psq = pos.square(strong_side, PieceType::PAWN);
+    let sbsq = pos.square(strong_side, PieceType::BISHOP);
+    let wbsq = pos.square(weak_side, PieceType::BISHOP);
+    let wksq = pos.square(weak_side, PieceType::KING);
 
     // Case 1: Defending king blocks the pawn, and cannot be driven away
     if wksq.file() == psq.file()
@@ -810,11 +823,12 @@ fn scale_kbpkb(pos: &Position, strong_side: Color) -> ScaleFactor {
 
         let path = forward_file_bb(strong_side, psq);
 
-        if path & pos.pieces_cp(weak_side, KING) != 0 {
+        if path & pos.pieces_cp(weak_side, PieceType::KING) != 0 {
             return ScaleFactor::DRAW;
         }
 
-        if pos.attacks_from(BISHOP, wbsq) & path != 0 && Square::distance(wbsq, psq) >= 3 {
+        if pos.attacks_from(PieceType::BISHOP, wbsq) & path != 0 && Square::distance(wbsq, psq) >= 3
+        {
             return ScaleFactor::DRAW;
         }
     }
@@ -829,16 +843,16 @@ fn scale_kbppkb(pos: &Position, strong_side: Color) -> ScaleFactor {
     debug_assert!(verify_material(pos, strong_side, BishopValueMg, 2));
     debug_assert!(verify_material(pos, weak_side, BishopValueMg, 0));
 
-    let wbsq = pos.square(strong_side, BISHOP);
-    let bbsq = pos.square(weak_side, BISHOP);
+    let wbsq = pos.square(strong_side, PieceType::BISHOP);
+    let bbsq = pos.square(weak_side, PieceType::BISHOP);
 
     if !opposite_colors(wbsq, bbsq) {
         return ScaleFactor::NONE;
     }
 
-    let ksq = pos.square(weak_side, KING);
-    let psq1 = pos.squares(strong_side, PAWN)[0];
-    let psq2 = pos.squares(strong_side, PAWN)[1];
+    let ksq = pos.square(weak_side, PieceType::KING);
+    let psq1 = pos.squares(strong_side, PieceType::PAWN)[0];
+    let psq2 = pos.squares(strong_side, PieceType::PAWN)[1];
     let r1 = psq1.rank();
     let r2 = psq2.rank();
 
@@ -878,14 +892,18 @@ fn scale_kbppkb(pos: &Position, strong_side: Color) -> ScaleFactor {
             if ksq == block_sq1
                 && opposite_colors(ksq, wbsq)
                 && (bbsq == block_sq2
-                    || pos.attacks_from(BISHOP, block_sq2) & pos.pieces_cp(weak_side, BISHOP) != 0
+                    || pos.attacks_from(PieceType::BISHOP, block_sq2)
+                        & pos.pieces_cp(weak_side, PieceType::BISHOP)
+                        != 0
                     || u32::distance(r1, r2) >= 2)
             {
                 ScaleFactor::DRAW
             } else if ksq == block_sq2
                 && opposite_colors(ksq, wbsq)
                 && (bbsq == block_sq1
-                    || pos.attacks_from(BISHOP, block_sq1) & pos.pieces_cp(weak_side, BISHOP) != 0)
+                    || pos.attacks_from(PieceType::BISHOP, block_sq1)
+                        & pos.pieces_cp(weak_side, PieceType::BISHOP)
+                        != 0)
             {
                 return ScaleFactor::DRAW;
             } else {
@@ -906,9 +924,9 @@ fn scale_kbpkn(pos: &Position, strong_side: Color) -> ScaleFactor {
     debug_assert!(verify_material(pos, strong_side, BishopValueMg, 1));
     debug_assert!(verify_material(pos, weak_side, KnightValueMg, 0));
 
-    let psq = pos.square(strong_side, PAWN);
-    let sbsq = pos.square(strong_side, BISHOP);
-    let wksq = pos.square(weak_side, KING);
+    let psq = pos.square(strong_side, PieceType::PAWN);
+    let sbsq = pos.square(strong_side, PieceType::BISHOP);
+    let wksq = pos.square(weak_side, PieceType::KING);
 
     if wksq.file() == psq.file()
         && psq.relative_rank(strong_side) < wksq.relative_rank(strong_side)
@@ -929,8 +947,8 @@ fn scale_knpk(pos: &Position, strong_side: Color) -> ScaleFactor {
     debug_assert!(verify_material(pos, strong_side, KnightValueMg, 1));
     debug_assert!(verify_material(pos, weak_side, Value::ZERO, 0));
 
-    let psq = normalize(pos, strong_side, pos.square(strong_side, PAWN));
-    let wksq = normalize(pos, strong_side, pos.square(weak_side, KING));
+    let psq = normalize(pos, strong_side, pos.square(strong_side, PieceType::PAWN));
+    let wksq = normalize(pos, strong_side, pos.square(weak_side, PieceType::KING));
 
     if psq == Square::A7 && Square::distance(Square::A8, wksq) <= 1 {
         return ScaleFactor::DRAW;
@@ -944,13 +962,13 @@ fn scale_knpk(pos: &Position, strong_side: Color) -> ScaleFactor {
 fn scale_knpkb(pos: &Position, strong_side: Color) -> ScaleFactor {
     let weak_side = !strong_side;
 
-    let psq = pos.square(strong_side, PAWN);
-    let bsq = pos.square(weak_side, BISHOP);
-    let wksq = pos.square(weak_side, KING);
+    let psq = pos.square(strong_side, PieceType::PAWN);
+    let bsq = pos.square(weak_side, PieceType::BISHOP);
+    let wksq = pos.square(weak_side, PieceType::KING);
 
     // King needs to get close to promoting pawn to prevent knight from
     // blocking. Rules for this are very tricky, so just approximate.
-    if forward_file_bb(strong_side, psq) & pos.attacks_from(BISHOP, bsq) != 0 {
+    if forward_file_bb(strong_side, psq) & pos.attacks_from(PieceType::BISHOP, bsq) != 0 {
         return ScaleFactor(Square::distance(wksq, psq) as i32);
     }
 
@@ -969,9 +987,9 @@ pub fn scale_kpkp(pos: &Position, strong_side: Color) -> ScaleFactor {
     debug_assert!(verify_material(pos, weak_side, Value::ZERO, 1));
 
     // Assume strong_side is white and the pawn is on files A-D
-    let wksq = normalize(pos, strong_side, pos.square(strong_side, KING));
-    let bksq = normalize(pos, strong_side, pos.square(weak_side, KING));
-    let psq = normalize(pos, strong_side, pos.square(strong_side, PAWN));
+    let wksq = normalize(pos, strong_side, pos.square(strong_side, PieceType::KING));
+    let bksq = normalize(pos, strong_side, pos.square(weak_side, PieceType::KING));
+    let psq = normalize(pos, strong_side, pos.square(strong_side, PieceType::PAWN));
 
     let us = if strong_side == pos.side_to_move() {
         WHITE

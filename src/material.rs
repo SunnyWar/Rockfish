@@ -7,9 +7,8 @@ use crate::endgame::{
 };
 use crate::position::Position;
 use crate::types::{
-    key::Key, scale_factor::ScaleFactor, BishopValueMg, Color, Phase, QueenValueMg, RookValueMg,
-    Score, Value, BISHOP, BLACK, ENDGAME_LIMIT, KNIGHT, MIDGAME_LIMIT, PAWN, PHASE_MIDGAME, QUEEN,
-    ROOK, WHITE,
+    key::Key, scale_factor::ScaleFactor, BishopValueMg, Color, Phase, PieceType, QueenValueMg,
+    RookValueMg, Score, Value, BLACK, ENDGAME_LIMIT, MIDGAME_LIMIT, PHASE_MIDGAME, WHITE,
 };
 
 pub struct Entry {
@@ -95,16 +94,16 @@ fn is_kxk(pos: &Position, us: Color) -> bool {
 
 fn is_kbpsks(pos: &Position, us: Color) -> bool {
     pos.non_pawn_material_c(us) == BishopValueMg
-        && pos.count(us, BISHOP) == 1
-        && pos.count(us, PAWN) >= 1
+        && pos.count(us, PieceType::BISHOP) == 1
+        && pos.count(us, PieceType::PAWN) >= 1
 }
 
 fn is_kqkrps(pos: &Position, us: Color) -> bool {
-    pos.count(us, PAWN) == 0
+    pos.count(us, PieceType::PAWN) == 0
         && pos.non_pawn_material_c(us) == QueenValueMg
-        && pos.count(us, QUEEN) == 1
-        && pos.count(!us, ROOK) == 1
-        && pos.count(!us, PAWN) >= 1
+        && pos.count(us, PieceType::QUEEN) == 1
+        && pos.count(!us, PieceType::ROOK) == 1
+        && pos.count(!us, PieceType::PAWN) >= 1
 }
 
 // imbalance() calculates the imbalance by comparing the piece count of
@@ -206,8 +205,11 @@ pub fn probe(pos: &Position) -> &'static mut Entry {
         };
     }
 
-    if npm_w + npm_b == Value::ZERO && pos.pieces_p(PAWN) != 0 {
-        match (pos.count(WHITE, PAWN), pos.count(BLACK, PAWN)) {
+    if npm_w + npm_b == Value::ZERO && pos.pieces_p(PieceType::PAWN) != 0 {
+        match (
+            pos.count(WHITE, PieceType::PAWN),
+            pos.count(BLACK, PieceType::PAWN),
+        ) {
             (white, 0) if white >= 2 => {
                 debug_assert!(white >= 2);
                 e.scaling_function[WHITE.0 as usize] = Some(scale_kpsk);
@@ -228,7 +230,7 @@ pub fn probe(pos: &Position) -> &'static mut Entry {
     // material advantage. This catches some trivial draws like KK, KBK
     // and KNK and gives a drawish scale factor for cases such as KRKBP
     // and KmmKm (except for KBBKN).
-    if pos.count(WHITE, PAWN) == 0 && npm_w - npm_b <= BishopValueMg {
+    if pos.count(WHITE, PieceType::PAWN) == 0 && npm_w - npm_b <= BishopValueMg {
         e.factor[WHITE.0 as usize] = match npm_w {
             x if x < RookValueMg => ScaleFactor::DRAW.0 as u8,
             _ if npm_b <= BishopValueMg => 4,
@@ -236,7 +238,7 @@ pub fn probe(pos: &Position) -> &'static mut Entry {
         };
     }
 
-    if pos.count(BLACK, PAWN) == 0 && npm_b - npm_w <= BishopValueMg {
+    if pos.count(BLACK, PieceType::PAWN) == 0 && npm_b - npm_w <= BishopValueMg {
         e.factor[BLACK.0 as usize] = match npm_b {
             x if x < RookValueMg => ScaleFactor::DRAW.0 as u8,
             _ if npm_w <= BishopValueMg => 4,
@@ -248,7 +250,7 @@ pub fn probe(pos: &Position) -> &'static mut Entry {
         (WHITE, npm_w - npm_b, WHITE.0),
         (BLACK, npm_b - npm_w, BLACK.0),
     ] {
-        if pos.count(color, PAWN) == 1 && npm_diff <= BishopValueMg {
+        if pos.count(color, PieceType::PAWN) == 1 && npm_diff <= BishopValueMg {
             e.factor[scale_factor as usize] = ScaleFactor::ONEPAWN.0 as u8;
         }
     }
@@ -258,20 +260,20 @@ pub fn probe(pos: &Position) -> &'static mut Entry {
     // more flexible in defining bishop pair bonuses.
     let pc = [
         [
-            i32::from(pos.count(WHITE, BISHOP) > 1),
-            pos.count(WHITE, PAWN),
-            pos.count(WHITE, KNIGHT),
-            pos.count(WHITE, BISHOP),
-            pos.count(WHITE, ROOK),
-            pos.count(WHITE, QUEEN),
+            i32::from(pos.count(WHITE, PieceType::BISHOP) > 1),
+            pos.count(WHITE, PieceType::PAWN),
+            pos.count(WHITE, PieceType::KNIGHT),
+            pos.count(WHITE, PieceType::BISHOP),
+            pos.count(WHITE, PieceType::ROOK),
+            pos.count(WHITE, PieceType::QUEEN),
         ],
         [
-            i32::from(pos.count(BLACK, BISHOP) > 1),
-            pos.count(BLACK, PAWN),
-            pos.count(BLACK, KNIGHT),
-            pos.count(BLACK, BISHOP),
-            pos.count(BLACK, ROOK),
-            pos.count(BLACK, QUEEN),
+            i32::from(pos.count(BLACK, PieceType::BISHOP) > 1),
+            pos.count(BLACK, PieceType::PAWN),
+            pos.count(BLACK, PieceType::KNIGHT),
+            pos.count(BLACK, PieceType::BISHOP),
+            pos.count(BLACK, PieceType::ROOK),
+            pos.count(BLACK, PieceType::QUEEN),
         ],
     ];
 

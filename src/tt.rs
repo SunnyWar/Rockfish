@@ -61,8 +61,7 @@ impl TTEntry {
         }
 
         // Don't overwrite more valuable entries
-        if key16 != self.key16 || (depth.value()) as i8 > self.depth8 - 4 || bound == Bound::EXACT
-        {
+        if key16 != self.key16 || (depth.value()) as i8 > self.depth8 - 4 || bound == Bound::EXACT {
             self.key16 = key16;
             self.value16 = value.0 as i16;
             self.eval16 = eval.0 as i16;

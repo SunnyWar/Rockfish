@@ -8,9 +8,9 @@ use crate::bitboard::{
 };
 use crate::position::Position;
 use crate::types::{
-    direction::Direction, key::Key, Black, CastlingRight, CastlingSide,
-    Color, ColorTrait, File, Piece, Score, Square, Value, White, BLACK, FILE_B, FILE_G, FILE_H,
-    PAWN, RANK_1, RANK_5, WHITE,
+    direction::Direction, key::Key, Black, CastlingRight, CastlingSide, Color, ColorTrait, File,
+    Piece, PieceType, Score, Square, Value, White, BLACK, FILE_B, FILE_G, FILE_H, RANK_1, RANK_5,
+    WHITE,
 };
 
 macro_rules! V {
@@ -203,7 +203,7 @@ impl Entry {
         };
 
         let center = ksq.file().clamp(FILE_B, FILE_G);
-        let b = pos.pieces_p(PAWN)
+        let b = pos.pieces_p(PieceType::PAWN)
             & (forward_ranks_bb(us, ksq) | ksq.rank_bb())
             & (adjacent_files_bb(center) | file_bb(center));
         let our_pawns = b & pos.pieces_c(us);
@@ -255,7 +255,7 @@ impl Entry {
         self.castling_rights[us.0 as usize] = pos.castling_rights(us);
         let mut min_king_pawn_distance = 0i32;
 
-        let pawns = pos.pieces_cp(us, PAWN);
+        let pawns = pos.pieces_cp(us, PieceType::PAWN);
         if pawns != 0 {
             while distance_ring_bb(ksq, min_king_pawn_distance) & pawns == 0 {
                 min_king_pawn_distance += 1;
@@ -340,14 +340,24 @@ pub fn probe(pos: &Position) -> &mut Entry {
 fn evaluate<Us: ColorTrait>(pos: &Position, e: &mut Entry) -> Score {
     let us = Us::COLOR;
     let (them, up, right, left) = match us {
-        WHITE => (BLACK, Direction::NORTH, Direction::NORTH_EAST, Direction::NORTH_WEST),
-        _ => (WHITE, Direction::SOUTH, Direction::SOUTH_WEST, Direction::SOUTH_EAST),
+        WHITE => (
+            BLACK,
+            Direction::NORTH,
+            Direction::NORTH_EAST,
+            Direction::NORTH_WEST,
+        ),
+        _ => (
+            WHITE,
+            Direction::SOUTH,
+            Direction::SOUTH_WEST,
+            Direction::SOUTH_EAST,
+        ),
     };
 
     let mut score = Score::ZERO;
 
-    let our_pawns = pos.pieces_cp(us, PAWN);
-    let their_pawns = pos.pieces_cp(them, PAWN);
+    let our_pawns = pos.pieces_cp(us, PieceType::PAWN);
+    let their_pawns = pos.pieces_cp(them, PieceType::PAWN);
 
     e.passed_pawns[us.0 as usize] = Bitboard(0);
     e.pawn_attacks_span[us.0 as usize] = Bitboard(0);
@@ -360,8 +370,8 @@ fn evaluate<Us: ColorTrait>(pos: &Position, e: &mut Entry) -> Score {
         popcount(our_pawns & !DARK_SQUARES) as i32;
 
     // Loop through all pawns of the current color and score each pawn
-    for s in pos.square_list(us, PAWN) {
-        debug_assert!(pos.piece_on(s) == Piece::make(us, PAWN));
+    for s in pos.square_list(us, PieceType::PAWN) {
+        debug_assert!(pos.piece_on(s) == Piece::make(us, PieceType::PAWN));
 
         let f = s.file();
 
