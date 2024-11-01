@@ -10,8 +10,7 @@ use crate::position::Position;
 use crate::types::{
     direction::pawn_push, direction::Direction, scale_factor::ScaleFactor, Bishop, BishopValueEg,
     BishopValueMg, Black, Color, ColorTrait, Knight, KnightValueMg, Piece, PieceType,
-    PieceTypeTrait, Queen, Rook, RookValueMg, Score, Square, Value, White, EG, MG,
-    PHASE_MIDGAME,
+    PieceTypeTrait, Queen, Rook, RookValueMg, Score, Square, Value, White, EG, MG, PHASE_MIDGAME,
 };
 
 pub const TEMPO: Value = Value(20);

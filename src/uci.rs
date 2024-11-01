@@ -6,9 +6,7 @@ use crate::movegen::{Legal, MoveList};
 use crate::position::Position;
 use crate::search;
 use crate::threads;
-use crate::types::{
-    Color, Move, PawnValueEg, Square, Value, CASTLING, MAX_PLY, PROMOTION,
-};
+use crate::types::{Color, Move, PawnValueEg, Square, Value, CASTLING, MAX_PLY, PROMOTION};
 use crate::ucioption;
 use threads::PosData;
 
@@ -299,7 +297,14 @@ pub fn move_str(m: Move, chess960: bool) -> String {
     }
 
     if m.move_type() == CASTLING && !chess960 {
-        to = Square::make(if to > from { Square::FILE_G } else { Square::FILE_C }, from.rank());
+        to = Square::make(
+            if to > from {
+                Square::FILE_G
+            } else {
+                Square::FILE_C
+            },
+            from.rank(),
+        );
     }
 
     let mut move_str = square(from);

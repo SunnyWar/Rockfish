@@ -7,8 +7,7 @@ use crate::position::Position;
 use crate::search::RootMoves;
 use crate::types::{
     depth::Depth, key::Key, Color, Move, PawnValueEg, Piece, PieceType, Square, Value,
-    ANY_CASTLING, B_PAWN, ENPASSANT, MAX_MATE_PLY, NO_PIECE,
-    PROMOTION, W_PAWN,
+    ANY_CASTLING, B_PAWN, ENPASSANT, MAX_MATE_PLY, NO_PIECE, PROMOTION, W_PAWN,
 };
 use crate::ucioption;
 

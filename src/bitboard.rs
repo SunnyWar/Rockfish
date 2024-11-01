@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use crate::types::{direction::Direction, Color, File, PieceType, Rank, Square,};
+use crate::types::{direction::Direction, Color, File, PieceType, Rank, Square};
 use crate::uci;
 
 #[derive(Clone, Copy, PartialEq, Eq)]

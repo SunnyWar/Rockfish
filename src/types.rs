@@ -327,7 +327,7 @@ impl Square {
     //pub const FILE_F: File = 5;
     pub const FILE_G: File = 6;
     pub const FILE_H: File = 7;
-    
+
     pub const RANK_1: Rank = 0;
     pub const RANK_2: Rank = 1;
     pub const RANK_3: Rank = 2;

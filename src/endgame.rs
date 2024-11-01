@@ -476,7 +476,9 @@ pub fn scale_kbpsk(pos: &Position, strong_side: Color) -> ScaleFactor {
     let pawns_file = lsb(pawns).file();
 
     // All pawns are on a single rook file?
-    if (pawns_file == Square::FILE_A || pawns_file == Square::FILE_H) && pawns & !file_bb(pawns_file) == 0 {
+    if (pawns_file == Square::FILE_A || pawns_file == Square::FILE_H)
+        && pawns & !file_bb(pawns_file) == 0
+    {
         let bishop_sq = pos.square(strong_side, PieceType::BISHOP);
         let queening_sq = Square::make(pawns_file, Square::RANK_8).relative(strong_side);
         let king_sq = pos.square(weak_side, PieceType::KING);
@@ -597,7 +599,8 @@ fn scale_krpkr(pos: &Position, strong_side: Color) -> ScaleFactor {
     if r == Square::RANK_6
         && Square::distance(bksq, queening_sq) <= 1
         && wksq.rank() + tempo <= Square::RANK_6
-        && (brsq.rank() == Square::RANK_1 || (tempo == 0 && u32::distance(brsq.file(), wpsq.file()) >= 3))
+        && (brsq.rank() == Square::RANK_1
+            || (tempo == 0 && u32::distance(brsq.file(), wpsq.file()) >= 3))
     {
         return ScaleFactor::DRAW;
     }
@@ -616,7 +619,9 @@ fn scale_krpkr(pos: &Position, strong_side: Color) -> ScaleFactor {
         && wrsq == Square::A8
         && (bksq == Square::H7 || bksq == Square::G7)
         && brsq.file() == Square::FILE_A
-        && (brsq.rank() <= Square::RANK_3 || wksq.file() >= Square::FILE_D || wksq.rank() <= Square::RANK_5)
+        && (brsq.rank() <= Square::RANK_3
+            || wksq.file() >= Square::FILE_D
+            || wksq.rank() <= Square::RANK_5)
     {
         return ScaleFactor::DRAW;
     }

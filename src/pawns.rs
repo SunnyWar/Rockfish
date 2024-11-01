@@ -9,7 +9,7 @@ use crate::bitboard::{
 use crate::position::Position;
 use crate::types::{
     direction::Direction, key::Key, Black, CastlingRight, CastlingSide, Color, ColorTrait, File,
-    Piece, PieceType, Score, Square, Value, White, 
+    Piece, PieceType, Score, Square, Value, White,
 };
 
 macro_rules! V {
