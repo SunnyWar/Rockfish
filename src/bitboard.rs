@@ -6,30 +6,32 @@ use crate::uci;
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Bitboard(pub u64);
 
+impl Bitboard {
+    pub const ALL_SQUARES: Bitboard = Bitboard(!0u64);
+    pub const DARK_SQUARES: Bitboard = Bitboard(0xaa55_aa55_aa55_aa55);
+
+    pub const FILEA_BB: Bitboard = Bitboard(0x0101_0101_0101_0101);
+    pub const FILEB_BB: Bitboard = Bitboard(0x0202_0202_0202_0202);
+    pub const FILEC_BB: Bitboard = Bitboard(0x0404_0404_0404_0404);
+    //pub const FILED_BB: Bitboard = Bitboard(0x0808_0808_0808_0808);
+    //pub const FILEE_BB: Bitboard = Bitboard(0x1010_1010_1010_1010);
+    pub const FILEF_BB: Bitboard = Bitboard(0x2020_2020_2020_2020);
+    pub const FILEG_BB: Bitboard = Bitboard(0x4040_4040_4040_4040);
+    pub const FILEH_BB: Bitboard = Bitboard(0x8080_8080_8080_8080);
+
+    pub const RANK1_BB: Bitboard = Bitboard(0xff);
+    pub const RANK2_BB: Bitboard = Bitboard(0xff00);
+    pub const RANK3_BB: Bitboard = Bitboard(0x00ff_0000);
+    pub const RANK4_BB: Bitboard = Bitboard(0xff00_0000);
+    pub const RANK5_BB: Bitboard = Bitboard(0x00ff_0000_0000);
+    pub const RANK6_BB: Bitboard = Bitboard(0xff00_0000_0000);
+    pub const RANK7_BB: Bitboard = Bitboard(0x00ff_0000_0000_0000);
+    pub const RANK8_BB: Bitboard = Bitboard(0xff00_0000_0000_0000);
+}
+
 pub fn popcount(bb: Bitboard) -> u32 {
     bb.0.count_ones()
 }
-
-pub const ALL_SQUARES: Bitboard = Bitboard(!0u64);
-pub const DARK_SQUARES: Bitboard = Bitboard(0xaa55_aa55_aa55_aa55);
-
-pub const FILEA_BB: Bitboard = Bitboard(0x0101_0101_0101_0101);
-pub const FILEB_BB: Bitboard = Bitboard(0x0202_0202_0202_0202);
-pub const FILEC_BB: Bitboard = Bitboard(0x0404_0404_0404_0404);
-//pub const FILED_BB: Bitboard = Bitboard(0x0808_0808_0808_0808);
-//pub const FILEE_BB: Bitboard = Bitboard(0x1010_1010_1010_1010);
-pub const FILEF_BB: Bitboard = Bitboard(0x2020_2020_2020_2020);
-pub const FILEG_BB: Bitboard = Bitboard(0x4040_4040_4040_4040);
-pub const FILEH_BB: Bitboard = Bitboard(0x8080_8080_8080_8080);
-
-pub const RANK1_BB: Bitboard = Bitboard(0xff);
-pub const RANK2_BB: Bitboard = Bitboard(0xff00);
-pub const RANK3_BB: Bitboard = Bitboard(0x00ff_0000);
-pub const RANK4_BB: Bitboard = Bitboard(0xff00_0000);
-pub const RANK5_BB: Bitboard = Bitboard(0x00ff_0000_0000);
-pub const RANK6_BB: Bitboard = Bitboard(0xff00_0000_0000);
-pub const RANK7_BB: Bitboard = Bitboard(0x00ff_0000_0000_0000);
-pub const RANK8_BB: Bitboard = Bitboard(0xff00_0000_0000_0000);
 
 static mut SQUARE_DISTANCE: [u32; 64 * 64] = [0; 64 * 64];
 
@@ -484,10 +486,10 @@ impl Bitboard {
         match d {
             Direction::NORTH => self << 8,
             Direction::SOUTH => self >> 8,
-            Direction::NORTH_EAST => (self & !FILEH_BB) << 9,
-            Direction::SOUTH_EAST => (self & !FILEH_BB) >> 7,
-            Direction::NORTH_WEST => (self & !FILEA_BB) << 7,
-            Direction::SOUTH_WEST => (self & !FILEA_BB) >> 9,
+            Direction::NORTH_EAST => (self & !Bitboard::FILEH_BB) << 9,
+            Direction::SOUTH_EAST => (self & !Bitboard::FILEH_BB) >> 7,
+            Direction::NORTH_WEST => (self & !Bitboard::FILEA_BB) << 7,
+            Direction::SOUTH_WEST => (self & !Bitboard::FILEA_BB) >> 9,
             _ => Bitboard(0),
         }
     }
@@ -591,7 +593,7 @@ impl Distance for Square {
 // init() initializes various bitboard tables. It is called at startup.
 #[allow(clippy::too_many_lines)]
 pub fn init() {
-    for s in ALL_SQUARES {
+    for s in Bitboard::ALL_SQUARES {
         unsafe {
             SQUARE_BB[s.0 as usize] = Bitboard(1u64) << (s.0 as i32);
         }
@@ -599,13 +601,13 @@ pub fn init() {
 
     for f in 0..8 {
         unsafe {
-            FILE_BB[f as usize] = FILEA_BB << f;
+            FILE_BB[f as usize] = Bitboard::FILEA_BB << f;
         }
     }
 
     for r in 0..8 {
         unsafe {
-            RANK_BB[r as usize] = RANK1_BB << (8 * r);
+            RANK_BB[r as usize] = Bitboard::RANK1_BB << (8 * r);
         }
     }
 
@@ -638,7 +640,7 @@ pub fn init() {
     }
 
     for &color in &[Color::WHITE, Color::BLACK] {
-        for square in &ALL_SQUARES {
+        for square in &Bitboard::ALL_SQUARES {
             unsafe {
                 let forward_rank = FORWARD_RANKS_BB[color.0 as usize][square.rank() as usize];
                 let file_bb = FILE_BB[square.file() as usize];
@@ -657,8 +659,8 @@ pub fn init() {
     }
 
     // set square distance
-    for s1 in &ALL_SQUARES {
-        for s2 in &ALL_SQUARES {
+    for s1 in &Bitboard::ALL_SQUARES {
+        for s2 in &Bitboard::ALL_SQUARES {
             if s1 != s2 {
                 let dist = std::cmp::max(
                     File::distance(s1.file(), s2.file()),
@@ -676,7 +678,7 @@ pub fn init() {
 
     for &color in &[Color::WHITE, Color::BLACK] {
         for &piece_type in &[PieceType::PAWN, PieceType::KNIGHT, PieceType::KING] {
-            for square in &ALL_SQUARES {
+            for square in &Bitboard::ALL_SQUARES {
                 let steps: &[i32] = match piece_type {
                     PieceType::PAWN => &[7, 9],
                     PieceType::KNIGHT => &[6, 10, 15, 17],
@@ -725,7 +727,7 @@ pub fn init() {
         init_magics(&mut BISHOP_MAGICS, &BISHOP_INIT, bishop_dirs, index_bishop);
     }
 
-    for s1 in &ALL_SQUARES {
+    for s1 in &Bitboard::ALL_SQUARES {
         let bishop_attacks = attacks_bb(PieceType::BISHOP, s1, Bitboard(0));
         let rook_attacks = attacks_bb(PieceType::ROOK, s1, Bitboard(0));
 
@@ -739,7 +741,7 @@ pub fn init() {
         for &piece_type in &[PieceType::BISHOP, PieceType::ROOK] {
             let s1_attacks = attacks_bb(piece_type, s1, Bitboard(0));
 
-            for s2 in &ALL_SQUARES {
+            for s2 in &Bitboard::ALL_SQUARES {
                 unsafe {
                     if s1_attacks & s2 == 0 {
                         continue;
@@ -777,9 +779,10 @@ fn init_magics(
     dirs: [Direction; 4],
     index: fn(Square, Bitboard) -> usize,
 ) {
-    for s in ALL_SQUARES {
+    for s in Bitboard::ALL_SQUARES {
         // Board edges are not considered in the relevant occupancies
-        let edges = ((RANK1_BB | RANK8_BB) & !s.rank_bb()) | ((FILEA_BB | FILEH_BB) & !s.file_bb());
+        let edges = ((Bitboard::RANK1_BB | Bitboard::RANK8_BB) & !s.rank_bb())
+            | ((Bitboard::FILEA_BB | Bitboard::FILEH_BB) & !s.file_bb());
 
         let mask = sliding_attack(dirs, s, Bitboard(0)) & !edges;
 

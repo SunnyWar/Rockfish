@@ -4,7 +4,7 @@ use std::convert::TryInto;
 use crate::bitboard::{
     adjacent_files_bb, backmost_sq, distance_ring_bb, file_bb, forward_file_bb, forward_ranks_bb,
     frontmost_sq, more_than_one, passed_pawn_mask, pawn_attack_span, pawn_attacks, popcount,
-    Bitboard, DARK_SQUARES,
+    Bitboard,
 };
 use crate::position::Position;
 use crate::types::{
@@ -171,7 +171,7 @@ impl Entry {
     }
 
     pub fn pawns_on_same_color_squares(&self, c: Color, s: Square) -> i32 {
-        self.pawns_on_squares[c.0 as usize][usize::from((DARK_SQUARES & s) != 0)]
+        self.pawns_on_squares[c.0 as usize][usize::from((Bitboard::DARK_SQUARES & s) != 0)]
     }
 
     pub fn king_safety<Us: ColorTrait>(&mut self, pos: &Position, ksq: Square) -> Score {
@@ -370,9 +370,9 @@ fn evaluate<Us: ColorTrait>(pos: &Position, e: &mut Entry) -> Score {
     e.king_squares[us.0 as usize] = Square::NONE;
     e.pawn_attacks[us.0 as usize] = our_pawns.shift(right) | our_pawns.shift(left);
     e.pawns_on_squares[us.0 as usize][Color::BLACK.0 as usize] =
-        popcount(our_pawns & DARK_SQUARES) as i32;
+        popcount(our_pawns & Bitboard::DARK_SQUARES) as i32;
     e.pawns_on_squares[us.0 as usize][Color::WHITE.0 as usize] =
-        popcount(our_pawns & !DARK_SQUARES) as i32;
+        popcount(our_pawns & !Bitboard::DARK_SQUARES) as i32;
 
     // Loop through all pawns of the current color and score each pawn
     for s in pos.square_list(us, PieceType::PAWN) {

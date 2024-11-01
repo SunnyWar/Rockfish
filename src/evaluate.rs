@@ -2,8 +2,7 @@
 
 use crate::bitboard::{
     attacks_bb, forward_file_bb, line_bb, more_than_one, popcount, pseudo_attacks, Bitboard,
-    Distance, ALL_SQUARES, RANK1_BB, RANK2_BB, RANK3_BB, RANK4_BB, RANK5_BB, RANK6_BB, RANK7_BB,
-    RANK8_BB,
+    Distance,
 };
 use crate::material;
 use crate::pawns;
@@ -380,9 +379,9 @@ fn initialize<Us: ColorTrait>(pos: &Position, ei: &mut EvalInfo) {
         Direction::NORTH
     };
     let low_ranks = if us == Color::WHITE {
-        RANK2_BB | RANK3_BB
+        Bitboard::RANK2_BB | Bitboard::RANK3_BB
     } else {
-        RANK7_BB | RANK6_BB
+        Bitboard::RANK7_BB | Bitboard::RANK6_BB
     };
 
     // Find our pawns on the first two ranks and those which are blocked
@@ -430,9 +429,9 @@ fn evaluate_pieces<Us: ColorTrait, Pt: PieceTypeTrait>(pos: &Position, ei: &mut 
         Color::WHITE
     };
     let outpost_ranks = if us == Color::WHITE {
-        RANK4_BB | RANK5_BB | RANK6_BB
+        Bitboard::RANK4_BB | Bitboard::RANK5_BB | Bitboard::RANK6_BB
     } else {
-        RANK5_BB | RANK4_BB | RANK3_BB
+        Bitboard::RANK5_BB | Bitboard::RANK4_BB | Bitboard::RANK3_BB
     };
 
     let mut score = Score::ZERO;
@@ -603,9 +602,9 @@ fn evaluate_king<Us: ColorTrait>(pos: &Position, ei: &mut EvalInfo) -> Score {
         Color::WHITE
     };
     let camp = if us == Color::WHITE {
-        ALL_SQUARES ^ RANK6_BB ^ RANK7_BB ^ RANK8_BB
+        Bitboard::ALL_SQUARES ^ Bitboard::RANK6_BB ^ Bitboard::RANK7_BB ^ Bitboard::RANK8_BB
     } else {
-        ALL_SQUARES ^ RANK1_BB ^ RANK2_BB ^ RANK3_BB
+        Bitboard::ALL_SQUARES ^ Bitboard::RANK1_BB ^ Bitboard::RANK2_BB ^ Bitboard::RANK3_BB
     };
 
     let ksq = pos.square(us, PieceType::KING);
@@ -752,9 +751,9 @@ fn evaluate_threats<Us: ColorTrait>(pos: &Position, ei: &EvalInfo) -> Score {
         Direction::SOUTH_WEST
     };
     let trank3bb = if us == Color::WHITE {
-        RANK3_BB
+        Bitboard::RANK3_BB
     } else {
-        RANK6_BB
+        Bitboard::RANK6_BB
     };
     let mut score = Score::ZERO;
 
@@ -967,9 +966,9 @@ fn evaluate_space<Us: ColorTrait>(pos: &Position, ei: &EvalInfo) -> Score {
     };
 
     let space_mask = if us == Color::WHITE {
-        CENTER_FILES & (RANK2_BB | RANK3_BB | RANK4_BB)
+        CENTER_FILES & (Bitboard::RANK2_BB | Bitboard::RANK3_BB | Bitboard::RANK4_BB)
     } else {
-        CENTER_FILES & (RANK7_BB | RANK6_BB | RANK5_BB)
+        CENTER_FILES & (Bitboard::RANK7_BB | Bitboard::RANK6_BB | Bitboard::RANK5_BB)
     };
 
     // Find the safe squares for our pieces inside the areas defended by SpaceMask.

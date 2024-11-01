@@ -2,7 +2,6 @@
 
 use crate::bitboard::{
     attacks_bb, between_bb, file_bb, line_bb, lsb, more_than_one, pseudo_attacks, Bitboard,
-    RANK1_BB, RANK2_BB, RANK3_BB, RANK6_BB, RANK7_BB, RANK8_BB,
 };
 use crate::position::Position;
 use crate::types::{
@@ -208,19 +207,19 @@ fn generate_pawn_moves<Us: ColorTrait, T: GenType>(
     let us = Us::COLOR;
     let them = !us;
     let trank_8bb = if us == Color::WHITE {
-        RANK8_BB
+        Bitboard::RANK8_BB
     } else {
-        RANK1_BB
+        Bitboard::RANK1_BB
     };
     let trank_7bb = if us == Color::WHITE {
-        RANK7_BB
+        Bitboard::RANK7_BB
     } else {
-        RANK2_BB
+        Bitboard::RANK2_BB
     };
     let trank_3bb = if us == Color::WHITE {
-        RANK3_BB
+        Bitboard::RANK3_BB
     } else {
-        RANK6_BB
+        Bitboard::RANK6_BB
     };
     let up = if us == Color::WHITE {
         Direction::NORTH

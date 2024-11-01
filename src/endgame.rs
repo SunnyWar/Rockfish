@@ -2,8 +2,8 @@
 
 use crate::bitbases;
 use crate::bitboard::{
-    backmost_sq, file_bb, forward_file_bb, forward_ranks_bb, lsb, pseudo_attacks, Distance,
-    DARK_SQUARES, FILEA_BB, FILEC_BB, FILEF_BB, FILEH_BB,
+    backmost_sq, file_bb, forward_file_bb, forward_ranks_bb, lsb, pseudo_attacks, Bitboard,
+    Distance,
 };
 use crate::movegen::{Legal, MoveList};
 use crate::position::zobrist;
@@ -227,8 +227,8 @@ pub fn evaluate_kxk(pos: &Position, strong_side: Color) -> Value {
 
     if pos.pieces_pp(PieceType::QUEEN, PieceType::ROOK) != 0
         || (pos.pieces_p(PieceType::BISHOP) != 0 && pos.pieces_p(PieceType::KNIGHT) != 0)
-        || (pos.pieces_p(PieceType::BISHOP) & !DARK_SQUARES != 0
-            && pos.pieces_p(PieceType::BISHOP) & DARK_SQUARES != 0)
+        || (pos.pieces_p(PieceType::BISHOP) & !Bitboard::DARK_SQUARES != 0
+            && pos.pieces_p(PieceType::BISHOP) & Bitboard::DARK_SQUARES != 0)
     {
         result = std::cmp::min(result + Value::KNOWN_WIN, Value::MATE_IN_MAX_PLY - 1);
     }
@@ -416,7 +416,9 @@ fn evaluate_kqkp(pos: &Position, strong_side: Color) -> Value {
 
     if pawn_sq.relative_rank(weak_side) != RANK_7
         || Square::distance(loser_ksq, pawn_sq) != 1
-        || (FILEA_BB | FILEC_BB | FILEF_BB | FILEH_BB) & pawn_sq == 0
+        || (Bitboard::FILEA_BB | Bitboard::FILEC_BB | Bitboard::FILEF_BB | Bitboard::FILEH_BB)
+            & pawn_sq
+            == 0
     {
         result += QueenValueEg - PawnValueEg;
     }
@@ -684,7 +686,7 @@ fn scale_krpkb(pos: &Position, strong_side: Color) -> ScaleFactor {
     debug_assert!(verify_material(pos, weak_side, BishopValueMg, 0));
 
     // Test for a rook pawn
-    if pos.pieces_p(PieceType::PAWN) & (FILEA_BB | FILEH_BB) != 0 {
+    if pos.pieces_p(PieceType::PAWN) & (Bitboard::FILEA_BB | Bitboard::FILEH_BB) != 0 {
         let ksq = pos.square(weak_side, PieceType::KING);
         let bsq = pos.square(weak_side, PieceType::BISHOP);
         let psq = pos.square(strong_side, PieceType::PAWN);
@@ -771,7 +773,7 @@ pub fn scale_kpsk(pos: &Position, strong_side: Color) -> ScaleFactor {
     // If all pawns are ahead of the king, on a single rook file and
     // the king is within one file of the pawns, it's a draw.
     if pawns & !forward_ranks_bb(weak_side, ksq) == 0
-        && !(pawns & !FILEA_BB != 0 && pawns & !FILEH_BB != 0)
+        && !(pawns & !Bitboard::FILEA_BB != 0 && pawns & !Bitboard::FILEH_BB != 0)
         && u32::distance(ksq.file(), lsb(pawns).file()) <= 1
     {
         return ScaleFactor::DRAW;

@@ -2,7 +2,7 @@
 
 use crate::bitboard::{
     aligned, attacks_bb, between_bb, lsb, more_than_one, passed_pawn_mask, pawn_attacks, popcount,
-    pseudo_attacks, Bitboard, RANK1_BB, RANK8_BB,
+    pseudo_attacks, Bitboard,
 };
 use crate::material;
 use crate::movegen::{Legal, MoveList};
@@ -1633,7 +1633,7 @@ impl Position {
             panic!("pos_is_ok: Kings");
         }
 
-        if self.pieces_p(PieceType::PAWN) & (RANK1_BB | RANK8_BB) != 0
+        if self.pieces_p(PieceType::PAWN) & (Bitboard::RANK1_BB | Bitboard::RANK8_BB) != 0
             || self.count(Color::WHITE, PieceType::PAWN) > 8
             || self.count(Color::BLACK, PieceType::PAWN) > 8
         {

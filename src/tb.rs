@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: (GPL-3.0-or-later OR UPL-1.0)
 
-use crate::bitboard::{
-    lsb, popcount, Bitboard, FILEA_BB, FILEB_BB, FILEC_BB, FILEF_BB, FILEG_BB, FILEH_BB,
-};
+use crate::bitboard::{lsb, popcount, Bitboard};
 use crate::movegen::{generate, Captures, Evasions, ExtMove, Legal, MoveList, NonEvasions, Quiets};
 use crate::position::zobrist::material;
 use crate::position::Position;
@@ -2603,12 +2601,17 @@ fn init_indices() {
 fn leading_pawn_table<T: Encoding>(pawns: Bitboard, flip: bool) -> u32 {
     if T::ENC == FileEnc::ENC {
         match (
-            pawns & (FILEA_BB | FILEB_BB | FILEG_BB | FILEH_BB) != 0,
-            pawns & (FILEA_BB | FILEH_BB) != 0,
+            pawns
+                & (Bitboard::FILEA_BB
+                    | Bitboard::FILEB_BB
+                    | Bitboard::FILEG_BB
+                    | Bitboard::FILEH_BB)
+                != 0,
+            pawns & (Bitboard::FILEA_BB | Bitboard::FILEH_BB) != 0,
         ) {
             (true, true) => FILE_A,
             (true, false) => FILE_B,
-            (false, _) => match pawns & (FILEC_BB | FILEF_BB) != 0 {
+            (false, _) => match pawns & (Bitboard::FILEC_BB | Bitboard::FILEF_BB) != 0 {
                 true => FILE_C,
                 false => FILE_D,
             },

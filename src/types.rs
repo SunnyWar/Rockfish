@@ -948,12 +948,18 @@ mod tests {
 
         #[test]
         fn test_make() {
-            assert_eq!(CastlingRight::make(Color::WHITE, CastlingSide::KING), WHITE_OO);
+            assert_eq!(
+                CastlingRight::make(Color::WHITE, CastlingSide::KING),
+                WHITE_OO
+            );
             assert_eq!(
                 CastlingRight::make(Color::WHITE, CastlingSide::QUEEN),
                 WHITE_OOO
             );
-            assert_eq!(CastlingRight::make(Color::BLACK, CastlingSide::KING), BLACK_OO);
+            assert_eq!(
+                CastlingRight::make(Color::BLACK, CastlingSide::KING),
+                BLACK_OO
+            );
             assert_eq!(
                 CastlingRight::make(Color::BLACK, CastlingSide::QUEEN),
                 BLACK_OOO
