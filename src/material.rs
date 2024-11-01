@@ -8,7 +8,7 @@ use crate::endgame::{
 use crate::position::Position;
 use crate::types::{
     key::Key, scale_factor::ScaleFactor, BishopValueMg, Color, Phase, PieceType, QueenValueMg,
-    RookValueMg, Score, Value, BLACK, ENDGAME_LIMIT, MIDGAME_LIMIT, PHASE_MIDGAME, WHITE,
+    RookValueMg, Score, Value, ENDGAME_LIMIT, MIDGAME_LIMIT, PHASE_MIDGAME,
 };
 
 pub struct Entry {
@@ -27,7 +27,7 @@ impl Entry {
             key: Key(0),
             scaling_function: [None; 2],
             evaluation_function: None,
-            eval_side: WHITE,
+            eval_side: Color::WHITE,
             value: 0,
             factor: [0; 2],
             game_phase: 0,
@@ -109,7 +109,11 @@ fn is_kqkrps(pos: &Position, us: Color) -> bool {
 // imbalance() calculates the imbalance by comparing the piece count of
 // each piece type for both colors.
 fn imbalance(pc: &[[i32; 6]; 2], us: Color) -> i32 {
-    let them = if us == WHITE { BLACK } else { WHITE };
+    let them = if us == Color::WHITE {
+        Color::BLACK
+    } else {
+        Color::WHITE
+    };
 
     let mut bonus = 0;
 
@@ -150,13 +154,13 @@ pub fn probe(pos: &Position) -> &'static mut Entry {
     e.key = key;
     e.evaluation_function = None;
     e.scaling_function = [None; 2];
-    e.factor[WHITE.0 as usize] = ScaleFactor::NORMAL.0 as u8;
-    e.factor[BLACK.0 as usize] = ScaleFactor::NORMAL.0 as u8;
+    e.factor[Color::WHITE.0 as usize] = ScaleFactor::NORMAL.0 as u8;
+    e.factor[Color::BLACK.0 as usize] = ScaleFactor::NORMAL.0 as u8;
     e.value = 0;
 
     // Map total non-pawn material into [PHASE_ENDGAME, PHASE_MIDGAME]
-    let npm_w = pos.non_pawn_material_c(WHITE);
-    let npm_b = pos.non_pawn_material_c(BLACK);
+    let npm_w = pos.non_pawn_material_c(Color::WHITE);
+    let npm_b = pos.non_pawn_material_c(Color::BLACK);
     let npm = std::cmp::max(ENDGAME_LIMIT, std::cmp::min(npm_w + npm_b, MIDGAME_LIMIT));
     e.game_phase =
         (((npm - ENDGAME_LIMIT) * PHASE_MIDGAME) / (MIDGAME_LIMIT - ENDGAME_LIMIT)) as i32;
@@ -174,7 +178,7 @@ pub fn probe(pos: &Position) -> &'static mut Entry {
         }
     }
 
-    for &c in &[WHITE, BLACK] {
+    for &c in &[Color::WHITE, Color::BLACK] {
         if is_kxk(pos, c) {
             e.evaluation_function = Some(evaluate_kxk);
             e.eval_side = c;
@@ -197,7 +201,7 @@ pub fn probe(pos: &Position) -> &'static mut Entry {
     // We didn't find any specialized scaling function, so fall back on
     // generic ones that refer to more than one material distributiion.
     // Note that in this case we don't return after setting the function.
-    for &c in &[WHITE, BLACK] {
+    for &c in &[Color::WHITE, Color::BLACK] {
         e.scaling_function[c.0 as usize] = match (is_kbpsks(pos, c), is_kqkrps(pos, c)) {
             (true, _) => Some(scale_kbpsk),
             (_, true) => Some(scale_kqkrps),
@@ -207,20 +211,20 @@ pub fn probe(pos: &Position) -> &'static mut Entry {
 
     if npm_w + npm_b == Value::ZERO && pos.pieces_p(PieceType::PAWN) != 0 {
         match (
-            pos.count(WHITE, PieceType::PAWN),
-            pos.count(BLACK, PieceType::PAWN),
+            pos.count(Color::WHITE, PieceType::PAWN),
+            pos.count(Color::BLACK, PieceType::PAWN),
         ) {
             (white, 0) if white >= 2 => {
                 debug_assert!(white >= 2);
-                e.scaling_function[WHITE.0 as usize] = Some(scale_kpsk);
+                e.scaling_function[Color::WHITE.0 as usize] = Some(scale_kpsk);
             }
             (0, black) if black >= 2 => {
                 debug_assert!(black >= 2);
-                e.scaling_function[BLACK.0 as usize] = Some(scale_kpsk);
+                e.scaling_function[Color::BLACK.0 as usize] = Some(scale_kpsk);
             }
             (1, 1) => {
-                e.scaling_function[WHITE.0 as usize] = Some(scale_kpkp);
-                e.scaling_function[BLACK.0 as usize] = Some(scale_kpkp);
+                e.scaling_function[Color::WHITE.0 as usize] = Some(scale_kpkp);
+                e.scaling_function[Color::BLACK.0 as usize] = Some(scale_kpkp);
             }
             _ => {}
         }
@@ -230,16 +234,16 @@ pub fn probe(pos: &Position) -> &'static mut Entry {
     // material advantage. This catches some trivial draws like KK, KBK
     // and KNK and gives a drawish scale factor for cases such as KRKBP
     // and KmmKm (except for KBBKN).
-    if pos.count(WHITE, PieceType::PAWN) == 0 && npm_w - npm_b <= BishopValueMg {
-        e.factor[WHITE.0 as usize] = match npm_w {
+    if pos.count(Color::WHITE, PieceType::PAWN) == 0 && npm_w - npm_b <= BishopValueMg {
+        e.factor[Color::WHITE.0 as usize] = match npm_w {
             x if x < RookValueMg => ScaleFactor::DRAW.0 as u8,
             _ if npm_b <= BishopValueMg => 4,
             _ => 14,
         };
     }
 
-    if pos.count(BLACK, PieceType::PAWN) == 0 && npm_b - npm_w <= BishopValueMg {
-        e.factor[BLACK.0 as usize] = match npm_b {
+    if pos.count(Color::BLACK, PieceType::PAWN) == 0 && npm_b - npm_w <= BishopValueMg {
+        e.factor[Color::BLACK.0 as usize] = match npm_b {
             x if x < RookValueMg => ScaleFactor::DRAW.0 as u8,
             _ if npm_w <= BishopValueMg => 4,
             _ => 14,
@@ -247,8 +251,8 @@ pub fn probe(pos: &Position) -> &'static mut Entry {
     }
 
     for &(color, npm_diff, scale_factor) in &[
-        (WHITE, npm_w - npm_b, WHITE.0),
-        (BLACK, npm_b - npm_w, BLACK.0),
+        (Color::WHITE, npm_w - npm_b, Color::WHITE.0),
+        (Color::BLACK, npm_b - npm_w, Color::BLACK.0),
     ] {
         if pos.count(color, PieceType::PAWN) == 1 && npm_diff <= BishopValueMg {
             e.factor[scale_factor as usize] = ScaleFactor::ONEPAWN.0 as u8;
@@ -260,24 +264,24 @@ pub fn probe(pos: &Position) -> &'static mut Entry {
     // more flexible in defining bishop pair bonuses.
     let pc = [
         [
-            i32::from(pos.count(WHITE, PieceType::BISHOP) > 1),
-            pos.count(WHITE, PieceType::PAWN),
-            pos.count(WHITE, PieceType::KNIGHT),
-            pos.count(WHITE, PieceType::BISHOP),
-            pos.count(WHITE, PieceType::ROOK),
-            pos.count(WHITE, PieceType::QUEEN),
+            i32::from(pos.count(Color::WHITE, PieceType::BISHOP) > 1),
+            pos.count(Color::WHITE, PieceType::PAWN),
+            pos.count(Color::WHITE, PieceType::KNIGHT),
+            pos.count(Color::WHITE, PieceType::BISHOP),
+            pos.count(Color::WHITE, PieceType::ROOK),
+            pos.count(Color::WHITE, PieceType::QUEEN),
         ],
         [
-            i32::from(pos.count(BLACK, PieceType::BISHOP) > 1),
-            pos.count(BLACK, PieceType::PAWN),
-            pos.count(BLACK, PieceType::KNIGHT),
-            pos.count(BLACK, PieceType::BISHOP),
-            pos.count(BLACK, PieceType::ROOK),
-            pos.count(BLACK, PieceType::QUEEN),
+            i32::from(pos.count(Color::BLACK, PieceType::BISHOP) > 1),
+            pos.count(Color::BLACK, PieceType::PAWN),
+            pos.count(Color::BLACK, PieceType::KNIGHT),
+            pos.count(Color::BLACK, PieceType::BISHOP),
+            pos.count(Color::BLACK, PieceType::ROOK),
+            pos.count(Color::BLACK, PieceType::QUEEN),
         ],
     ];
 
-    e.value = ((imbalance(&pc, WHITE) - imbalance(&pc, BLACK)) / 16) as i16;
+    e.value = ((imbalance(&pc, Color::WHITE) - imbalance(&pc, Color::BLACK)) / 16) as i16;
 
     e
 }

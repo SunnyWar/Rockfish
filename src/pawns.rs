@@ -9,8 +9,7 @@ use crate::bitboard::{
 use crate::position::Position;
 use crate::types::{
     direction::Direction, key::Key, Black, CastlingRight, CastlingSide, Color, ColorTrait, File,
-    Piece, PieceType, Score, Square, Value, White, BLACK, FILE_B, FILE_G, FILE_H, RANK_1, RANK_5,
-    WHITE,
+    Piece, PieceType, Score, Square, Value, White, FILE_B, FILE_G, FILE_H, RANK_1, RANK_5,
 };
 
 macro_rules! V {
@@ -190,13 +189,17 @@ impl Entry {
 
     fn shelter_storm<Us: ColorTrait>(pos: &Position, ksq: Square) -> Value {
         let us = Us::COLOR;
-        let them = if us == WHITE { BLACK } else { WHITE };
-        let shelter_mask = if us == WHITE {
+        let them = if us == Color::WHITE {
+            Color::BLACK
+        } else {
+            Color::WHITE
+        };
+        let shelter_mask = if us == Color::WHITE {
             bitboard!(A2, B3, C2, F2, G3, H2)
         } else {
             bitboard!(A7, B6, C7, F7, G6, H7)
         };
-        let storm_mask = if us == WHITE {
+        let storm_mask = if us == Color::WHITE {
             bitboard!(A3, C3, F3, H3)
         } else {
             bitboard!(A6, C6, F6, H6)
@@ -326,9 +329,10 @@ pub fn probe(pos: &Position) -> &mut Entry {
     e.key = key;
     e.score = evaluate::<White>(pos, e) - evaluate::<Black>(pos, e);
 
-    let white_semiopen = e.semiopen_files[WHITE.0 as usize];
-    let black_semiopen = e.semiopen_files[BLACK.0 as usize];
-    let passed_pawns = e.passed_pawns[WHITE.0 as usize].0 | e.passed_pawns[BLACK.0 as usize].0;
+    let white_semiopen = e.semiopen_files[Color::WHITE.0 as usize];
+    let black_semiopen = e.semiopen_files[Color::BLACK.0 as usize];
+    let passed_pawns =
+        e.passed_pawns[Color::WHITE.0 as usize].0 | e.passed_pawns[Color::BLACK.0 as usize].0;
     let semiopen_diff = white_semiopen ^ black_semiopen;
 
     e.open_files = (white_semiopen & black_semiopen).count_ones() as i32;
@@ -340,14 +344,14 @@ pub fn probe(pos: &Position) -> &mut Entry {
 fn evaluate<Us: ColorTrait>(pos: &Position, e: &mut Entry) -> Score {
     let us = Us::COLOR;
     let (them, up, right, left) = match us {
-        WHITE => (
-            BLACK,
+        Color::WHITE => (
+            Color::BLACK,
             Direction::NORTH,
             Direction::NORTH_EAST,
             Direction::NORTH_WEST,
         ),
         _ => (
-            WHITE,
+            Color::WHITE,
             Direction::SOUTH,
             Direction::SOUTH_WEST,
             Direction::SOUTH_EAST,
@@ -365,8 +369,9 @@ fn evaluate<Us: ColorTrait>(pos: &Position, e: &mut Entry) -> Score {
     e.semiopen_files[us.0 as usize] = 0xff;
     e.king_squares[us.0 as usize] = Square::NONE;
     e.pawn_attacks[us.0 as usize] = our_pawns.shift(right) | our_pawns.shift(left);
-    e.pawns_on_squares[us.0 as usize][BLACK.0 as usize] = popcount(our_pawns & DARK_SQUARES) as i32;
-    e.pawns_on_squares[us.0 as usize][WHITE.0 as usize] =
+    e.pawns_on_squares[us.0 as usize][Color::BLACK.0 as usize] =
+        popcount(our_pawns & DARK_SQUARES) as i32;
+    e.pawns_on_squares[us.0 as usize][Color::WHITE.0 as usize] =
         popcount(our_pawns & !DARK_SQUARES) as i32;
 
     // Loop through all pawns of the current color and score each pawn

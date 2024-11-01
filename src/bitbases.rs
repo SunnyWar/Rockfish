@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 use crate::bitboard::{pawn_attacks, pseudo_attacks, Distance};
-use crate::types::{
-    direction::Direction, Color, PieceType, Square, BLACK, FILE_D, RANK_2, RANK_7, WHITE,
-};
+use crate::types::{direction::Direction, Color, PieceType, Square, FILE_D, RANK_2, RANK_7};
 
 // There are 24 possible pawn squares: the first 4 files and ranks from 2 to 7
 const MAX_INDEX: usize = 2 * 24 * 64 * 64;
@@ -20,7 +18,7 @@ static KPK_BITBASE_INIT: Once = Once::new();
 //
 // bit  0- 5: white king square (from A1 to H8)
 // bit  6-11: black king square (from A1 to H8)
-// bit    12: side to move (WHITE or BLACK)
+// bit    12: side to move (Color::WHITE or Color::BLACK)
 // bit 13-14: white pawn file (from FILE_A to FILE_D)
 // bit 15-17: white pawn RANK_7 - rank
 //            (from RANK_7 - RANK_7 to RANK_7 - RANK_2)
@@ -47,10 +45,10 @@ impl KPKPosition {
         let us = Color((idx >> 12) & 0x01);
         let psq = Square::make((idx >> 13) & 0x03, RANK_7 - ((idx >> 15) & 0x07));
 
-        let white_king = ksq[WHITE.0 as usize];
-        let black_king = ksq[BLACK.0 as usize];
-        let white_pawn_attacks = pawn_attacks(WHITE, psq);
-        let black_pawn_attacks = pawn_attacks(BLACK, psq);
+        let white_king = ksq[Color::WHITE.0 as usize];
+        let black_king = ksq[Color::BLACK.0 as usize];
+        let white_pawn_attacks = pawn_attacks(Color::WHITE, psq);
+        let black_pawn_attacks = pawn_attacks(Color::BLACK, psq);
 
         let result = match (
             Square::distance(white_king, black_king) <= 1, // Check if the kings are adjacent
@@ -74,15 +72,14 @@ impl KPKPosition {
             (true, _, _, _, _, _, _, _, _, _, _)
             | (_, true, _, _, _, _, _, _, _, _, _)
             | (_, _, true, _, _, _, _, _, _, _, _)
-            | (_, _, _, WHITE, true, _, _, _, _, _, _) => INVALID, // Result is invalid
+            | (_, _, _, Color::WHITE, true, _, _, _, _, _, _) => INVALID, // Result is invalid
 
             // Immediate win if a pawn can be promoted without getting captured
-            (_, _, _, WHITE, _, true, true, true, true, _, _) => WIN, // Result is win
+            (_, _, _, Color::WHITE, _, true, true, true, true, _, _) => WIN, // Result is win
 
             // Immediate draw if it is a stalemate or a king captures undefended pawn
-            (_, _, _, BLACK, _, _, _, _, _, true, _) | (_, _, _, BLACK, _, _, _, _, _, _, true) => {
-                DRAW
-            } // Result is draw
+            (_, _, _, Color::BLACK, _, _, _, _, _, true, _)
+            | (_, _, _, Color::BLACK, _, _, _, _, _, _, true) => DRAW, // Result is draw
 
             // Position will be classified later
             _ => UNKNOWN, // Result is unknown
@@ -110,20 +107,24 @@ impl KPKPosition {
         let us = self.us;
         let psq = self.psq;
 
-        let them = if us == WHITE { BLACK } else { WHITE };
-        let good = if us == WHITE { WIN } else { DRAW };
-        let bad = if us == WHITE { DRAW } else { WIN };
+        let them = if us == Color::WHITE {
+            Color::BLACK
+        } else {
+            Color::WHITE
+        };
+        let good = if us == Color::WHITE { WIN } else { DRAW };
+        let bad = if us == Color::WHITE { DRAW } else { WIN };
 
         let mut r = INVALID;
 
         for s in pseudo_attacks(PieceType::KING, self.ksq[us.0 as usize]) {
             r |= match us {
-                WHITE => db[index(them, self.ksq[them.0 as usize], s, psq)].result,
+                Color::WHITE => db[index(them, self.ksq[them.0 as usize], s, psq)].result,
                 _ => db[index(them, s, self.ksq[them.0 as usize], psq)].result,
             };
         }
 
-        if us == WHITE {
+        if us == Color::WHITE {
             match psq.rank() {
                 rank if rank < RANK_7 => {
                     r |= db[index(

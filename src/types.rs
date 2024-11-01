@@ -14,8 +14,10 @@ pub const MAX_MATE_PLY: i32 = 128;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Color(pub u32);
 
-pub const WHITE: Color = Color(0);
-pub const BLACK: Color = Color(1);
+impl Color {
+    pub const WHITE: Color = Color(0);
+    pub const BLACK: Color = Color(1);
+}
 
 impl std::ops::Not for Color {
     type Output = Color;
@@ -66,13 +68,13 @@ pub trait ColorTrait {
 impl ColorTrait for White {
     type KingSide = WhiteOO;
     type QueenSide = WhiteOOO;
-    const COLOR: Color = WHITE;
+    const COLOR: Color = Color::WHITE;
 }
 
 impl ColorTrait for Black {
     type KingSide = BlackOO;
     type QueenSide = BlackOOO;
-    const COLOR: Color = BLACK;
+    const COLOR: Color = Color::BLACK;
 }
 
 #[allow(non_camel_case_types)]
@@ -120,10 +122,9 @@ impl CastlingRightTrait for BlackOOO {
 
 impl CastlingRight {
     pub fn make(c: Color, cs: CastlingSide) -> CastlingRight {
-        use crate::types::CastlingSide::KING;
         match (c, cs) {
-            (WHITE, CastlingSide::KING) => WHITE_OO,
-            (WHITE, _) => WHITE_OOO,
+            (Color::WHITE, CastlingSide::KING) => WHITE_OO,
+            (Color::WHITE, _) => WHITE_OOO,
             (_, CastlingSide::KING) => BLACK_OO,
             (_, _) => BLACK_OOO,
         }
@@ -874,31 +875,31 @@ mod tests {
 
         #[test]
         fn test_not() {
-            assert_eq!(!WHITE, BLACK);
-            assert_eq!(!BLACK, WHITE);
+            assert_eq!(!Color::WHITE, Color::BLACK);
+            assert_eq!(!Color::BLACK, Color::WHITE);
         }
 
         #[test]
         fn test_bitxor() {
-            assert_eq!(WHITE ^ true, BLACK);
-            assert_eq!(BLACK ^ true, WHITE);
-            assert_eq!(WHITE ^ false, WHITE);
-            assert_eq!(BLACK ^ false, BLACK);
+            assert_eq!(Color::WHITE ^ true, Color::BLACK);
+            assert_eq!(Color::BLACK ^ true, Color::WHITE);
+            assert_eq!(Color::WHITE ^ false, Color::WHITE);
+            assert_eq!(Color::BLACK ^ false, Color::BLACK);
         }
 
         #[test]
         fn test_into_iterator() {
-            let color = WHITE;
+            let color = Color::WHITE;
             let mut iter = color.into_iter();
-            assert_eq!(iter.next(), Some(WHITE));
+            assert_eq!(iter.next(), Some(Color::WHITE));
             assert_eq!(iter.next(), Some(Color(1)));
             assert_eq!(iter.next(), Some(Color(2)));
         }
 
         #[test]
         fn test_trait() {
-            assert_eq!(White::COLOR, WHITE);
-            assert_eq!(Black::COLOR, BLACK);
+            assert_eq!(White::COLOR, Color::WHITE);
+            assert_eq!(Black::COLOR, Color::BLACK);
         }
     }
 
@@ -907,8 +908,8 @@ mod tests {
 
         #[test]
         fn test_color() {
-            assert_eq!(White::COLOR, WHITE);
-            assert_eq!(Black::COLOR, BLACK);
+            assert_eq!(White::COLOR, Color::WHITE);
+            assert_eq!(Black::COLOR, Color::BLACK);
         }
 
         #[test]
@@ -947,18 +948,22 @@ mod tests {
 
         #[test]
         fn test_make() {
-            use crate::types::CastlingSide::{PieceType::QUEEN, KING};
-
-            assert_eq!(CastlingRight::make(WHITE, PieceType::KING), WHITE_OO);
-            assert_eq!(CastlingRight::make(WHITE, PieceType::QUEEN), WHITE_OOO);
-            assert_eq!(CastlingRight::make(BLACK, PieceType::KING), BLACK_OO);
-            assert_eq!(CastlingRight::make(BLACK, PieceType::QUEEN), BLACK_OOO);
+            assert_eq!(CastlingRight::make(Color::WHITE, CastlingSide::KING), WHITE_OO);
+            assert_eq!(
+                CastlingRight::make(Color::WHITE, CastlingSide::QUEEN),
+                WHITE_OOO
+            );
+            assert_eq!(CastlingRight::make(Color::BLACK, CastlingSide::KING), BLACK_OO);
+            assert_eq!(
+                CastlingRight::make(Color::BLACK, CastlingSide::QUEEN),
+                BLACK_OOO
+            );
         }
 
         #[test]
         fn test_bit_ops() {
-            assert_eq!(WHITE | crate::types::CastlingSide::KING, WHITE_OO);
-            assert_eq!(BLACK | crate::types::CastlingSide::QUEEN, BLACK_OOO);
+            assert_eq!(Color::WHITE | crate::types::CastlingSide::KING, WHITE_OO);
+            assert_eq!(Color::BLACK | crate::types::CastlingSide::QUEEN, BLACK_OOO);
 
             let cr1 = WHITE_OO;
             let cr2 = BLACK_OO;
@@ -1063,14 +1068,14 @@ mod tests {
 
         #[test]
         fn test_color() {
-            assert_eq!(W_PAWN.color(), WHITE);
-            assert_eq!(B_PAWN.color(), BLACK);
+            assert_eq!(W_PAWN.color(), Color::WHITE);
+            assert_eq!(B_PAWN.color(), Color::BLACK);
         }
 
         #[test]
         fn test_make() {
-            assert_eq!(Piece::make(WHITE, PieceType(1)), W_PAWN);
-            assert_eq!(Piece::make(BLACK, PieceType(1)), B_PAWN);
+            assert_eq!(Piece::make(Color::WHITE, PieceType(1)), W_PAWN);
+            assert_eq!(Piece::make(Color::BLACK, PieceType(1)), B_PAWN);
         }
 
         #[test]
@@ -1125,18 +1130,18 @@ mod tests {
 
         #[test]
         fn test_relative() {
-            assert_eq!(Square::A1.relative(WHITE), Square::A1);
-            assert_eq!(Square::A1.relative(BLACK), Square::A8);
-            assert_eq!(Square::H1.relative(WHITE), Square::H1);
-            assert_eq!(Square::H1.relative(BLACK), Square::H8);
+            assert_eq!(Square::A1.relative(Color::WHITE), Square::A1);
+            assert_eq!(Square::A1.relative(Color::BLACK), Square::A8);
+            assert_eq!(Square::H1.relative(Color::WHITE), Square::H1);
+            assert_eq!(Square::H1.relative(Color::BLACK), Square::H8);
         }
 
         #[test]
         fn test_relative_rank() {
-            assert_eq!(Square::A1.relative_rank(WHITE), RANK_1);
-            assert_eq!(Square::A1.relative_rank(BLACK), RANK_8);
-            assert_eq!(Square::H1.relative_rank(WHITE), RANK_1);
-            assert_eq!(Square::H1.relative_rank(BLACK), RANK_8);
+            assert_eq!(Square::A1.relative_rank(Color::WHITE), RANK_1);
+            assert_eq!(Square::A1.relative_rank(Color::BLACK), RANK_8);
+            assert_eq!(Square::H1.relative_rank(Color::WHITE), RANK_1);
+            assert_eq!(Square::H1.relative_rank(Color::BLACK), RANK_8);
         }
 
         #[test]
@@ -1154,8 +1159,8 @@ mod tests {
 
         #[test]
         fn test_relative_square() {
-            assert_eq!(relative_square(WHITE, Square::A1), Square::A1);
-            assert_eq!(relative_square(BLACK, Square::A1), Square::A8);
+            assert_eq!(relative_square(Color::WHITE, Square::A1), Square::A1);
+            assert_eq!(relative_square(Color::BLACK, Square::A1), Square::A8);
         }
 
         #[test]

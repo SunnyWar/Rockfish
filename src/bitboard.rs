@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use crate::types::{
-    direction::Direction, Color, File, PieceType, Rank, Square, BLACK, FILE_A, FILE_H, WHITE,
-};
+use crate::types::{direction::Direction, Color, File, PieceType, Rank, Square, FILE_A, FILE_H};
 use crate::uci;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -398,7 +396,7 @@ pub fn pop_lsb(b: &mut Bitboard) -> Square {
 }
 
 pub fn frontmost_sq(c: Color, b: Bitboard) -> Square {
-    if c == WHITE {
+    if c == Color::WHITE {
         msb(b)
     } else {
         lsb(b)
@@ -406,7 +404,7 @@ pub fn frontmost_sq(c: Color, b: Bitboard) -> Square {
 }
 
 pub fn backmost_sq(c: Color, b: Bitboard) -> Square {
-    if c == WHITE {
+    if c == Color::WHITE {
         lsb(b)
     } else {
         msb(b)
@@ -513,7 +511,7 @@ pub fn between_bb(s1: Square, s2: Square) -> Bitboard {
 
 // forward_ranks_bb() returns a bitboard representing all the squares on all
 // the ranks in front of the given one, from the point of view of the given
-// color. For instance, forward_ranks_bb(BLACK, Square::D3) returns the 16
+// color. For instance, forward_ranks_bb(Color::BLACK, Square::D3) returns the 16
 // squares on ranks 1 and 2.
 
 pub fn forward_ranks_bb(c: Color, s: Square) -> Bitboard {
@@ -631,15 +629,15 @@ pub fn init() {
     for r in 0..7 {
         unsafe {
             let black_forward_rank =
-                FORWARD_RANKS_BB[BLACK.0 as usize][r as usize] | RANK_BB[r as usize];
-            FORWARD_RANKS_BB[BLACK.0 as usize][(r + 1) as usize] = black_forward_rank;
+                FORWARD_RANKS_BB[Color::BLACK.0 as usize][r as usize] | RANK_BB[r as usize];
+            FORWARD_RANKS_BB[Color::BLACK.0 as usize][(r + 1) as usize] = black_forward_rank;
 
             let white_forward_rank = !black_forward_rank;
-            FORWARD_RANKS_BB[WHITE.0 as usize][r as usize] = white_forward_rank;
+            FORWARD_RANKS_BB[Color::WHITE.0 as usize][r as usize] = white_forward_rank;
         }
     }
 
-    for &color in &[WHITE, BLACK] {
+    for &color in &[Color::WHITE, Color::BLACK] {
         for square in &ALL_SQUARES {
             unsafe {
                 let forward_rank = FORWARD_RANKS_BB[color.0 as usize][square.rank() as usize];
@@ -676,7 +674,7 @@ pub fn init() {
         }
     }
 
-    for &color in &[WHITE, BLACK] {
+    for &color in &[Color::WHITE, Color::BLACK] {
         for &piece_type in &[PieceType::PAWN, PieceType::KNIGHT, PieceType::KING] {
             for square in &ALL_SQUARES {
                 let steps: &[i32] = match piece_type {
@@ -686,7 +684,7 @@ pub fn init() {
                 };
 
                 for &step in steps {
-                    let direction = if color == WHITE {
+                    let direction = if color == Color::WHITE {
                         Direction(step)
                     } else {
                         Direction(-step)

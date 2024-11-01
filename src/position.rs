@@ -18,9 +18,9 @@ use crate::types::{
     depth::Depth, direction::pawn_push, direction::Direction, key::Key, opposite_colors,
     piece_value, relative_rank, relative_square, BishopValueMg, Bool, CastlingRight, CastlingSide,
     Color, False, KnightValueMg, Move, PawnValueMg, Piece, PieceType, QueenValueMg, RookValueMg,
-    Score, Square, SquareList, True, Value, ANY_CASTLING, BLACK, BLACK_OO, BLACK_OOO, B_BISHOP,
-    B_KING, CASTLING, ENPASSANT, MG, NORMAL, NO_PIECE, PROMOTION, RANK_1, RANK_2, RANK_4, RANK_6,
-    RANK_8, WHITE, WHITE_OO, WHITE_OOO, W_BISHOP, W_KING,
+    Score, Square, SquareList, True, Value, ANY_CASTLING, BLACK_OO, BLACK_OOO, B_BISHOP, B_KING,
+    CASTLING, ENPASSANT, MG, NORMAL, NO_PIECE, PROMOTION, RANK_1, RANK_2, RANK_4, RANK_6, RANK_8,
+    WHITE_OO, WHITE_OOO, W_BISHOP, W_KING,
 };
 use crate::uci;
 
@@ -191,7 +191,7 @@ impl Position {
             castling_rook_square: [Square::NONE; 16],
             castling_path: [Bitboard(0); 16],
             game_ply: 0,
-            side_to_move: WHITE,
+            side_to_move: Color::WHITE,
             states: Vec::new(),
             chess960: false,
             failed_low: false,
@@ -329,8 +329,9 @@ impl Position {
     }
 
     pub fn attackers_to_occ(&self, s: Square, occ: Bitboard) -> Bitboard {
-        (self.attacks_from_pawn(s, BLACK) & self.pieces_cp(WHITE, PieceType::PAWN))
-            | (self.attacks_from_pawn(s, WHITE) & self.pieces_cp(BLACK, PieceType::PAWN))
+        (self.attacks_from_pawn(s, Color::BLACK) & self.pieces_cp(Color::WHITE, PieceType::PAWN))
+            | (self.attacks_from_pawn(s, Color::WHITE)
+                & self.pieces_cp(Color::BLACK, PieceType::PAWN))
             | (self.attacks_from(PieceType::KNIGHT, s) & self.pieces_p(PieceType::KNIGHT))
             | (attacks_bb(PieceType::ROOK, s, occ)
                 & self.pieces_pp(PieceType::ROOK, PieceType::QUEEN))
@@ -389,7 +390,7 @@ impl Position {
     }
 
     pub fn non_pawn_material(&self) -> Value {
-        self.non_pawn_material_c(WHITE) + self.non_pawn_material_c(BLACK)
+        self.non_pawn_material_c(Color::WHITE) + self.non_pawn_material_c(Color::BLACK)
     }
 
     pub fn game_ply(&self) -> i32 {
@@ -404,8 +405,8 @@ impl Position {
         self.piece_count[W_BISHOP.0 as usize] == 1
             && self.piece_count[B_BISHOP.0 as usize] == 1
             && opposite_colors(
-                self.square(WHITE, PieceType::BISHOP),
-                self.square(BLACK, PieceType::BISHOP),
+                self.square(Color::WHITE, PieceType::BISHOP),
+                self.square(Color::BLACK, PieceType::BISHOP),
             )
     }
 
@@ -515,13 +516,21 @@ impl Position {
 
         // 2. Active color
         let color = iter.next().unwrap();
-        self.side_to_move = if color == "b" { BLACK } else { WHITE };
+        self.side_to_move = if color == "b" {
+            Color::BLACK
+        } else {
+            Color::WHITE
+        };
 
         // 3. Castling availability
         let castling = iter.next().unwrap();
         if castling != "-" {
             for c in castling.chars() {
-                let color = if c.is_lowercase() { BLACK } else { WHITE };
+                let color = if c.is_lowercase() {
+                    Color::BLACK
+                } else {
+                    Color::WHITE
+                };
                 let rook = Piece::make(color, PieceType::ROOK);
                 let side = c.to_uppercase().next().unwrap();
                 let rsq = match side {
@@ -554,7 +563,11 @@ impl Position {
         self.st_mut().ep_square = Square::NONE;
         if enpassant != "-" {
             let file = enpassant.chars().nth(0).unwrap().to_digit(18).unwrap() - 10;
-            let rank = if self.side_to_move == WHITE { 5 } else { 2 };
+            let rank = if self.side_to_move == Color::WHITE {
+                5
+            } else {
+                2
+            };
             let ep_sq = Square::make(file, rank);
             if self.attackers_to(ep_sq) & self.pieces_cp(self.side_to_move, PieceType::PAWN) != 0
                 && self.pieces_cp(!self.side_to_move, PieceType::PAWN)
@@ -569,7 +582,7 @@ impl Position {
         self.st_mut().rule50 = iter.next().unwrap_or("0").parse().unwrap_or(0);
         let fullmove = iter.next().unwrap_or("1").parse::<i32>().unwrap_or(1);
         self.game_ply = std::cmp::max(2 * (fullmove - 1), 0);
-        if self.side_to_move == BLACK {
+        if self.side_to_move == Color::BLACK {
             self.game_ply += 1;
         }
 
@@ -633,18 +646,18 @@ impl Position {
 
     fn set_check_info(&mut self) {
         let mut pinners = Bitboard(0);
-        self.st_mut().blockers_for_king[WHITE.0 as usize] = self.slider_blockers(
-            self.pieces_c(BLACK),
-            self.square(WHITE, PieceType::KING),
+        self.st_mut().blockers_for_king[Color::WHITE.0 as usize] = self.slider_blockers(
+            self.pieces_c(Color::BLACK),
+            self.square(Color::WHITE, PieceType::KING),
             &mut pinners,
         );
-        self.st_mut().pinners_for_king[WHITE.0 as usize] = pinners;
-        self.st_mut().blockers_for_king[BLACK.0 as usize] = self.slider_blockers(
-            self.pieces_c(WHITE),
-            self.square(BLACK, PieceType::KING),
+        self.st_mut().pinners_for_king[Color::WHITE.0 as usize] = pinners;
+        self.st_mut().blockers_for_king[Color::BLACK.0 as usize] = self.slider_blockers(
+            self.pieces_c(Color::WHITE),
+            self.square(Color::BLACK, PieceType::KING),
             &mut pinners,
         );
-        self.st_mut().pinners_for_king[BLACK.0 as usize] = pinners;
+        self.st_mut().pinners_for_king[Color::BLACK.0 as usize] = pinners;
 
         let ksq = self.square(!self.side_to_move(), PieceType::KING);
 
@@ -671,8 +684,8 @@ impl Position {
         self.st_mut().key = Key(0);
         self.st_mut().material_key = Key(0);
         self.st_mut().pawn_key = zobrist::no_pawns();
-        self.st_mut().non_pawn_material[WHITE.0 as usize] = Value::ZERO;
-        self.st_mut().non_pawn_material[BLACK.0 as usize] = Value::ZERO;
+        self.st_mut().non_pawn_material[Color::WHITE.0 as usize] = Value::ZERO;
+        self.st_mut().non_pawn_material[Color::BLACK.0 as usize] = Value::ZERO;
         self.st_mut().psq = Score::ZERO;
         self.st_mut().checkers_bb = self
             .attackers_to(self.square(self.side_to_move, PieceType::KING))
@@ -691,7 +704,7 @@ impl Position {
             self.st_mut().key = tmp;
         }
 
-        if self.side_to_move == BLACK {
+        if self.side_to_move == Color::BLACK {
             self.st_mut().key ^= zobrist::side();
         }
 
@@ -753,7 +766,7 @@ impl Position {
         }
 
         ss.push_str(match self.side_to_move {
-            WHITE => " w ",
+            Color::WHITE => " w ",
             _ => " b ",
         });
 
@@ -1602,17 +1615,17 @@ impl Position {
     // helpful when debugging.
 
     pub fn is_ok(&self) -> bool {
-        if self.side_to_move() != WHITE && self.side_to_move != BLACK
-            || self.piece_on(self.square(WHITE, PieceType::KING)) != W_KING
-            || self.piece_on(self.square(BLACK, PieceType::KING)) != B_KING
+        if self.side_to_move() != Color::WHITE && self.side_to_move != Color::BLACK
+            || self.piece_on(self.square(Color::WHITE, PieceType::KING)) != W_KING
+            || self.piece_on(self.square(Color::BLACK, PieceType::KING)) != B_KING
             || (self.ep_square() != Square::NONE
                 && self.ep_square().relative_rank(self.side_to_move()) != RANK_6)
         {
             panic!("pos: Default");
         }
 
-        if self.count(WHITE, PieceType::KING) != 1
-            || self.count(BLACK, PieceType::KING) != 1
+        if self.count(Color::WHITE, PieceType::KING) != 1
+            || self.count(Color::BLACK, PieceType::KING) != 1
             || self.attackers_to(self.square(!self.side_to_move(), PieceType::KING))
                 & self.pieces_c(self.side_to_move())
                 != 0
@@ -1621,8 +1634,8 @@ impl Position {
         }
 
         if self.pieces_p(PieceType::PAWN) & (RANK1_BB | RANK8_BB) != 0
-            || self.count(WHITE, PieceType::PAWN) > 8
-            || self.count(BLACK, PieceType::PAWN) > 8
+            || self.count(Color::WHITE, PieceType::PAWN) > 8
+            || self.count(Color::BLACK, PieceType::PAWN) > 8
         {
             panic!("pos_is_ok: Pawns");
         }

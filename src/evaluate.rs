@@ -10,9 +10,9 @@ use crate::pawns;
 use crate::position::Position;
 use crate::types::{
     direction::pawn_push, direction::Direction, scale_factor::ScaleFactor, Bishop, BishopValueEg,
-    BishopValueMg, Black, ColorTrait, Knight, KnightValueMg, Piece, PieceType, PieceTypeTrait,
-    Queen, Rook, RookValueMg, Score, Square, Value, White, BLACK, EG, FILE_A, FILE_E, MG,
-    PHASE_MIDGAME, RANK_1, RANK_5, RANK_7, WHITE,
+    BishopValueMg, Black, Color, ColorTrait, Knight, KnightValueMg, Piece, PieceType,
+    PieceTypeTrait, Queen, Rook, RookValueMg, Score, Square, Value, White, EG, FILE_A, FILE_E, MG,
+    PHASE_MIDGAME, RANK_1, RANK_5, RANK_7,
 };
 
 pub const TEMPO: Value = Value(20);
@@ -84,7 +84,7 @@ struct EvalInfo<'a> {
     // the given color to squares directly adjacent to the enemy king. Pieces
     // which attack more than one square are counted multiple times. For
     // instances, if there is a white knight of g5 and black's king is on g8,
-    // this white knight adds 2 to kind_adjacent_zone_attackscount[WHITE].
+    // this white knight adds 2 to kind_adjacent_zone_attackscount[Color::WHITE].
     king_adjacent_zone_attacks_count: [i32; 2],
 }
 
@@ -364,18 +364,22 @@ const SPACE_THRESHOLD: Value = Value(12222);
 
 fn initialize<Us: ColorTrait>(pos: &Position, ei: &mut EvalInfo) {
     let us = Us::COLOR;
-    let them = if us == WHITE { BLACK } else { WHITE };
-    let up = if us == WHITE {
+    let them = if us == Color::WHITE {
+        Color::BLACK
+    } else {
+        Color::WHITE
+    };
+    let up = if us == Color::WHITE {
         Direction::NORTH
     } else {
         Direction::SOUTH
     };
-    let down = if us == WHITE {
+    let down = if us == Color::WHITE {
         Direction::SOUTH
     } else {
         Direction::NORTH
     };
-    let low_ranks = if us == WHITE {
+    let low_ranks = if us == Color::WHITE {
         RANK2_BB | RANK3_BB
     } else {
         RANK7_BB | RANK6_BB
@@ -420,8 +424,12 @@ fn initialize<Us: ColorTrait>(pos: &Position, ei: &mut EvalInfo) {
 fn evaluate_pieces<Us: ColorTrait, Pt: PieceTypeTrait>(pos: &Position, ei: &mut EvalInfo) -> Score {
     let us = Us::COLOR;
     let pt = Pt::TYPE;
-    let them = if us == WHITE { BLACK } else { WHITE };
-    let outpost_ranks = if us == WHITE {
+    let them = if us == Color::WHITE {
+        Color::BLACK
+    } else {
+        Color::WHITE
+    };
+    let outpost_ranks = if us == Color::WHITE {
         RANK4_BB | RANK5_BB | RANK6_BB
     } else {
         RANK5_BB | RANK4_BB | RANK3_BB
@@ -589,8 +597,12 @@ fn evaluate_pieces<Us: ColorTrait, Pt: PieceTypeTrait>(pos: &Position, ei: &mut 
 
 fn evaluate_king<Us: ColorTrait>(pos: &Position, ei: &mut EvalInfo) -> Score {
     let us = Us::COLOR;
-    let them = if us == WHITE { BLACK } else { WHITE };
-    let camp = if us == WHITE {
+    let them = if us == Color::WHITE {
+        Color::BLACK
+    } else {
+        Color::WHITE
+    };
+    let camp = if us == Color::WHITE {
         ALL_SQUARES ^ RANK6_BB ^ RANK7_BB ^ RANK8_BB
     } else {
         ALL_SQUARES ^ RANK1_BB ^ RANK2_BB ^ RANK3_BB
@@ -698,12 +710,12 @@ fn evaluate_king<Us: ColorTrait>(pos: &Position, ei: &mut EvalInfo) -> Score {
         & KING_FLANK[kf as usize]
         & camp;
 
-    debug_assert!(((if us == WHITE { b << 4 } else { b >> 4 }) & b) == 0);
-    debug_assert!(popcount(if us == WHITE { b << 4 } else { b >> 4 }) == popcount(b));
+    debug_assert!(((if us == Color::WHITE { b << 4 } else { b >> 4 }) & b) == 0);
+    debug_assert!(popcount(if us == Color::WHITE { b << 4 } else { b >> 4 }) == popcount(b));
 
     // Second, add the squares which are attacked twice in that flank and
     // which are not defended by our pawns.
-    b = (if us == WHITE { b << 4 } else { b >> 4 })
+    b = (if us == Color::WHITE { b << 4 } else { b >> 4 })
         | (b & ei.attacked_by2[them.0 as usize]
             & !ei.attacked_by[us.0 as usize][PieceType::PAWN.0 as usize]);
 
@@ -719,23 +731,31 @@ fn evaluate_king<Us: ColorTrait>(pos: &Position, ei: &mut EvalInfo) -> Score {
 
 fn evaluate_threats<Us: ColorTrait>(pos: &Position, ei: &EvalInfo) -> Score {
     let us = Us::COLOR;
-    let them = if us == WHITE { BLACK } else { WHITE };
-    let up = if us == WHITE {
+    let them = if us == Color::WHITE {
+        Color::BLACK
+    } else {
+        Color::WHITE
+    };
+    let up = if us == Color::WHITE {
         Direction::NORTH
     } else {
         Direction::SOUTH
     };
-    let left = if us == WHITE {
+    let left = if us == Color::WHITE {
         Direction::NORTH_WEST
     } else {
         Direction::SOUTH_EAST
     };
-    let right = if us == WHITE {
+    let right = if us == Color::WHITE {
         Direction::NORTH_EAST
     } else {
         Direction::SOUTH_WEST
     };
-    let trank3bb = if us == WHITE { RANK3_BB } else { RANK6_BB };
+    let trank3bb = if us == Color::WHITE {
+        RANK3_BB
+    } else {
+        RANK6_BB
+    };
     let mut score = Score::ZERO;
 
     // Non-pawn enemies attacked by a pawn
@@ -842,8 +862,12 @@ fn capped_distance(s1: Square, s2: Square) -> i32 {
 
 fn evaluate_passed_pawns<Us: ColorTrait>(pos: &Position, ei: &EvalInfo) -> Score {
     let us = Us::COLOR;
-    let them = if us == WHITE { BLACK } else { WHITE };
-    let up = if us == WHITE {
+    let them = if us == Color::WHITE {
+        Color::BLACK
+    } else {
+        Color::WHITE
+    };
+    let up = if us == Color::WHITE {
         Direction::NORTH
     } else {
         Direction::SOUTH
@@ -936,9 +960,13 @@ fn evaluate_passed_pawns<Us: ColorTrait>(pos: &Position, ei: &EvalInfo) -> Score
 
 fn evaluate_space<Us: ColorTrait>(pos: &Position, ei: &EvalInfo) -> Score {
     let us = Us::COLOR;
-    let them = if us == WHITE { BLACK } else { WHITE };
+    let them = if us == Color::WHITE {
+        Color::BLACK
+    } else {
+        Color::WHITE
+    };
 
-    let space_mask = if us == WHITE {
+    let space_mask = if us == Color::WHITE {
         CENTER_FILES & (RANK2_BB | RANK3_BB | RANK4_BB)
     } else {
         CENTER_FILES & (RANK7_BB | RANK6_BB | RANK5_BB)
@@ -956,23 +984,28 @@ fn evaluate_space<Us: ColorTrait>(pos: &Position, ei: &EvalInfo) -> Score {
 
     // Find all squares which are at most three squares behind some friendly pawn.
     let mut behind = pos.pieces_cp(us, PieceType::PAWN);
-    behind |= if us == WHITE {
+    behind |= if us == Color::WHITE {
         behind >> 8
     } else {
         behind << 8
     };
-    behind |= if us == WHITE {
+    behind |= if us == Color::WHITE {
         behind >> 16
     } else {
         behind << 16
     };
 
     // Since space_mask[us] is fully on our half of the board...
-    debug_assert!((safe >> (if us == WHITE { 32 } else { 0 })).0 as u32 == 0);
+    debug_assert!((safe >> (if us == Color::WHITE { 32 } else { 0 })).0 as u32 == 0);
 
     // Count safe + (behind & safe) with a single popcount.
-    let bonus =
-        popcount((if us == WHITE { safe << 32 } else { safe >> 32 }) | (behind & safe)) as i32;
+    let bonus = popcount(
+        (if us == Color::WHITE {
+            safe << 32
+        } else {
+            safe >> 32
+        }) | (behind & safe),
+    ) as i32;
     let weight = pos.count(us, PieceType::ALL_PIECES) - 2 * ei.pe.open_files();
 
     Score::make(bonus * weight * weight / 16, 0)
@@ -984,19 +1017,20 @@ fn evaluate_space<Us: ColorTrait>(pos: &Position, ei: &EvalInfo) -> Score {
 
 fn evaluate_initiative(pos: &Position, ei: &EvalInfo, eg: Value) -> Score {
     let king_distance = u32::distance(
-        pos.square(WHITE, PieceType::KING).file(),
-        pos.square(BLACK, PieceType::KING).file(),
+        pos.square(Color::WHITE, PieceType::KING).file(),
+        pos.square(Color::BLACK, PieceType::KING).file(),
     ) as i32
         - u32::distance(
-            pos.square(WHITE, PieceType::KING).rank(),
-            pos.square(BLACK, PieceType::KING).rank(),
+            pos.square(Color::WHITE, PieceType::KING).rank(),
+            pos.square(Color::BLACK, PieceType::KING).rank(),
         ) as i32;
     let both_flanks = pos.pieces_p(PieceType::PAWN) & QUEEN_SIDE != 0
         && pos.pieces_p(PieceType::PAWN) & KING_SIDE != 0;
 
     // Compute the initiative bonus for the attacking side
     let initiative = 8 * (ei.pe.pawn_asymmetry() + king_distance - 17)
-        + 12 * (pos.count(WHITE, PieceType::PAWN) + pos.count(BLACK, PieceType::PAWN))
+        + 12 * (pos.count(Color::WHITE, PieceType::PAWN)
+            + pos.count(Color::BLACK, PieceType::PAWN))
         + 16 * i32::from(both_flanks);
 
     // Now apply the bonus: note that we find the attacking side by extracting
@@ -1010,7 +1044,11 @@ fn evaluate_initiative(pos: &Position, ei: &EvalInfo, eg: Value) -> Score {
 // evaluate_scale_factor() computes the scale factor for the winning side
 
 fn evaluate_scale_factor(pos: &Position, ei: &EvalInfo, eg: Value) -> ScaleFactor {
-    let strong_side = if eg > Value::DRAW { WHITE } else { BLACK };
+    let strong_side = if eg > Value::DRAW {
+        Color::WHITE
+    } else {
+        Color::BLACK
+    };
     let sf = ei.me.scale_factor(pos, strong_side);
 
     // If we don't already have an unusual scale factor, check for certain
@@ -1020,8 +1058,8 @@ fn evaluate_scale_factor(pos: &Position, ei: &EvalInfo, eg: Value) -> ScaleFacto
             // Endgame with opposite-coloured bishops and no other pieces
             // (ignoring pawns) is almost a draw. In case of KBP vs KB, it is
             // even more a draw.
-            if pos.non_pawn_material_c(WHITE) == BishopValueMg
-                && pos.non_pawn_material_c(BLACK) == BishopValueMg
+            if pos.non_pawn_material_c(Color::WHITE) == BishopValueMg
+                && pos.non_pawn_material_c(Color::BLACK) == BishopValueMg
             {
                 return if more_than_one(pos.pieces_p(PieceType::PAWN)) {
                     ScaleFactor(31)
@@ -1070,7 +1108,11 @@ pub fn evaluate(pos: &Position) -> Value {
     // Early exit if score is high
     let v = (score.mg() + score.eg()) / 2;
     if v.abs() > LAZY_THRESHOLD {
-        return if pos.side_to_move() == WHITE { v } else { -v };
+        return if pos.side_to_move() == Color::WHITE {
+            v
+        } else {
+            -v
+        };
     }
 
     // Main evaluation begins here
@@ -1090,7 +1132,7 @@ pub fn evaluate(pos: &Position) -> Value {
         - evaluate_pieces::<Black, Queen>(pos, &mut ei);
 
     // Evaluate mobility
-    score += ei.mobility[WHITE.0 as usize] - ei.mobility[BLACK.0 as usize];
+    score += ei.mobility[Color::WHITE.0 as usize] - ei.mobility[Color::BLACK.0 as usize];
 
     // Evaluate kings
     score += evaluate_king::<White>(pos, &mut ei) - evaluate_king::<Black>(pos, &mut ei);
@@ -1115,5 +1157,10 @@ pub fn evaluate(pos: &Position) -> Value {
         + score.eg() * (PHASE_MIDGAME - ei.me.game_phase()) * sf.0 / ScaleFactor::NORMAL.0;
     v /= PHASE_MIDGAME;
 
-    TEMPO + if pos.side_to_move() == WHITE { v } else { -v }
+    TEMPO
+        + if pos.side_to_move() == Color::WHITE {
+            v
+        } else {
+            -v
+        }
 }

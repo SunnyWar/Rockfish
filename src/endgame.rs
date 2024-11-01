@@ -11,9 +11,8 @@ use crate::position::Position;
 use crate::types::{
     direction::pawn_push, direction::Direction, key::Key, opposite_colors,
     scale_factor::ScaleFactor, BishopValueMg, Color, KnightValueMg, PawnValueEg, Piece, PieceType,
-    QueenValueEg, QueenValueMg, RookValueEg, RookValueMg, Square, Value, BLACK, FILE_A, FILE_B,
-    FILE_D, FILE_E, FILE_G, FILE_H, RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8,
-    WHITE,
+    QueenValueEg, QueenValueMg, RookValueEg, RookValueMg, Square, Value, FILE_A, FILE_B, FILE_D,
+    FILE_E, FILE_G, FILE_H, RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8,
 };
 
 pub type EvalFn = fn(&Position, Color) -> Value;
@@ -151,7 +150,7 @@ fn calc_key(code: &str, c: Color) -> Key {
 
     for ch in code.chars() {
         let mut pc = Piece(Position::PIECE_TO_CHAR.find(ch).unwrap() as u32);
-        if c == BLACK {
+        if c == Color::BLACK {
             pc = !pc;
         }
         key ^= zobrist::material(pc, cnt[pc.0 as usize]);
@@ -166,8 +165,8 @@ pub fn init() {
         let ei = &EVAL_INITS[i];
         unsafe {
             EVAL_FNS[i].func = ei.func;
-            EVAL_FNS[i].key[WHITE.0 as usize] = calc_key(ei.code, WHITE);
-            EVAL_FNS[i].key[BLACK.0 as usize] = calc_key(ei.code, BLACK);
+            EVAL_FNS[i].key[Color::WHITE.0 as usize] = calc_key(ei.code, Color::WHITE);
+            EVAL_FNS[i].key[Color::BLACK.0 as usize] = calc_key(ei.code, Color::BLACK);
         }
     }
 
@@ -175,8 +174,8 @@ pub fn init() {
         let si = &SCALE_INITS[i];
         unsafe {
             SCALE_FNS[i].func = si.func;
-            SCALE_FNS[i].key[WHITE.0 as usize] = calc_key(si.code, WHITE);
-            SCALE_FNS[i].key[BLACK.0 as usize] = calc_key(si.code, BLACK);
+            SCALE_FNS[i].key[Color::WHITE.0 as usize] = calc_key(si.code, Color::WHITE);
+            SCALE_FNS[i].key[Color::BLACK.0 as usize] = calc_key(si.code, Color::BLACK);
         }
     }
 }
@@ -196,7 +195,7 @@ fn normalize(pos: &Position, strong_side: Color, sq: Square) -> Square {
         sq
     };
 
-    if strong_side == BLACK {
+    if strong_side == Color::BLACK {
         !sq
     } else {
         sq
@@ -286,9 +285,9 @@ fn evaluate_kpk(pos: &Position, strong_side: Color) -> Value {
 
     // Assume strong_side is white and the pawn is on files A-D
     let us = if strong_side == pos.side_to_move() {
-        WHITE
+        Color::WHITE
     } else {
-        BLACK
+        Color::BLACK
     };
 
     let wksq = normalize(pos, strong_side, pos.square(strong_side, PieceType::KING));
@@ -992,9 +991,9 @@ pub fn scale_kpkp(pos: &Position, strong_side: Color) -> ScaleFactor {
     let psq = normalize(pos, strong_side, pos.square(strong_side, PieceType::PAWN));
 
     let us = if strong_side == pos.side_to_move() {
-        WHITE
+        Color::WHITE
     } else {
-        BLACK
+        Color::BLACK
     };
 
     // If the pawn has advanced to the fifth rank or further and is not a

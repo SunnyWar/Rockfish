@@ -1,4 +1,4 @@
-use super::{Color, Square, WHITE};
+use super::{Color, Square};
 use std::arch::x86_64::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -71,7 +71,7 @@ impl std::ops::Mul<Direction> for i32 {
 
 pub fn pawn_push(c: Color) -> Direction {
     match c {
-        WHITE => Direction::NORTH,
+        Color::WHITE => Direction::NORTH,
         _ => Direction::SOUTH,
     }
 }
@@ -79,7 +79,7 @@ pub fn pawn_push(c: Color) -> Direction {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{BLACK, WHITE};
+    use crate::types::Color;
 
     #[test]
     fn test_neg() {
@@ -139,7 +139,7 @@ mod tests {
 
     #[test]
     fn test_pawn_push() {
-        assert_eq!(pawn_push(WHITE), Direction::NORTH);
-        assert_eq!(pawn_push(BLACK), Direction::SOUTH);
+        assert_eq!(pawn_push(Color::WHITE), Direction::NORTH);
+        assert_eq!(pawn_push(Color::BLACK), Direction::SOUTH);
     }
 }

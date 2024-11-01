@@ -7,7 +7,7 @@ use crate::position::Position;
 use crate::search;
 use crate::threads;
 use crate::types::{
-    Move, PawnValueEg, Square, Value, BLACK, CASTLING, FILE_C, FILE_G, MAX_PLY, PROMOTION, WHITE,
+    Color, Move, PawnValueEg, Square, Value, CASTLING, FILE_C, FILE_G, MAX_PLY, PROMOTION,
 };
 use crate::ucioption;
 use threads::PosData;
@@ -96,10 +96,10 @@ fn go(pos: &mut Position, pos_data: &Arc<RwLock<PosData>>, args: &str) {
                     searchmoves.push(to_move(pos, token));
                 }
             }
-            "wtime" => limits.time[WHITE.0 as usize] = iter.next().unwrap().parse().unwrap(),
-            "btime" => limits.time[BLACK.0 as usize] = iter.next().unwrap().parse().unwrap(),
-            "winc" => limits.inc[WHITE.0 as usize] = iter.next().unwrap().parse().unwrap(),
-            "binc" => limits.inc[BLACK.0 as usize] = iter.next().unwrap().parse().unwrap(),
+            "wtime" => limits.time[Color::WHITE.0 as usize] = iter.next().unwrap().parse().unwrap(),
+            "btime" => limits.time[Color::BLACK.0 as usize] = iter.next().unwrap().parse().unwrap(),
+            "winc" => limits.inc[Color::WHITE.0 as usize] = iter.next().unwrap().parse().unwrap(),
+            "binc" => limits.inc[Color::BLACK.0 as usize] = iter.next().unwrap().parse().unwrap(),
             "movestogo" => limits.movestogo = iter.next().unwrap().parse().unwrap(),
             "depth" => limits.depth = iter.next().unwrap().parse().unwrap(),
             "nodes" => limits.nodes = iter.next().unwrap().parse().unwrap(),

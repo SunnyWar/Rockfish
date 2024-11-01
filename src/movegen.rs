@@ -8,7 +8,7 @@ use crate::position::Position;
 use crate::types::{
     direction::Direction, relative_rank, relative_square, Bishop, Black, Bool, CastlingRightTrait,
     Color, ColorTrait, False, Knight, Move, PieceType, PieceTypeTrait, Queen, Rook, Square, True,
-    White, BLACK_OO, CASTLING, ENPASSANT, MAX_MOVES, RANK_6, WHITE, WHITE_OO,
+    White, BLACK_OO, CASTLING, ENPASSANT, MAX_MOVES, RANK_6, WHITE_OO,
 };
 
 const CAPTURES: i32 = 0;
@@ -207,20 +207,32 @@ fn generate_pawn_moves<Us: ColorTrait, T: GenType>(
 ) -> usize {
     let us = Us::COLOR;
     let them = !us;
-    let trank_8bb = if us == WHITE { RANK8_BB } else { RANK1_BB };
-    let trank_7bb = if us == WHITE { RANK7_BB } else { RANK2_BB };
-    let trank_3bb = if us == WHITE { RANK3_BB } else { RANK6_BB };
-    let up = if us == WHITE {
+    let trank_8bb = if us == Color::WHITE {
+        RANK8_BB
+    } else {
+        RANK1_BB
+    };
+    let trank_7bb = if us == Color::WHITE {
+        RANK7_BB
+    } else {
+        RANK2_BB
+    };
+    let trank_3bb = if us == Color::WHITE {
+        RANK3_BB
+    } else {
+        RANK6_BB
+    };
+    let up = if us == Color::WHITE {
         Direction::NORTH
     } else {
         Direction::SOUTH
     };
-    let right = if us == WHITE {
+    let right = if us == Color::WHITE {
         Direction::NORTH_EAST
     } else {
         Direction::SOUTH_WEST
     };
-    let left = if us == WHITE {
+    let left = if us == Color::WHITE {
         Direction::NORTH_WEST
     } else {
         Direction::SOUTH_EAST
@@ -459,7 +471,7 @@ pub fn generate_quiet_checks(pos: &Position, list: &mut [ExtMove], mut idx: usiz
         }
     }
 
-    if us == WHITE {
+    if us == Color::WHITE {
         generate_all::<White, QuietChecks>(pos, list, idx, !pos.pieces())
     } else {
         generate_all::<Black, QuietChecks>(pos, list, idx, !pos.pieces())
@@ -498,7 +510,7 @@ fn generate_evasions(pos: &Position, list: &mut [ExtMove], mut idx: usize) -> us
     let check_sq = lsb(pos.checkers());
     let target = between_bb(check_sq, ksq) | check_sq;
 
-    if us == WHITE {
+    if us == Color::WHITE {
         generate_all::<White, Evasions>(pos, list, idx, target)
     } else {
         generate_all::<Black, Evasions>(pos, list, idx, target)
@@ -563,7 +575,7 @@ pub fn generate<T: GenType>(pos: &Position, list: &mut [ExtMove], idx: usize) ->
                 _ => Bitboard(0),
             };
 
-            if us == WHITE {
+            if us == Color::WHITE {
                 generate_all::<White, T>(pos, list, idx, target)
             } else {
                 generate_all::<Black, T>(pos, list, idx, target)

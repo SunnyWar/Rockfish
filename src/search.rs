@@ -11,9 +11,9 @@ use crate::threads;
 use crate::timeman;
 use crate::tt;
 use crate::types::{
-    bound::Bound, depth::Depth, key::Key, mate_in, mated_in, piece_value, Bool, False, Move,
-    PawnValueEg, PawnValueMg, Piece, Score, Square, True, Value, ANY_CASTLING, BLACK, EG,
-    ENPASSANT, MAX_MATE_PLY, MAX_PLY, NORMAL, NO_PIECE, WHITE,
+    bound::Bound, depth::Depth, key::Key, mate_in, mated_in, piece_value, Bool, Color, False, Move,
+    PawnValueEg, PawnValueMg, Piece, Score, Square, True, Value, ANY_CASTLING, EG, ENPASSANT,
+    MAX_MATE_PLY, MAX_PLY, NORMAL, NO_PIECE,
 };
 use crate::uci;
 use crate::ucioption;
@@ -372,14 +372,14 @@ pub fn thread_search(pos: &mut Position, _th: &threads::ThreadCtrl) {
         base_ct = match ucioption::get_string("Analysis Contempt").as_ref() {
             "off" => 0,
             "white" => {
-                if us == WHITE {
+                if us == Color::WHITE {
                     base_ct
                 } else {
                     -base_ct
                 }
             }
             "black" => {
-                if us == BLACK {
+                if us == Color::BLACK {
                     base_ct
                 } else {
                     -base_ct
@@ -391,7 +391,11 @@ pub fn thread_search(pos: &mut Position, _th: &threads::ThreadCtrl) {
 
     unsafe {
         let contempt = Score::make(base_ct, base_ct / 2);
-        evaluate::CONTEMPT = if us == WHITE { contempt } else { -contempt };
+        evaluate::CONTEMPT = if us == Color::WHITE {
+            contempt
+        } else {
+            -contempt
+        };
     }
 
     let mut root_depth = Depth::ZERO;
@@ -480,7 +484,7 @@ pub fn thread_search(pos: &mut Position, _th: &threads::ThreadCtrl) {
                         best_value.0 / 10
                     });
                 let ct = Score::make(ct, ct / 2);
-                unsafe { evaluate::CONTEMPT = if us == WHITE { ct } else { -ct } }
+                unsafe { evaluate::CONTEMPT = if us == Color::WHITE { ct } else { -ct } }
             }
 
             // Start with a small aspiration window and, in the case of a fail

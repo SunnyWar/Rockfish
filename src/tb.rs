@@ -9,8 +9,8 @@ use crate::position::Position;
 use crate::search::RootMoves;
 use crate::types::{
     depth::Depth, key::Key, Color, Move, PawnValueEg, Piece, PieceType, Square, Value,
-    ANY_CASTLING, BLACK, B_PAWN, ENPASSANT, FILE_A, FILE_B, FILE_C, FILE_D, MAX_MATE_PLY, NO_PIECE,
-    PROMOTION, WHITE, W_PAWN,
+    ANY_CASTLING, B_PAWN, ENPASSANT, FILE_A, FILE_B, FILE_C, FILE_D, MAX_MATE_PLY, NO_PIECE,
+    PROMOTION, W_PAWN,
 };
 use crate::ucioption;
 
@@ -687,7 +687,7 @@ enum TbHashEntry {
 // of the form KQPvKRP, where "KQP" represents the white pieces if
 // flip == false and the black pieces if flip == true.
 fn prt_str(pos: &Position, flip: bool) -> String {
-    let mut c = if flip { BLACK } else { WHITE };
+    let mut c = if flip { Color::BLACK } else { Color::WHITE };
 
     let mut s = String::new();
 
@@ -1594,10 +1594,11 @@ fn probe_helper<T: TbTable>(
     let flip = if !e.symmetric() {
         (key != e.key()) != tb.switched()
     } else {
-        pos.side_to_move() != WHITE
+        pos.side_to_move() != Color::WHITE
     };
     let bside = usize::from(
-        !e.symmetric() && (((key != e.key()) != tb.switched()) == (pos.side_to_move() == WHITE)),
+        !e.symmetric()
+            && (((key != e.key()) != tb.switched()) == (pos.side_to_move() == Color::WHITE)),
     );
 
     let t = if T::Enc::ENC != PieceEnc::ENC {
