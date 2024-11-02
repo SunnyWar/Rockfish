@@ -105,7 +105,7 @@ pub struct MovePicker {
     cur: usize,
     end_moves: usize,
     end_bad_captures: usize,
-    stage: i32,
+    stage: GameStage,
     depth: Depth,
     tt_move: Move,
     countermove: Move,
@@ -117,7 +117,7 @@ pub struct MovePicker {
 pub struct MovePickerQ {
     cur: usize,
     end_moves: usize,
-    stage: i32,
+    stage: GameStage,
     depth: Depth,
     tt_move: Move,
     recapture_square: Square,
@@ -127,30 +127,65 @@ pub struct MovePickerQ {
 pub struct MovePickerPC {
     cur: usize,
     end_moves: usize,
-    stage: i32,
+    stage: GameStage,
     tt_move: Move,
     threshold: Value,
     list: [ExtMove; MAX_MOVES],
 }
 
-const MAIN_SEARCH: i32 = 0;
-const CAPTURES_INIT: i32 = 1;
-const GOOD_CAPTURES: i32 = 2;
-const KILLERS: i32 = 3;
-const COUNTERMOVE: i32 = 4;
-const QUIET_INIT: i32 = 5;
-const QUIET: i32 = 6;
-const BAD_CAPTURES: i32 = 7;
-const EVASION: i32 = 8;
-const EVASIONS_INIT: i32 = 9;
-const ALL_EVASIONS: i32 = 10;
-const PROBCUT: i32 = 11;
-const PROBCUT_INIT: i32 = 12;
-const PROBCUT_CAPTURES: i32 = 13;
-const QSEARCH: i32 = 14;
-const QCAPTURES_INIT: i32 = 15;
-const QCAPTURES: i32 = 16;
-const QCHECKS: i32 = 17;
+#[derive(Debug, Clone, Copy)]
+enum GameStage {
+    MainSearch = 0,
+    CapturesInit = 1,
+    GoodCaptures = 2,
+    Killers = 3,
+    CounterMove = 4,
+    QuietInit = 5,
+    Quiet = 6,
+    BadCaptures = 7,
+    Evasion = 8,
+    EvasionsInit = 9,
+    AllEvasions = 10,
+    ProbCut = 11,
+    ProbCutInit = 12,
+    ProbCutCaptures = 13,
+    QSearch = 14,
+    QCapturesInit = 15,
+    QCaptures = 16,
+    QChecks = 17,
+    Invalid = 18,
+}
+
+impl GameStage {
+    pub fn next(self) -> Self {
+        let next_value = self as u8 + 1;
+        GameStage::from(next_value)
+    }
+
+    pub fn from(value: u8) -> Self {
+        match value {
+            0 => GameStage::MainSearch,
+            1 => GameStage::CapturesInit,
+            2 => GameStage::GoodCaptures,
+            3 => GameStage::Killers,
+            4 => GameStage::CounterMove,
+            5 => GameStage::QuietInit,
+            6 => GameStage::Quiet,
+            7 => GameStage::BadCaptures,
+            8 => GameStage::Evasion,
+            9 => GameStage::EvasionsInit,
+            10 => GameStage::AllEvasions,
+            11 => GameStage::ProbCut,
+            12 => GameStage::ProbCutInit,
+            13 => GameStage::ProbCutCaptures,
+            14 => GameStage::QSearch,
+            15 => GameStage::QCapturesInit,
+            16 => GameStage::QCaptures,
+            17 => GameStage::QChecks,
+            _ => GameStage::Invalid,
+        }
+    }
+}
 
 // partial_insertion_sort() sorts moves in descending order up to and
 // including a given limit.
@@ -227,9 +262,9 @@ fn score_evasions(pos: &Position, list: &mut [ExtMove]) {
 impl MovePicker {
     pub fn new(pos: &Position, ttm: Move, d: Depth, ss: &[search::Stack]) -> MovePicker {
         let mut stage = if pos.checkers() != 0 {
-            EVASION
+            GameStage::Evasion
         } else {
-            MAIN_SEARCH
+            GameStage::MainSearch
         };
         let tt_move = if ttm != Move::NONE && pos.pseudo_legal(ttm) {
             ttm
@@ -237,7 +272,7 @@ impl MovePicker {
             Move::NONE
         };
         if tt_move == Move::NONE {
-            stage += 1;
+            stage = stage.next();
         }
         let prev_sq = ss[4].current_move.to();
         MovePicker {
@@ -260,18 +295,18 @@ impl MovePicker {
     pub fn next_move(&mut self, pos: &Position, skip_quiets: bool) -> Move {
         loop {
             match self.stage {
-                MAIN_SEARCH | EVASION => {
-                    self.stage += 1;
+                GameStage::MainSearch | GameStage::Evasion => {
+                    self.stage = self.stage.next();
                     return self.tt_move;
                 }
 
-                CAPTURES_INIT => {
+                GameStage::CapturesInit => {
                     self.end_moves = generate::<Captures>(pos, &mut self.list, 0);
                     score_captures(pos, &mut self.list[..self.end_moves]);
-                    self.stage += 1;
+                    self.stage = self.stage.next();
                 }
 
-                GOOD_CAPTURES => {
+                GameStage::GoodCaptures => {
                     while self.cur < self.end_moves {
                         let m = pick_best(&mut self.list[self.cur..self.end_moves]);
                         self.cur += 1;
@@ -286,7 +321,7 @@ impl MovePicker {
                             self.end_bad_captures += 1;
                         }
                     }
-                    self.stage += 1;
+                    self.stage = self.stage.next();
                     let m = self.killers[0];
                     if m != Move::NONE
                         && m != self.tt_move
@@ -297,8 +332,8 @@ impl MovePicker {
                     }
                 }
 
-                KILLERS => {
-                    self.stage += 1;
+                GameStage::Killers => {
+                    self.stage = self.stage.next();
                     let m = self.killers[1];
                     if m != Move::NONE
                         && m != self.tt_move
@@ -309,8 +344,8 @@ impl MovePicker {
                     }
                 }
 
-                COUNTERMOVE => {
-                    self.stage += 1;
+                GameStage::CounterMove => {
+                    self.stage = self.stage.next();
                     let m = self.countermove;
                     if m != Move::NONE
                         && m != self.tt_move
@@ -323,7 +358,7 @@ impl MovePicker {
                     }
                 }
 
-                QUIET_INIT => {
+                GameStage::QuietInit => {
                     self.cur = self.end_bad_captures;
                     self.end_moves = generate::<Quiets>(pos, &mut self.list, self.cur);
                     score_quiets(pos, self);
@@ -331,10 +366,10 @@ impl MovePicker {
                         &mut self.list[self.cur..self.end_moves],
                         -4000 * self.depth.value(),
                     );
-                    self.stage += 1;
+                    self.stage = self.stage.next();
                 }
 
-                QUIET => {
+                GameStage::Quiet => {
                     if !skip_quiets {
                         while self.cur < self.end_moves {
                             let m = self.list[self.cur].m;
@@ -348,11 +383,11 @@ impl MovePicker {
                             }
                         }
                     }
-                    self.stage += 1;
+                    self.stage = self.stage.next();
                     self.cur = 0; // Point to beginning of bad captures
                 }
 
-                BAD_CAPTURES => {
+                GameStage::BadCaptures => {
                     if self.cur < self.end_bad_captures {
                         let m = self.list[self.cur].m;
                         self.cur += 1;
@@ -361,14 +396,14 @@ impl MovePicker {
                     break;
                 }
 
-                EVASIONS_INIT => {
+                GameStage::EvasionsInit => {
                     self.cur = 0;
                     self.end_moves = generate::<Evasions>(pos, &mut self.list, 0);
                     score_evasions(pos, &mut self.list[..self.end_moves]);
-                    self.stage += 1;
+                    self.stage = self.stage.next();
                 }
 
-                ALL_EVASIONS => {
+                GameStage::AllEvasions => {
                     while self.cur < self.end_moves {
                         let m = pick_best(&mut self.list[self.cur..self.end_moves]);
                         self.cur += 1;
@@ -392,9 +427,9 @@ impl MovePicker {
 impl MovePickerQ {
     pub fn new(pos: &Position, ttm: Move, d: Depth, s: Square) -> MovePickerQ {
         let mut stage = if pos.checkers() != 0 {
-            EVASION
+            GameStage::Evasion
         } else {
-            QSEARCH
+            GameStage::QSearch
         };
         let tt_move = if ttm != Move::NONE
             && pos.pseudo_legal(ttm)
@@ -402,7 +437,7 @@ impl MovePickerQ {
         {
             ttm
         } else {
-            stage += 1;
+            stage = stage.next();
             Move::NONE
         };
 
@@ -423,19 +458,19 @@ impl MovePickerQ {
     pub fn next_move(&mut self, pos: &Position) -> Move {
         loop {
             match self.stage {
-                EVASION | QSEARCH => {
-                    self.stage += 1;
+                GameStage::Evasion | GameStage::QSearch => {
+                    self.stage = self.stage.next();
                     return self.tt_move;
                 }
 
-                EVASIONS_INIT => {
+                GameStage::EvasionsInit => {
                     self.cur = 0;
                     self.end_moves = generate::<Evasions>(pos, &mut self.list, 0);
                     score_evasions(pos, &mut self.list[..self.end_moves]);
-                    self.stage += 1;
+                    self.stage = self.stage.next();
                 }
 
-                ALL_EVASIONS => {
+                GameStage::AllEvasions => {
                     while self.cur < self.end_moves {
                         let m = pick_best(&mut self.list[self.cur..self.end_moves]);
                         self.cur += 1;
@@ -446,14 +481,14 @@ impl MovePickerQ {
                     break;
                 }
 
-                QCAPTURES_INIT => {
+                GameStage::QCapturesInit => {
                     self.cur = 0;
                     self.end_moves = generate::<Captures>(pos, &mut self.list, 0);
                     score_captures(pos, &mut self.list[..self.end_moves]);
-                    self.stage += 1;
+                    self.stage = self.stage.next();
                 }
 
-                QCAPTURES => {
+                GameStage::QCaptures => {
                     while self.cur < self.end_moves {
                         let m = pick_best(&mut self.list[self.cur..self.end_moves]);
                         self.cur += 1;
@@ -469,10 +504,10 @@ impl MovePickerQ {
                     }
                     self.cur = 0;
                     self.end_moves = generate::<QuietChecks>(pos, &mut self.list, 0);
-                    self.stage += 1;
+                    self.stage = self.stage.next();
                 }
 
-                QCHECKS => {
+                GameStage::QChecks => {
                     while self.cur < self.end_moves {
                         let m = self.list[self.cur].m;
                         self.cur += 1;
@@ -504,10 +539,10 @@ impl MovePickerPC {
             && pos.see_ge(ttm, threshold)
         {
             tt_move = ttm;
-            stage = PROBCUT;
+            stage = GameStage::ProbCut;
         } else {
             tt_move = Move::NONE;
-            stage = PROBCUT + 1;
+            stage = GameStage::ProbCut.next();
         }
 
         MovePickerPC {
@@ -526,19 +561,19 @@ impl MovePickerPC {
     pub fn next_move(&mut self, pos: &Position) -> Move {
         loop {
             match self.stage {
-                PROBCUT => {
-                    self.stage += 1;
+                GameStage::ProbCut => {
+                    self.stage = self.stage.next();
                     return self.tt_move;
                 }
 
-                PROBCUT_INIT => {
+                GameStage::ProbCutInit => {
                     self.cur = 0;
                     self.end_moves = generate::<Captures>(pos, &mut self.list, 0);
                     score_captures(pos, &mut self.list[..self.end_moves]);
-                    self.stage += 1;
+                    self.stage = self.stage.next();
                 }
 
-                PROBCUT_CAPTURES => {
+                GameStage::ProbCutCaptures => {
                     while self.cur < self.end_moves {
                         let m = pick_best(&mut self.list[self.cur..self.end_moves]);
                         self.cur += 1;
