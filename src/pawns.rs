@@ -108,10 +108,10 @@ pub struct Entry {
     king_safety: [Score; 2],
     weak_unopposed: [i32; 2],
     castling_rights: [CastlingRight; 2],
-    semiopen_files: [i32; 2],
+    semiopen_files: [u8; 2],
     pawns_on_squares: [[i32; 2]; 2],
     asymmetry: i32,
-    open_files: i32,
+    open_files: u8,
 }
 
 impl Entry {
@@ -162,11 +162,11 @@ impl Entry {
         self.asymmetry
     }
 
-    pub fn open_files(&self) -> i32 {
+    pub fn open_files(&self) -> u8 {
         self.open_files
     }
 
-    pub fn semiopen_file(&self, c: Color, f: File) -> i32 {
+    pub fn semiopen_file(&self, c: Color, f: File) -> u8 {
         self.semiopen_files[c.0 as usize] & (1 << f)
     }
 
@@ -335,7 +335,7 @@ pub fn probe(pos: &Position) -> &mut Entry {
         e.passed_pawns[Color::WHITE.0 as usize].0 | e.passed_pawns[Color::BLACK.0 as usize].0;
     let semiopen_diff = white_semiopen ^ black_semiopen;
 
-    e.open_files = (white_semiopen & black_semiopen).count_ones() as i32;
+    e.open_files = (white_semiopen & black_semiopen).count_ones() as u8;
     e.asymmetry = (passed_pawns | semiopen_diff as u64).count_ones() as i32;
 
     e
@@ -366,7 +366,7 @@ fn evaluate<Us: ColorTrait>(pos: &Position, e: &mut Entry) -> Score {
     e.passed_pawns[us.0 as usize] = Bitboard(0);
     e.pawn_attacks_span[us.0 as usize] = Bitboard(0);
     e.weak_unopposed[us.0 as usize] = 0;
-    e.semiopen_files[us.0 as usize] = 0xff;
+    e.semiopen_files[us.0 as usize] = std::u8::MAX;
     e.king_squares[us.0 as usize] = Square::NONE;
     e.pawn_attacks[us.0 as usize] = our_pawns.shift(right) | our_pawns.shift(left);
     e.pawns_on_squares[us.0 as usize][Color::BLACK.0 as usize] =

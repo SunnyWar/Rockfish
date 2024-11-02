@@ -1004,7 +1004,7 @@ fn evaluate_space<Us: ColorTrait>(pos: &Position, ei: &EvalInfo) -> Score {
             safe >> 32
         }) | (behind & safe),
     ) as i32;
-    let weight = pos.count(us, PieceType::ALL_PIECES) - 2 * ei.pe.open_files();
+    let weight = pos.count(us, PieceType::ALL_PIECES) - 2 * ei.pe.open_files() as i32;
 
     Score::make(bonus * weight * weight / 16, 0)
 }
