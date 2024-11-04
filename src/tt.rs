@@ -113,7 +113,6 @@ fn cluster(key: Key) -> &'static mut Cluster {
 // tt::resize() sets the size of the transposition table, measured in
 // megabytes. The transposition table consists of a power of 2 number of
 // clusters and each cluster consists of CLUSTER_SIZE number of TTEntry.
-
 pub fn resize(mb_size: usize) {
     let new_cluster_count = mb_size * 1024 * 1024 / std::mem::size_of::<Cluster>();
 
@@ -135,7 +134,6 @@ pub fn resize(mb_size: usize) {
 }
 
 // tt::free() deallocates the transposition table.
-
 pub fn free() {
     unsafe {
         if !TABLE.is_null() {
@@ -148,7 +146,6 @@ pub fn free() {
 // tt::clear() clears the entire transposition table. It is called whenever
 // the table is resized or when the user asks the program to clear the table
 // (via the UCI interface).
-
 pub fn clear() {
     let tt_slice = unsafe { std::slice::from_raw_parts_mut(TABLE, CLUSTER_COUNT) };
 
@@ -171,7 +168,6 @@ pub fn clear() {
 // TTEntry to be replaced later. The replace value of an entry is calculated
 // as its depth minus 8 times its relative age. TTEntry t1 is considered more
 // valuable than TTEntry t2 if its replace value is greater than that of t2.
-
 pub fn probe(key: Key) -> (&'static mut TTEntry, bool) {
     let cl = cluster(key);
     // Use the high 16 bits of the hash key as key inside the cluster
@@ -208,7 +204,6 @@ pub fn probe(key: Key) -> (&'static mut TTEntry, bool) {
 
 // tt::hashfull() returns an approximation of the hashtable occupation during
 // a search. The hash is x permill full, as per UCI protocol.
-
 pub fn hashfull() -> i32 {
     let tt_slice = unsafe { std::slice::from_raw_parts(TABLE, 1000 / CLUSTER_SIZE) };
 

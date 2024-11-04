@@ -251,7 +251,6 @@ impl Entry {
     // do_king_safety() calculates a bonus for king safety. It is called only
     // when king square changes, which is in about 20% of total king_safety()
     // calls.
-
     fn do_king_safety<Us: ColorTrait>(&mut self, pos: &Position, ksq: Square) -> Score {
         let us = Us::COLOR;
         self.king_squares[us.0 as usize] = ksq;
@@ -284,7 +283,6 @@ impl Entry {
 }
 
 // pawns::init() initializes some tables needed by evaluation.
-
 pub fn init() {
     const SEED: [i32; 8] = [0, 13, 24, 18, 76, 100, 175, 330];
 

@@ -228,7 +228,6 @@ fn perft<Root: Bool>(pos: &mut Position, depth: Depth) -> u64 {
 }
 
 // search::init() is called during startup to initialize various lookup tables
-
 pub fn init() {
     unsafe {
         for imp in 0..2 {
@@ -255,7 +254,6 @@ pub fn init() {
 }
 
 // search::clear() resets search state to its initial value
-
 pub fn clear() {
     threads::wait_for_all();
     tt::clear();
@@ -266,7 +264,6 @@ pub fn clear() {
 // mainthread_search() is called by the main thread when the program
 // received the UCI 'go' command. It searches from the root position and
 // outputs the "bestmove".
-
 pub fn mainthread_search(pos: &mut Position, th: &threads::ThreadCtrl) {
     if limits().perft != 0 {
         let nodes = perft::<True>(pos, (limits().perft as i32) * Depth::ONE);
@@ -1936,7 +1933,6 @@ fn check_time() {
 // print_pv() prints PV information according to the UCI protocol. UCI
 // requires that all (if any) unsearched PV lines are sent using a previous
 // search score.
-
 fn print_pv(pos: &mut Position, depth: Depth, alpha: Value, beta: Value) {
     let elapsed = timeman::elapsed() + 1;
     let pv_idx = pos.pv_idx;

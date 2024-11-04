@@ -21,7 +21,6 @@ const START_FEN: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 
 // The function sets up the position described in the given FEN string ("fen")
 // or the starting position ("startpos") and then makes the moves given in the
 // following move list ("moves").
-
 fn position(pos: &mut Position, pos_data: &mut PosData, args: &str) {
     let fen: &str;
 
@@ -63,7 +62,6 @@ fn position(pos: &mut Position, pos_data: &mut PosData, args: &str) {
 
 // setoption() is called when engine received the "setoption" UCI command.
 // The function updates the UCI option ("name") to the given value ("value").
-
 fn setoption(args: &str) {
     let idx = args.find("name").unwrap();
     let args = &args[idx + 4..];
@@ -80,7 +78,6 @@ fn setoption(args: &str) {
 // go() is called when engine receives the "go" UCI command. The function
 // sets the thinking time and other parameters from the input string, then
 // starts the search.
-
 fn go(pos: &mut Position, pos_data: &Arc<RwLock<PosData>>, args: &str) {
     let mut limits = search::LimitsType::new();
     let mut searchmoves: Vec<Move> = Vec::new();
@@ -116,7 +113,6 @@ fn go(pos: &mut Position, pos_data: &Arc<RwLock<PosData>>, args: &str) {
 // bench() is called when engine receives the "bench" command. First a list
 // of UCI commands is setup according to bench parameters. Then the commands
 // are run one by one. At the end, a summary is printed.
-
 fn bench(pos: &mut Position, pos_data: &Arc<RwLock<PosData>>, args: &str) {
     let list = setup_bench(pos, args);
     let num = list.iter().filter(|&s| s.contains("go ")).count();
@@ -168,7 +164,6 @@ fn bench(pos: &mut Position, pos_data: &Arc<RwLock<PosData>>, args: &str) {
 // line arguments, e.g. to run 'bench', once the command is executed the
 // function returns immediately. In addition to the UCI ones, some additional
 // debug commands are supported.
-
 pub fn cmd_loop() {
     let mut pos = Box::new(Position::new());
 
@@ -247,7 +242,6 @@ pub fn cmd_loop() {
 // cp <x>   The score from the engine's point of view in centipawns
 // mate <y> Mate in y moves, not plies. If the engine is getting mated
 //          use negative values for y.
-
 pub fn value(v: Value) -> String {
     let mut s = String::new();
 
@@ -270,7 +264,6 @@ pub fn value(v: Value) -> String {
 }
 
 // square() converts a Square to a string in algebraic notation (g1, a7, etc.)
-
 pub fn square(s: Square) -> String {
     let mut sq = String::new();
 
@@ -283,7 +276,6 @@ pub fn square(s: Square) -> String {
 // The only special case is castling, where we print in the e1g1 notation in
 // normal chess mode, and in e1h1 notation in chess960 mode. Internally all
 // castling moves are always encoded as 'king captures rook'.
-
 pub fn move_str(m: Move, chess960: bool) -> String {
     let from = m.from();
     let mut to = m.to();
@@ -324,7 +316,6 @@ pub fn move_str(m: Move, chess960: bool) -> String {
 
 // to_move() converts a string representing a move in coordinate notations
 // (g1f3, a7a8q) to the corresponding legal Move, if any.
-
 pub fn to_move(pos: &Position, s: &str) -> Move {
     for m in MoveList::new::<Legal>(pos) {
         if s == move_str(m, pos.is_chess960()) {

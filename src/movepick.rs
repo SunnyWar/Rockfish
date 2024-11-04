@@ -100,7 +100,6 @@ impl ContinuationHistory {
 // no moves left, when MOVE_NONE is returned. In order to improve the
 // efficiency of the alpha beta algorithm, MovePicker attempts to return the
 // moves which are most likely to get a cut off first.
-
 pub struct MovePicker {
     cur: usize,
     end_moves: usize,
@@ -258,7 +257,6 @@ fn score_evasions(pos: &Position, list: &mut [ExtMove]) {
 // to return (in the quiescence search, for instance, we only want to search
 // captures, promotions and some checks) and how important good move ordering
 // is at the current node.
-
 impl MovePicker {
     pub fn new(pos: &Position, ttm: Move, d: Depth, ss: &[search::Stack]) -> MovePicker {
         let mut stage = if pos.checkers() != 0 {

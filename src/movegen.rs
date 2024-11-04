@@ -557,7 +557,6 @@ fn generate_legal(pos: &Position, list: &mut [ExtMove], idx: usize) -> usize {
 // non-captures.
 //
 // generate<Legal>() generates all the legal moves in the given position.
-
 pub fn generate<T: GenType>(pos: &Position, list: &mut [ExtMove], idx: usize) -> usize {
     match T::TYPE {
         QUIET_CHECKS => generate_quiet_checks(pos, list, idx),

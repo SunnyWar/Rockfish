@@ -476,7 +476,6 @@ impl Position {
     // set() initializes the position objection with the given FEN string.
     // This function is not very robust - make sure that input FENs are
     // correct. This is assumed to be the responsibility of the GUI.
-
     pub fn set(&mut self, fen_str: &str, is_chess960: bool) {
         // Initialize arrays with default values
         self.by_color_bb.iter_mut().for_each(|bb| *bb = Bitboard(0));
@@ -591,7 +590,6 @@ impl Position {
 
     // set_castling_right() is a helper function used to set castling rights
     // given the corresponding color and the rook starting square.
-
     fn set_castling_right(&mut self, c: Color, rfrom: Square) {
         let kfrom = self.square(c, PieceType::KING);
         let cs = if kfrom < rfrom {
@@ -641,7 +639,6 @@ impl Position {
     }
 
     // set_check_info() sets king attacks to detect if a move gives cehck
-
     fn set_check_info(&mut self) {
         let mut pinners = Bitboard(0);
         self.st_mut().blockers_for_king[Color::WHITE.0 as usize] = self.slider_blockers(
@@ -677,7 +674,6 @@ impl Position {
     // that once computed is updated incrementally as moves are made.
     // The function is used only when a new position is set up, and to verify
     // the correctness of the StateInfo data when running in debug mode.
-
     fn set_state(&mut self) {
         self.st_mut().key = Key(0);
         self.st_mut().material_key = Key(0);
@@ -734,7 +730,6 @@ impl Position {
 
     // fen() returns a FEN representation of the position. In case of Chess960
     // the Shredder-FEN notation is used.
-
     pub fn fen(&self) -> String {
         let mut ss = String::new();
 
@@ -819,7 +814,6 @@ impl Position {
     // blocking piece can be either a pinned or a discovered check piece,
     // depending on whether its color is the opposite of or the same as the
     // color of the slider.
-
     pub fn slider_blockers(
         &self,
         sliders: Bitboard,
@@ -850,7 +844,6 @@ impl Position {
     }
 
     // legal() tests whether a pseudo-legal move is legal
-
     pub fn legal(&self, m: Move) -> bool {
         debug_assert!(m.is_ok());
 
@@ -901,7 +894,6 @@ impl Position {
     // pseudo_legal() takes a random move and tests whether the move is
     // pseudo legal. It is used to validate moves from T that can be
     // corrupted due to SMP concurrent access or hash position key aliasing.
-
     pub fn pseudo_legal(&self, m: Move) -> bool {
         let us = self.side_to_move();
         let from = m.from();
@@ -981,7 +973,6 @@ impl Position {
     }
 
     // gives_check() tests whether a pseudo-legal move gives a check
-
     pub fn gives_check(&self, m: Move) -> bool {
         debug_assert!(m.is_ok());
         debug_assert!(self.moved_piece(m).color() == self.side_to_move());
@@ -1076,7 +1067,6 @@ impl Position {
     // do_move() makes a move and saves all information necessary to a
     // StateInfo object. The move is assumed to be legal. Pseudo-legal
     // moves should be filtered out before this function is called.
-
     pub fn do_move(&mut self, m: Move, gives_check: bool) {
         debug_assert!(m.is_ok());
 
@@ -1269,7 +1259,6 @@ impl Position {
 
     // undo_move() unmakes a move. When it returns, the position should be
     // restored to exactly the same state as before the move was made.
-
     pub fn undo_move(&mut self, m: Move) {
         debug_assert!(m.is_ok());
 
@@ -1516,7 +1505,6 @@ impl Position {
 
     // is_draw() tests whether the position is drawn by 50-move rule or by
     // repetition. It does not detect stalemates.
-
     pub fn is_draw(&self, ply: i32) -> bool {
         if self.st().rule50 > 99
             && (self.checkers() == 0 || MoveList::new::<Legal>(self).len() != 0)
@@ -1616,7 +1604,6 @@ impl Position {
     // is_ok() performs some consistency checks for the position object and
     // raises an assert if something wrong is detected. This is meant to be
     // helpful when debugging.
-
     pub fn is_ok(&self) -> bool {
         if self.side_to_move() != Color::WHITE && self.side_to_move != Color::BLACK
             || self.piece_on(self.square(Color::WHITE, PieceType::KING)) != Piece::W_KING

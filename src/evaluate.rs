@@ -359,7 +359,6 @@ const SPACE_THRESHOLD: Value = Value(12222);
 
 // initialize() computes king and pawn attacks and the king ring bitboard
 // for a given color. This is done at the beginning of the evaluation.
-
 fn initialize<Us: ColorTrait>(pos: &Position, ei: &mut EvalInfo) {
     let us = Us::COLOR;
     let them = if us == Color::WHITE {
@@ -418,7 +417,6 @@ fn initialize<Us: ColorTrait>(pos: &Position, ei: &mut EvalInfo) {
 
 // evaluate_pieces() assigned bonuses and penalties to the pieces of a given
 // color and type.
-
 fn evaluate_pieces<Us: ColorTrait, Pt: PieceTypeTrait>(pos: &Position, ei: &mut EvalInfo) -> Score {
     let us = Us::COLOR;
     let pt = Pt::TYPE;
@@ -592,7 +590,6 @@ fn evaluate_pieces<Us: ColorTrait, Pt: PieceTypeTrait>(pos: &Position, ei: &mut 
 }
 
 // evaluate_king() assigns bonuses and penalties to a king of a given color
-
 fn evaluate_king<Us: ColorTrait>(pos: &Position, ei: &mut EvalInfo) -> Score {
     let us = Us::COLOR;
     let them = if us == Color::WHITE {
@@ -857,7 +854,6 @@ fn capped_distance(s1: Square, s2: Square) -> i32 {
 
 // evaluate_passed_pawns() evaluates the passed pawns and candidate passed
 // pawns of the given color.
-
 fn evaluate_passed_pawns<Us: ColorTrait>(pos: &Position, ei: &EvalInfo) -> Score {
     let us = Us::COLOR;
     let them = if us == Color::WHITE {
@@ -955,7 +951,6 @@ fn evaluate_passed_pawns<Us: ColorTrait>(pos: &Position, ei: &EvalInfo) -> Score
 // two or three squares behind a friendly pawn are counted twice. Finally,
 // the space bonus is multiplied by a weight. The aim is to improve play on
 // game opening.
-
 fn evaluate_space<Us: ColorTrait>(pos: &Position, ei: &EvalInfo) -> Score {
     let us = Us::COLOR;
     let them = if us == Color::WHITE {
@@ -1012,7 +1007,6 @@ fn evaluate_space<Us: ColorTrait>(pos: &Position, ei: &EvalInfo) -> Score {
 // evaluate_initiative() computes the initiative correction value for the
 // position, i.e., second order bonus/malus based on the known attacking/
 // defending status of the players.
-
 fn evaluate_initiative(pos: &Position, ei: &EvalInfo, eg: Value) -> Score {
     let king_distance = u32::distance(
         pos.square(Color::WHITE, PieceType::KING).file(),
@@ -1040,7 +1034,6 @@ fn evaluate_initiative(pos: &Position, ei: &EvalInfo, eg: Value) -> Score {
 }
 
 // evaluate_scale_factor() computes the scale factor for the winning side
-
 fn evaluate_scale_factor(pos: &Position, ei: &EvalInfo, eg: Value) -> ScaleFactor {
     let strong_side = if eg > Value::DRAW {
         Color::WHITE
@@ -1084,7 +1077,6 @@ fn evaluate_scale_factor(pos: &Position, ei: &EvalInfo, eg: Value) -> ScaleFacto
 // evaluate() is the main evaluation function. It computes the various parts
 // of the evaluation and returns the value of the position from the point of
 // view of the side to move.
-
 pub fn evaluate(pos: &Position) -> Value {
     debug_assert!(pos.checkers() == 0);
 

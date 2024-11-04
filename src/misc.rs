@@ -17,7 +17,6 @@ pub struct Prng(u64);
 //
 // For further analysis see
 //   <http://vigna.di.unimi.it/ftp/papers/xorshift.pdf>
-
 impl Prng {
     pub fn new(seed: u64) -> Prng {
         Prng(seed)
