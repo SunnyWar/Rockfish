@@ -2061,11 +2061,9 @@ pub fn probe_dtz(pos: &mut Position, success: &mut i32) -> i32 {
         if *success == 0 {
             return 0;
         }
-        if wdl > 0 {
-            if v > 0 && v + 1 < best {
-                best = v + 1;
-            }
-        } else if v - 1 < best {
+        if wdl > 0 && v > 0 && v + 1 < best {
+            best = v + 1;
+        } else if wdl <= 0 && v - 1 < best {
             best = v - 1;
         }
     }
@@ -2584,16 +2582,15 @@ fn init_indices() {
     for i in 0..6 {
         let mut s = 0;
         for j in 0..24 {
-            unsafe {
-                PAWN_IDX2[i][j] = s;
-            }
             let k = (1 + (j / 4)) * 8 + (j % 4);
             s += binomial(ptwist::<RankEnc>(Square(k as u32)), i);
-            if (j + 1) % 4 == 0 {
-                unsafe {
+
+            unsafe {
+                PAWN_IDX2[i][j] = s;
+                if (j + 1) % 4 == 0 {
                     PFACTOR2[i][j / 4] = s;
+                    s = 0;
                 }
-                s = 0;
             }
         }
     }
@@ -2631,13 +2628,7 @@ fn encode<T: Encoding>(p: &mut [Square; TB_PIECES], ei: &EncInfo, entry: &T::Ent
     let n = entry.num() as usize;
 
     if T::ENC != PieceEnc::ENC {
-        for i in 0..entry.pawns(0) {
-            for j in i + 1..entry.pawns(0) {
-                if ptwist::<T>(p[i as usize]) < ptwist::<T>(p[j as usize]) {
-                    p.swap(i as usize, j as usize);
-                }
-            }
-        }
+        p[..entry.pawns(0) as usize].sort_by(|a, b| ptwist::<T>(*b).cmp(&ptwist::<T>(*a)));
     }
 
     if p[0].0 & 0x04 != 0 {
@@ -2696,31 +2687,26 @@ fn encode<T: Encoding>(p: &mut [Square; TB_PIECES], ei: &EncInfo, entry: &T::Ent
     } else {
         let t = entry.pawns(0) as usize;
         idx = pawn_idx::<T>(t - 1, flap::<T>(p[0]));
-        (1..t).for_each(|i| {
-            idx += binomial(ptwist::<T>(p[i]), t - i);
-        });
+
+        idx += (1..t)
+            .map(|i| binomial(ptwist::<T>(p[i]), t - i))
+            .sum::<usize>();
+
         idx *= ei.factor[0];
 
         // remaining pawns
         i = entry.pawns(0) as usize;
         let t = i + entry.pawns(1) as usize;
         if t > i {
-            for j in i..t {
-                for k in j + 1..t {
-                    if p[j].0 > p[k].0 {
-                        p.swap(j, k);
-                    }
-                }
-            }
+            p[i..t].sort_by_key(|x| x.0);
+
             let mut s = 0;
             for m in i..t {
                 let sq = p[m];
-                let mut skips = 0;
-                (0..i).for_each(|k| {
-                    skips += skip(sq, p[k]);
-                });
+                let skips: usize = (0..i).map(|k| skip(sq, p[k])).sum();
                 s += binomial(sq.0 as usize - skips - 8, m - i + 1);
             }
+
             idx += s * ei.factor[i];
             i = t;
         }
@@ -2728,22 +2714,15 @@ fn encode<T: Encoding>(p: &mut [Square; TB_PIECES], ei: &EncInfo, entry: &T::Ent
 
     while i < n {
         let t = ei.norm[i] as usize;
-        for j in i..i + t {
-            for k in j + 1..i + t {
-                if p[j] > p[k] {
-                    p.swap(j, k);
-                }
-            }
-        }
+        p[i..i + t].sort();
+
         let mut s = 0;
         for m in i..i + t {
             let sq = p[m];
-            let mut skips = 0;
-            (0..i).for_each(|k| {
-                skips += skip(sq, p[k]);
-            });
+            let skips = (0..i).map(|k| skip(sq, p[k])).sum::<usize>();
             s += binomial(sq.0 as usize - skips, m - i + 1);
         }
+
         idx += s * ei.factor[i];
         i += t;
     }
@@ -2762,13 +2741,14 @@ fn decompress_pairs(d: &PairsData, idx: usize) -> i32 {
     let idx_offset = u16::from_le(d.index_table[main_idx].offset);
     lit_idx += idx_offset as isize;
 
-    while lit_idx < 0 {
-        block -= 1;
-        lit_idx += d.size_table[block] as isize + 1;
-    }
-    while lit_idx > d.size_table[block] as isize {
-        lit_idx -= d.size_table[block] as isize + 1;
-        block += 1;
+    while lit_idx < 0 || lit_idx > d.size_table[block] as isize {
+        if lit_idx < 0 {
+            block -= 1;
+            lit_idx += d.size_table[block] as isize + 1;
+        } else {
+            lit_idx -= d.size_table[block] as isize + 1;
+            block += 1;
+        }
     }
 
     let mut ptr = std::ptr::from_ref::<u8>(&d.data[block << d.block_size]).cast::<u32>();
