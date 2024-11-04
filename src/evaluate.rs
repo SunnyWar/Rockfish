@@ -1020,7 +1020,7 @@ fn evaluate_initiative(pos: &Position, ei: &EvalInfo, eg: Value) -> Score {
         && pos.pieces_p(PieceType::PAWN) & KING_SIDE != 0;
 
     // Compute the initiative bonus for the attacking side
-    let initiative = 8 * (ei.pe.pawn_asymmetry() + king_distance - 17)
+    let initiative = 8 * ((ei.pe.pawn_asymmetry() as i32) + king_distance - 17)
         + 12 * (pos.count(Color::WHITE, PieceType::PAWN)
             + pos.count(Color::BLACK, PieceType::PAWN))
         + 16 * i32::from(both_flanks);

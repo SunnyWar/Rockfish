@@ -110,7 +110,7 @@ pub struct Entry {
     castling_rights: [CastlingRight; 2],
     semiopen_files: [u8; 2],
     pawns_on_squares: [[i32; 2]; 2],
-    asymmetry: i32,
+    asymmetry: u8,
     open_files: u8,
 }
 
@@ -158,7 +158,7 @@ impl Entry {
         self.weak_unopposed[c.0 as usize]
     }
 
-    pub fn pawn_asymmetry(&self) -> i32 {
+    pub fn pawn_asymmetry(&self) -> u8 {
         self.asymmetry
     }
 
@@ -334,7 +334,7 @@ pub fn probe(pos: &Position) -> &mut Entry {
     let semiopen_diff = white_semiopen ^ black_semiopen;
 
     e.open_files = (white_semiopen & black_semiopen).count_ones() as u8;
-    e.asymmetry = (passed_pawns | semiopen_diff as u64).count_ones() as i32;
+    e.asymmetry = (passed_pawns | semiopen_diff as u64).count_ones() as u8;
 
     e
 }
