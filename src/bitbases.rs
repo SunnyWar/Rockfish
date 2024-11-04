@@ -115,8 +115,6 @@ impl KPKPosition {
         } else {
             Color::WHITE
         };
-        let good = if us == Color::WHITE { WIN } else { DRAW };
-        let bad = if us == Color::WHITE { DRAW } else { WIN };
 
         let mut r = INVALID;
 
@@ -155,6 +153,8 @@ impl KPKPosition {
             }
         }
 
+        let good = if us == Color::WHITE { WIN } else { DRAW };
+        let bad = if us == Color::WHITE { DRAW } else { WIN };
         match (r & good != 0, r & UNKNOWN != 0) {
             (true, _) => good,
             (false, true) => UNKNOWN,

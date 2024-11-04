@@ -255,7 +255,7 @@ impl Entry {
         let us = Us::COLOR;
         self.king_squares[us.0 as usize] = ksq;
         self.castling_rights[us.0 as usize] = pos.castling_rights(us);
-        let mut min_king_pawn_distance = 0i32;
+        let mut min_king_pawn_distance = 0;
 
         let pawns = pos.pieces_cp(us, PieceType::PAWN);
         if pawns != 0 {
