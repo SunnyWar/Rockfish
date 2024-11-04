@@ -2657,30 +2657,30 @@ fn encode<T: Encoding>(p: &mut [Square; TB_PIECES], ei: &EncInfo, entry: &T::Ent
             }
         }
 
+        let p0 = p[0];
+        let p1 = p[1];
+        let p2 = p[2];
         idx = if entry.kk_enc() {
             i = 2;
-            kk_idx(triangle(p[0]), p[1])
+            kk_idx(triangle(p0), p1)
         } else {
             i = 3;
-            let s1 = skip(p[1], p[0]);
-            let s2 = skip(p[2], p[0]) + skip(p[2], p[1]);
-            if is_off_diag(p[0]) {
-                triangle(p[0]) * 63 * 62 + (p[1].0 as usize - s1) * 62 + (p[2].0 as usize - s2)
-            } else if is_off_diag(p[1]) {
-                6 * 63 * 62 + diag(p[0]) * 28 * 62 + lower(p[1]) * 62 + p[2].0 as usize - s2
-            } else if is_off_diag(p[2]) {
-                6 * 63 * 62
-                    + 4 * 28 * 62
-                    + diag(p[0]) * 7 * 28
-                    + (diag(p[1]) - s1) * 28
-                    + lower(p[2])
+
+            let s1 = skip(p1, p0);
+            let s2 = skip(p2, p0) + skip(p2, p1);
+            if is_off_diag(p0) {
+                triangle(p0) * 63 * 62 + (p1.0 as usize - s1) * 62 + (p2.0 as usize - s2)
+            } else if is_off_diag(p1) {
+                6 * 63 * 62 + diag(p0) * 28 * 62 + lower(p1) * 62 + p2.0 as usize - s2
+            } else if is_off_diag(p2) {
+                6 * 63 * 62 + 4 * 28 * 62 + diag(p0) * 7 * 28 + (diag(p1) - s1) * 28 + lower(p2)
             } else {
                 6 * 63 * 62
                     + 4 * 28 * 62
                     + 4 * 7 * 28
-                    + diag(p[0]) * 7 * 6
-                    + (diag(p[1]) - s1) * 6
-                    + (diag(p[2]) - s2)
+                    + diag(p0) * 7 * 6
+                    + (diag(p1) - s1) * 6
+                    + (diag(p2) - s2)
             }
         };
         idx *= ei.factor[0];

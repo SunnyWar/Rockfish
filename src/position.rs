@@ -16,9 +16,9 @@ use crate::tb;
 use crate::threads::ThreadCtrl;
 use crate::types::{
     depth::Depth, direction::pawn_push, direction::Direction, key::Key, opposite_colors,
-    piece_value, relative_rank, relative_square, BishopValueMg, Bool, CastlingRight, CastlingSide,
-    Color, False, KnightValueMg, Move, MoveType, PawnValueMg, Piece, PieceType, QueenValueMg,
-    RookValueMg, Score, Square, SquareList, True, Value, MG,
+    piece_value, relative_rank, relative_square, BishopValueMg, CastlingRight, CastlingSide, Color,
+    KnightValueMg, Move, MoveType, PawnValueMg, Piece, PieceType, QueenValueMg, RookValueMg, Score,
+    Square, SquareList, Value, MG,
 };
 use crate::uci;
 
@@ -1113,7 +1113,7 @@ impl Position {
 
             let mut rfrom = Square::A1;
             let mut rto = Square::A1;
-            self.do_castling::<True>(us, from, &mut to, &mut rfrom, &mut rto);
+            self.do_castling::<true>(us, from, &mut to, &mut rfrom, &mut rto);
 
             self.st_mut().psq += psqt::psq(captured, rto) - psqt::psq(captured, rfrom);
             k ^= zobrist::psq(captured, rfrom) ^ zobrist::psq(captured, rto);
@@ -1287,7 +1287,7 @@ impl Position {
         if m.move_type() == MoveType::CASTLING {
             let mut rfrom = Square(0);
             let mut rto = Square(0);
-            self.do_castling::<False>(us, from, &mut to, &mut rfrom, &mut rto);
+            self.do_castling::<false>(us, from, &mut to, &mut rfrom, &mut rto);
         } else {
             // Put the piece back at the source square
             self.move_piece(pc, to, from);
@@ -1319,7 +1319,7 @@ impl Position {
 
     // do_castling() is a helper used to do/undo a castling move. This is
     // a bit tricky in Chess960 where from/to squares can overlap.
-    fn do_castling<Do: Bool>(
+    fn do_castling<const DOIT: bool>(
         &mut self,
         us: Color,
         from: Square,
@@ -1335,21 +1335,21 @@ impl Position {
         // Remove both pieces first since squares could overlap in Chess960
         self.remove_piece(
             Piece::make(us, PieceType::KING),
-            if Do::BOOL { from } else { *to },
+            if DOIT { from } else { *to },
         );
         self.remove_piece(
             Piece::make(us, PieceType::ROOK),
-            if Do::BOOL { *rfrom } else { *rto },
+            if DOIT { *rfrom } else { *rto },
         );
-        self.board[(if Do::BOOL { from } else { *to }).0 as usize] = Piece::NO_PIECE;
-        self.board[(if Do::BOOL { *rfrom } else { *rto }).0 as usize] = Piece::NO_PIECE;
+        self.board[(if DOIT { from } else { *to }).0 as usize] = Piece::NO_PIECE;
+        self.board[(if DOIT { *rfrom } else { *rto }).0 as usize] = Piece::NO_PIECE;
         self.put_piece(
             Piece::make(us, PieceType::KING),
-            if Do::BOOL { *to } else { from },
+            if DOIT { *to } else { from },
         );
         self.put_piece(
             Piece::make(us, PieceType::ROOK),
-            if Do::BOOL { *rto } else { *rfrom },
+            if DOIT { *rto } else { *rfrom },
         );
     }
 

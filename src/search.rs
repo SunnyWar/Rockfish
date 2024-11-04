@@ -11,9 +11,9 @@ use crate::threads;
 use crate::timeman;
 use crate::tt;
 use crate::types::{
-    bound::Bound, depth::Depth, key::Key, mate_in, mated_in, piece_value, Bool, CastlingRight,
-    Color, False, Move, MoveType, PawnValueEg, PawnValueMg, Piece, Score, Square, True, Value, EG,
-    MAX_MATE_PLY, MAX_PLY,
+    bound::Bound, depth::Depth, key::Key, mate_in, mated_in, piece_value, CastlingRight, Color,
+    Move, MoveType, PawnValueEg, PawnValueMg, Piece, Score, Square, Value, EG, MAX_MATE_PLY,
+    MAX_PLY,
 };
 use crate::uci;
 use crate::ucioption;
@@ -199,13 +199,13 @@ fn stat_bonus(depth: Depth) -> i32 {
 
 // perft() is our utility to verify move generation. All the leaf nodes up
 // to the given depth are generated and counted, and the sum is returned.
-fn perft<Root: Bool>(pos: &mut Position, depth: Depth) -> u64 {
+fn perft<const ROOT: bool>(pos: &mut Position, depth: Depth) -> u64 {
     let mut nodes = 0u64;
     let leaf = depth == Depth::TWO;
 
     for m in MoveList::new::<Legal>(pos) {
         let cnt;
-        if Root::BOOL && depth <= Depth::ONE {
+        if ROOT && depth <= Depth::ONE {
             cnt = 1;
             nodes += 1;
         } else {
@@ -214,12 +214,12 @@ fn perft<Root: Bool>(pos: &mut Position, depth: Depth) -> u64 {
             cnt = if leaf {
                 MoveList::new::<Legal>(pos).len() as u64
             } else {
-                perft::<False>(pos, depth - Depth::ONE)
+                perft::<false>(pos, depth - Depth::ONE)
             };
             nodes += cnt;
             pos.undo_move(m);
         }
-        if Root::BOOL {
+        if ROOT {
             println!("{}: {}", uci::move_str(m, pos.is_chess960()), cnt);
             stdout().flush().unwrap();
         }
@@ -266,7 +266,7 @@ pub fn clear() {
 // outputs the "bestmove".
 pub fn mainthread_search(pos: &mut Position, th: &threads::ThreadCtrl) {
     if limits().perft != 0 {
-        let nodes = perft::<True>(pos, (limits().perft as i32) * Depth::ONE);
+        let nodes = perft::<true>(pos, (limits().perft as i32) * Depth::ONE);
         println!("\nNodes searched: {nodes}");
         return;
     }
@@ -929,11 +929,11 @@ fn search<NT: NodeType>(
         // Step 7. Razoring (skipped when in check)
         if !pv_node && depth <= Depth::ONE {
             if eval + RAZOR_MARGIN1 <= alpha {
-                return qsearch::<NonPv, False>(pos, ss, alpha, alpha + 1, Depth::ZERO);
+                return qsearch::<NonPv, false>(pos, ss, alpha, alpha + 1, Depth::ZERO);
             }
         } else if !pv_node && depth <= Depth::TWO && eval + RAZOR_MARGIN2 <= alpha {
             let ralpha = alpha - RAZOR_MARGIN2;
-            let v = qsearch::<NonPv, False>(pos, ss, ralpha, ralpha + 1, Depth::ZERO);
+            let v = qsearch::<NonPv, false>(pos, ss, ralpha, ralpha + 1, Depth::ZERO);
             if v <= ralpha {
                 return v;
             }
@@ -967,7 +967,7 @@ fn search<NT: NodeType>(
 
             pos.do_null_move();
             let mut null_value = if depth - r < Depth::ONE {
-                -qsearch::<NonPv, False>(pos, &mut ss[1..], -beta, -beta + 1, Depth::ZERO)
+                -qsearch::<NonPv, false>(pos, &mut ss[1..], -beta, -beta + 1, Depth::ZERO)
             } else {
                 -search::<NonPv>(
                     pos,
@@ -997,7 +997,7 @@ fn search<NT: NodeType>(
                 pos.nmp_ply = ss[5].ply + 3 * (depth - r) / (Depth::FOUR);
                 pos.nmp_odd = ss[5].ply & 1;
                 let v = if depth - r < Depth::ONE {
-                    qsearch::<NonPv, False>(pos, ss, beta - 1, beta, Depth::ZERO)
+                    qsearch::<NonPv, false>(pos, ss, beta - 1, beta, Depth::ZERO)
                 } else {
                     search::<NonPv>(pos, ss, beta - 1, beta, depth - r, false, true)
                 };
@@ -1351,9 +1351,9 @@ fn search<NT: NodeType>(
         if do_full_depth_search {
             value = if new_depth < Depth::ONE {
                 if gives_check {
-                    -qsearch::<NonPv, True>(pos, &mut ss[1..], -(alpha + 1), -alpha, Depth::ZERO)
+                    -qsearch::<NonPv, true>(pos, &mut ss[1..], -(alpha + 1), -alpha, Depth::ZERO)
                 } else {
-                    -qsearch::<NonPv, False>(pos, &mut ss[1..], -(alpha + 1), -alpha, Depth::ZERO)
+                    -qsearch::<NonPv, false>(pos, &mut ss[1..], -(alpha + 1), -alpha, Depth::ZERO)
                 }
             } else {
                 -search::<NonPv>(
@@ -1377,9 +1377,9 @@ fn search<NT: NodeType>(
 
             value = if new_depth < Depth::ONE {
                 if gives_check {
-                    -qsearch::<Pv, True>(pos, &mut ss[1..], -beta, -alpha, Depth::ZERO)
+                    -qsearch::<Pv, true>(pos, &mut ss[1..], -beta, -alpha, Depth::ZERO)
                 } else {
-                    -qsearch::<Pv, False>(pos, &mut ss[1..], -beta, -alpha, Depth::ZERO)
+                    -qsearch::<Pv, false>(pos, &mut ss[1..], -beta, -alpha, Depth::ZERO)
                 }
             } else {
                 -search::<Pv>(pos, &mut ss[1..], -beta, -alpha, new_depth, false, false)
@@ -1546,14 +1546,14 @@ fn search<NT: NodeType>(
 // qsearch() is the quiescence search function, which is called by the main
 // search function with depth zero or recursively with depth less than ONE_PLY.
 #[allow(clippy::too_many_lines)]
-fn qsearch<NT: NodeType, InCheck: Bool>(
+fn qsearch<NT: NodeType, const IN_CHECK: bool>(
     pos: &mut Position,
     ss: &mut [Stack],
     mut alpha: Value,
     beta: Value,
     depth: Depth,
 ) -> Value {
-    let in_check = InCheck::BOOL;
+    let in_check = IN_CHECK;
     let pv_node = NT::NT == Pv::NT;
 
     debug_assert!(in_check == (pos.checkers() != 0));
@@ -1742,9 +1742,9 @@ fn qsearch<NT: NodeType, InCheck: Bool>(
         // Make and search the move
         pos.do_move(m, gives_check);
         let value = if gives_check {
-            -qsearch::<NT, True>(pos, &mut ss[1..], -beta, -alpha, depth - Depth::ONE)
+            -qsearch::<NT, true>(pos, &mut ss[1..], -beta, -alpha, depth - Depth::ONE)
         } else {
-            -qsearch::<NT, False>(pos, &mut ss[1..], -beta, -alpha, depth - Depth::ONE)
+            -qsearch::<NT, false>(pos, &mut ss[1..], -beta, -alpha, depth - Depth::ONE)
         };
         pos.undo_move(m);
 

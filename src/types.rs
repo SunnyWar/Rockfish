@@ -857,21 +857,6 @@ impl std::ops::Mul<i32> for Score {
     }
 }
 
-pub struct True {}
-pub struct False {}
-
-pub trait Bool {
-    const BOOL: bool;
-}
-
-impl Bool for True {
-    const BOOL: bool = true;
-}
-
-impl Bool for False {
-    const BOOL: bool = false;
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
