@@ -562,11 +562,7 @@ pub trait Distance {
 
 impl Distance for u32 {
     fn distance(x: Self, y: Self) -> u32 {
-        if x > y {
-            x - y
-        } else {
-            y - x
-        }
+        x.abs_diff(y)
     }
 }
 
