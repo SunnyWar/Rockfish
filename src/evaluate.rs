@@ -8,9 +8,9 @@ use crate::material;
 use crate::pawns;
 use crate::position::Position;
 use crate::types::{
-    direction::pawn_push, direction::Direction, scale_factor::ScaleFactor, Bishop, BishopValueEg,
-    BishopValueMg, Black, Color, ColorTrait, Knight, KnightValueMg, Piece, PieceType,
-    PieceTypeTrait, Queen, Rook, RookValueMg, Score, Square, Value, White, EG, MG, PHASE_MIDGAME,
+    direction::pawn_push, direction::Direction, scale_factor::ScaleFactor, Bishop, Black, Color,
+    ColorTrait, Knight, Piece, PieceType, PieceTypeTrait, Queen, Rook, Score, Square, Value, White,
+    EG, MG, PHASE_MIDGAME,
 };
 
 pub const TEMPO: Value = Value(20);
@@ -400,7 +400,7 @@ fn initialize<Us: ColorTrait>(pos: &Position, ei: &mut EvalInfo) {
         b | ei.attacked_by[us.0 as usize][PieceType::PAWN.0 as usize];
 
     // Init out king safety tables only if we are going to use them
-    if pos.non_pawn_material_c(them) >= RookValueMg + KnightValueMg {
+    if pos.non_pawn_material_c(them) >= Value::RookValueMg + Value::KnightValueMg {
         ei.king_ring[us.0 as usize] = b;
         if pos.square(us, PieceType::KING).relative_rank(us) == Square::RANK_1 {
             ei.king_ring[us.0 as usize] |= b.shift(up);
@@ -1049,8 +1049,8 @@ fn evaluate_scale_factor(pos: &Position, ei: &EvalInfo, eg: Value) -> ScaleFacto
             // Endgame with opposite-coloured bishops and no other pieces
             // (ignoring pawns) is almost a draw. In case of KBP vs KB, it is
             // even more a draw.
-            if pos.non_pawn_material_c(Color::WHITE) == BishopValueMg
-                && pos.non_pawn_material_c(Color::BLACK) == BishopValueMg
+            if pos.non_pawn_material_c(Color::WHITE) == Value::BishopValueMg
+                && pos.non_pawn_material_c(Color::BLACK) == Value::BishopValueMg
             {
                 return if more_than_one(pos.pieces_p(PieceType::PAWN)) {
                     ScaleFactor(31)
@@ -1063,7 +1063,7 @@ fn evaluate_scale_factor(pos: &Position, ei: &EvalInfo, eg: Value) -> ScaleFacto
             // Still a bit drawish, but not as drawish as with only the two
             // bishops.
             return ScaleFactor(46);
-        } else if eg.abs() <= BishopValueEg
+        } else if eg.abs() <= Value::BishopValueEg
             && pos.count(strong_side, PieceType::PAWN) <= 2
             && !pos.pawn_passed(!strong_side, pos.square(!strong_side, PieceType::KING))
         {

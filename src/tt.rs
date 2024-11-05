@@ -174,11 +174,12 @@ pub fn probe(key: Key) -> (&'static mut TTEntry, bool) {
     let key16 = (key.0 >> 48) as u16;
 
     for i in 0..CLUSTER_SIZE {
-        if cl.entry[i].key16 == 0 || cl.entry[i].key16 == key16 {
-            if cl.entry[i].gen_bound8 & 0xfc != generation() && cl.entry[i].key16 != 0 {
+        let clkey = cl.entry[i].key16;
+        if clkey == 0 || clkey == key16 {
+            if cl.entry[i].gen_bound8 & 0xfc != generation() && clkey != 0 {
                 cl.entry[i].gen_bound8 = generation() | (cl.entry[i].bound().0 as u8);
             }
-            let found = cl.entry[i].key16 != 0;
+            let found = clkey != 0;
             return (&mut (cl.entry[i]), found);
         }
     }

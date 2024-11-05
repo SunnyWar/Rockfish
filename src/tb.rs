@@ -6,8 +6,8 @@ use crate::position::zobrist::material;
 use crate::position::Position;
 use crate::search::RootMoves;
 use crate::types::{
-    depth::Depth, key::Key, CastlingRight, Color, Move, MoveType, PawnValueEg, Piece, PieceType,
-    Square, Value, MAX_MATE_PLY,
+    depth::Depth, key::Key, CastlingRight, Color, Move, MoveType, Piece, PieceType, Square, Value,
+    MAX_MATE_PLY,
 };
 use crate::ucioption;
 
@@ -2148,9 +2148,9 @@ fn root_probe_dtz(pos: &mut Position, root_moves: &mut RootMoves) -> bool {
         // gets closer to a real win.
         rm.tb_score = match r {
             _ if r >= bound => Value::MATE - MAX_MATE_PLY - 1,
-            _ if r > 0 => std::cmp::max(3, r - 800) * PawnValueEg / 200,
+            _ if r > 0 => std::cmp::max(3, r - 800) * Value::PawnValueEg / 200,
             _ if r == 0 => Value::DRAW,
-            _ if r > -bound => std::cmp::max(-3, r + 800) * PawnValueEg / 200,
+            _ if r > -bound => std::cmp::max(-3, r + 800) * Value::PawnValueEg / 200,
             _ => -Value::MATE + MAX_MATE_PLY + 1,
         };
     }
@@ -2213,9 +2213,9 @@ fn root_probe_dtm(pos: &mut Position, root_moves: &mut RootMoves) -> bool {
     // Probe each move
     for ref mut rm in root_moves.iter_mut() {
         // Use tb_score to find out if the position is won or lost
-        let wdl = if rm.tb_score > PawnValueEg {
+        let wdl = if rm.tb_score > Value::PawnValueEg {
             2
-        } else if rm.tb_score < -PawnValueEg {
+        } else if rm.tb_score < -Value::PawnValueEg {
             -2
         } else {
             0

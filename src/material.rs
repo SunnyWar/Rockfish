@@ -7,8 +7,8 @@ use crate::endgame::{
 };
 use crate::position::Position;
 use crate::types::{
-    key::Key, scale_factor::ScaleFactor, BishopValueMg, Color, Phase, PieceType, QueenValueMg,
-    RookValueMg, Score, Value, ENDGAME_LIMIT, MIDGAME_LIMIT, PHASE_MIDGAME,
+    key::Key, scale_factor::ScaleFactor, Color, Phase, PieceType, Score, Value, ENDGAME_LIMIT,
+    MIDGAME_LIMIT, PHASE_MIDGAME,
 };
 
 pub struct Entry {
@@ -89,18 +89,18 @@ const QUADRATIC_THEIRS: [[i32; 8]; 6] = [
 
 // Helper used to detect a given material distribution
 fn is_kxk(pos: &Position, us: Color) -> bool {
-    !more_than_one(pos.pieces_c(!us)) && pos.non_pawn_material_c(us) >= RookValueMg
+    !more_than_one(pos.pieces_c(!us)) && pos.non_pawn_material_c(us) >= Value::RookValueMg
 }
 
 fn is_kbpsks(pos: &Position, us: Color) -> bool {
-    pos.non_pawn_material_c(us) == BishopValueMg
+    pos.non_pawn_material_c(us) == Value::BishopValueMg
         && pos.count(us, PieceType::BISHOP) == 1
         && pos.count(us, PieceType::PAWN) >= 1
 }
 
 fn is_kqkrps(pos: &Position, us: Color) -> bool {
     pos.count(us, PieceType::PAWN) == 0
-        && pos.non_pawn_material_c(us) == QueenValueMg
+        && pos.non_pawn_material_c(us) == Value::QueenValueMg
         && pos.count(us, PieceType::QUEEN) == 1
         && pos.count(!us, PieceType::ROOK) == 1
         && pos.count(!us, PieceType::PAWN) >= 1
@@ -234,18 +234,18 @@ pub fn probe(pos: &Position) -> &'static mut Entry {
     // material advantage. This catches some trivial draws like KK, KBK
     // and KNK and gives a drawish scale factor for cases such as KRKBP
     // and KmmKm (except for KBBKN).
-    if pos.count(Color::WHITE, PieceType::PAWN) == 0 && npm_w - npm_b <= BishopValueMg {
+    if pos.count(Color::WHITE, PieceType::PAWN) == 0 && npm_w - npm_b <= Value::BishopValueMg {
         e.factor[Color::WHITE.0 as usize] = match npm_w {
-            x if x < RookValueMg => ScaleFactor::DRAW.0 as u8,
-            _ if npm_b <= BishopValueMg => 4,
+            x if x < Value::RookValueMg => ScaleFactor::DRAW.0 as u8,
+            _ if npm_b <= Value::BishopValueMg => 4,
             _ => 14,
         };
     }
 
-    if pos.count(Color::BLACK, PieceType::PAWN) == 0 && npm_b - npm_w <= BishopValueMg {
+    if pos.count(Color::BLACK, PieceType::PAWN) == 0 && npm_b - npm_w <= Value::BishopValueMg {
         e.factor[Color::BLACK.0 as usize] = match npm_b {
-            x if x < RookValueMg => ScaleFactor::DRAW.0 as u8,
-            _ if npm_w <= BishopValueMg => 4,
+            x if x < Value::RookValueMg => ScaleFactor::DRAW.0 as u8,
+            _ if npm_w <= Value::BishopValueMg => 4,
             _ => 14,
         };
     }
@@ -254,7 +254,7 @@ pub fn probe(pos: &Position) -> &'static mut Entry {
         (Color::WHITE, npm_w - npm_b, Color::WHITE.0),
         (Color::BLACK, npm_b - npm_w, Color::BLACK.0),
     ] {
-        if pos.count(color, PieceType::PAWN) == 1 && npm_diff <= BishopValueMg {
+        if pos.count(color, PieceType::PAWN) == 1 && npm_diff <= Value::BishopValueMg {
             e.factor[scale_factor as usize] = ScaleFactor::ONEPAWN.0 as u8;
         }
     }

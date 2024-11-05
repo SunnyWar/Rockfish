@@ -16,9 +16,8 @@ use crate::tb;
 use crate::threads::ThreadCtrl;
 use crate::types::{
     depth::Depth, direction::pawn_push, direction::Direction, key::Key, opposite_colors,
-    piece_value, relative_rank, relative_square, BishopValueMg, CastlingRight, CastlingSide, Color,
-    KnightValueMg, Move, MoveType, PawnValueMg, Piece, PieceType, QueenValueMg, RookValueMg, Score,
-    Square, SquareList, Value, MG,
+    piece_value, relative_rank, relative_square, CastlingRight, CastlingSide, Color, Move,
+    MoveType, Piece, PieceType, Score, Square, SquareList, Value, MG,
 };
 use crate::uci;
 
@@ -1441,7 +1440,7 @@ impl Position {
             res = Value(res.0 ^ 1);
             let bb = stm_attackers & self.pieces_p(PieceType::PAWN);
             if bb != 0 {
-                swap = PawnValueMg - swap;
+                swap = Value::PawnValueMg - swap;
                 if swap < res {
                     break;
                 }
@@ -1452,7 +1451,7 @@ impl Position {
             }
             let bb = stm_attackers & self.pieces_p(PieceType::KNIGHT);
             if bb != 0 {
-                swap = KnightValueMg - swap;
+                swap = Value::KnightValueMg - swap;
                 if swap < res {
                     break;
                 }
@@ -1461,7 +1460,7 @@ impl Position {
             }
             let bb = stm_attackers & self.pieces_p(PieceType::BISHOP);
             if bb != 0 {
-                swap = BishopValueMg - swap;
+                swap = Value::BishopValueMg - swap;
                 if swap < res {
                     break;
                 }
@@ -1472,7 +1471,7 @@ impl Position {
             }
             let bb = stm_attackers & self.pieces_p(PieceType::ROOK);
             if bb != 0 {
-                swap = RookValueMg - swap;
+                swap = Value::RookValueMg - swap;
                 if swap < res {
                     break;
                 }
@@ -1483,7 +1482,7 @@ impl Position {
             }
             let bb = stm_attackers & self.pieces_p(PieceType::QUEEN);
             if bb != 0 {
-                swap = QueenValueMg - swap;
+                swap = Value::QueenValueMg - swap;
                 if swap < res {
                     break;
                 }

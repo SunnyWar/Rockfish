@@ -10,8 +10,7 @@ use crate::position::zobrist;
 use crate::position::Position;
 use crate::types::{
     direction::pawn_push, direction::Direction, key::Key, opposite_colors,
-    scale_factor::ScaleFactor, BishopValueMg, Color, KnightValueMg, PawnValueEg, Piece, PieceType,
-    QueenValueEg, QueenValueMg, RookValueEg, RookValueMg, Square, Value,
+    scale_factor::ScaleFactor, Color, Piece, PieceType, Square, Value,
 };
 
 pub type EvalFn = fn(&Position, Color) -> Value;
@@ -220,7 +219,7 @@ pub fn evaluate_kxk(pos: &Position, strong_side: Color) -> Value {
     let loser_ksq = pos.square(weak_side, PieceType::KING);
 
     let mut result = pos.non_pawn_material_c(strong_side)
-        + pos.count(strong_side, PieceType::PAWN) * PawnValueEg
+        + pos.count(strong_side, PieceType::PAWN) * Value::PawnValueEg
         + PUSH_TO_EDGES[loser_ksq.0 as usize]
         + PUSH_CLOSE[Square::distance(winner_ksq, loser_ksq) as usize];
 
@@ -247,7 +246,7 @@ fn evaluate_kbnk(pos: &Position, strong_side: Color) -> Value {
     debug_assert!(verify_material(
         pos,
         strong_side,
-        KnightValueMg + BishopValueMg,
+        Value::KnightValueMg + Value::BishopValueMg,
         0
     ));
     debug_assert!(verify_material(pos, weak_side, Value::ZERO, 0));
@@ -296,7 +295,7 @@ fn evaluate_kpk(pos: &Position, strong_side: Color) -> Value {
         return Value::DRAW;
     }
 
-    let result = Value::KNOWN_WIN + PawnValueEg + Value(psq.rank() as i32);
+    let result = Value::KNOWN_WIN + Value::PawnValueEg + Value(psq.rank() as i32);
     if strong_side == pos.side_to_move() {
         result
     } else {
@@ -311,7 +310,7 @@ fn evaluate_kpk(pos: &Position, strong_side: Color) -> Value {
 fn evaluate_krkp(pos: &Position, strong_side: Color) -> Value {
     let weak_side = !strong_side;
 
-    debug_assert!(verify_material(pos, strong_side, RookValueMg, 0));
+    debug_assert!(verify_material(pos, strong_side, Value::RookValueMg, 0));
     debug_assert!(verify_material(pos, weak_side, Value::ZERO, 1));
 
     let wksq = pos
@@ -336,7 +335,7 @@ fn evaluate_krkp(pos: &Position, strong_side: Color) -> Value {
     if wksq.0 < psq.0 && wksq.file() == psq.file()
         || (bpsqdis >= 3 + u32::from(pos.side_to_move() == weak_side) && brsqdis >= 3)
     {
-        result = RookValueEg - wpsqdis as i32;
+        result = Value::RookValueEg - wpsqdis as i32;
     }
     // If the pawn is far advanced and supported by the defending king,
     // the position is drawish.
@@ -365,8 +364,8 @@ fn evaluate_krkp(pos: &Position, strong_side: Color) -> Value {
 fn evaluate_krkb(pos: &Position, strong_side: Color) -> Value {
     let weak_side = !strong_side;
 
-    debug_assert!(verify_material(pos, strong_side, RookValueMg, 0));
-    debug_assert!(verify_material(pos, weak_side, BishopValueMg, 0));
+    debug_assert!(verify_material(pos, strong_side, Value::RookValueMg, 0));
+    debug_assert!(verify_material(pos, weak_side, Value::BishopValueMg, 0));
 
     let result = Value(PUSH_TO_EDGES[pos.square(weak_side, PieceType::KING).0 as usize]);
 
@@ -382,8 +381,8 @@ fn evaluate_krkb(pos: &Position, strong_side: Color) -> Value {
 fn evaluate_krkn(pos: &Position, strong_side: Color) -> Value {
     let weak_side = !strong_side;
 
-    debug_assert!(verify_material(pos, strong_side, RookValueMg, 0));
-    debug_assert!(verify_material(pos, weak_side, KnightValueMg, 0));
+    debug_assert!(verify_material(pos, strong_side, Value::RookValueMg, 0));
+    debug_assert!(verify_material(pos, weak_side, Value::KnightValueMg, 0));
 
     let bksq = pos.square(weak_side, PieceType::KING);
     let bnsq = pos.square(weak_side, PieceType::KNIGHT);
@@ -404,7 +403,7 @@ fn evaluate_krkn(pos: &Position, strong_side: Color) -> Value {
 fn evaluate_kqkp(pos: &Position, strong_side: Color) -> Value {
     let weak_side = !strong_side;
 
-    debug_assert!(verify_material(pos, strong_side, QueenValueMg, 0));
+    debug_assert!(verify_material(pos, strong_side, Value::QueenValueMg, 0));
     debug_assert!(verify_material(pos, weak_side, Value::ZERO, 1));
 
     let winner_ksq = pos.square(strong_side, PieceType::KING);
@@ -419,7 +418,7 @@ fn evaluate_kqkp(pos: &Position, strong_side: Color) -> Value {
             & pawn_sq
             == 0
     {
-        result += QueenValueEg - PawnValueEg;
+        result += Value::QueenValueEg - Value::PawnValueEg;
     }
 
     if strong_side == pos.side_to_move() {
@@ -437,13 +436,13 @@ fn evaluate_kqkp(pos: &Position, strong_side: Color) -> Value {
 fn evaluate_kqkr(pos: &Position, strong_side: Color) -> Value {
     let weak_side = !strong_side;
 
-    debug_assert!(verify_material(pos, strong_side, QueenValueMg, 0));
-    debug_assert!(verify_material(pos, weak_side, RookValueMg, 0));
+    debug_assert!(verify_material(pos, strong_side, Value::QueenValueMg, 0));
+    debug_assert!(verify_material(pos, weak_side, Value::RookValueMg, 0));
 
     let winner_ksq = pos.square(strong_side, PieceType::KING);
     let loser_ksq = pos.square(weak_side, PieceType::KING);
 
-    let result = QueenValueEg - RookValueEg
+    let result = Value::QueenValueEg - Value::RookValueEg
         + PUSH_TO_EDGES[loser_ksq.0 as usize]
         + PUSH_CLOSE[Square::distance(winner_ksq, loser_ksq) as usize];
 
@@ -466,7 +465,7 @@ fn evaluate_knnk(_pos: &Position, _strong_side: Color) -> Value {
 pub fn scale_kbpsk(pos: &Position, strong_side: Color) -> ScaleFactor {
     let weak_side = !strong_side;
 
-    debug_assert!(pos.non_pawn_material_c(strong_side) == BishopValueMg);
+    debug_assert!(pos.non_pawn_material_c(strong_side) == Value::BishopValueMg);
     debug_assert!(pos.count(strong_side, PieceType::PAWN) >= 1);
 
     // No assertions about the material of weak_side, because we want draws
@@ -536,7 +535,7 @@ pub fn scale_kbpsk(pos: &Position, strong_side: Color) -> ScaleFactor {
 pub fn scale_kqkrps(pos: &Position, strong_side: Color) -> ScaleFactor {
     let weak_side = !strong_side;
 
-    debug_assert!(verify_material(pos, strong_side, QueenValueMg, 0));
+    debug_assert!(verify_material(pos, strong_side, Value::QueenValueMg, 0));
     debug_assert!(pos.count(weak_side, PieceType::ROOK) == 1);
     debug_assert!(pos.count(weak_side, PieceType::PAWN) >= 1);
 
@@ -569,8 +568,8 @@ pub fn scale_kqkrps(pos: &Position, strong_side: Color) -> ScaleFactor {
 fn scale_krpkr(pos: &Position, strong_side: Color) -> ScaleFactor {
     let weak_side = !strong_side;
 
-    debug_assert!(verify_material(pos, strong_side, RookValueMg, 1));
-    debug_assert!(verify_material(pos, weak_side, RookValueMg, 0));
+    debug_assert!(verify_material(pos, strong_side, Value::RookValueMg, 1));
+    debug_assert!(verify_material(pos, weak_side, Value::RookValueMg, 0));
 
     // Assume strong_side is white and the pawn is on files A-D
     let wksq = normalize(pos, strong_side, pos.square(strong_side, PieceType::KING));
@@ -686,8 +685,8 @@ fn scale_krpkr(pos: &Position, strong_side: Color) -> ScaleFactor {
 fn scale_krpkb(pos: &Position, strong_side: Color) -> ScaleFactor {
     let weak_side = !strong_side;
 
-    debug_assert!(verify_material(pos, strong_side, RookValueMg, 1));
-    debug_assert!(verify_material(pos, weak_side, BishopValueMg, 0));
+    debug_assert!(verify_material(pos, strong_side, Value::RookValueMg, 1));
+    debug_assert!(verify_material(pos, weak_side, Value::BishopValueMg, 0));
 
     // Test for a rook pawn
     if pos.pieces_p(PieceType::PAWN) & (Bitboard::FILEA_BB | Bitboard::FILEH_BB) != 0 {
@@ -733,8 +732,8 @@ fn scale_krpkb(pos: &Position, strong_side: Color) -> ScaleFactor {
 fn scale_krppkrp(pos: &Position, strong_side: Color) -> ScaleFactor {
     let weak_side = !strong_side;
 
-    debug_assert!(verify_material(pos, strong_side, RookValueMg, 2));
-    debug_assert!(verify_material(pos, weak_side, RookValueMg, 1));
+    debug_assert!(verify_material(pos, strong_side, Value::RookValueMg, 2));
+    debug_assert!(verify_material(pos, weak_side, Value::RookValueMg, 1));
 
     let wpsq1 = pos.squares(strong_side, PieceType::PAWN)[0];
     let wpsq2 = pos.squares(strong_side, PieceType::PAWN)[1];
@@ -793,8 +792,8 @@ pub fn scale_kpsk(pos: &Position, strong_side: Color) -> ScaleFactor {
 fn scale_kbpkb(pos: &Position, strong_side: Color) -> ScaleFactor {
     let weak_side = !strong_side;
 
-    debug_assert!(verify_material(pos, strong_side, BishopValueMg, 1));
-    debug_assert!(verify_material(pos, weak_side, BishopValueMg, 0));
+    debug_assert!(verify_material(pos, strong_side, Value::BishopValueMg, 1));
+    debug_assert!(verify_material(pos, weak_side, Value::BishopValueMg, 0));
 
     let psq = pos.square(strong_side, PieceType::PAWN);
     let sbsq = pos.square(strong_side, PieceType::BISHOP);
@@ -845,8 +844,8 @@ fn scale_kbpkb(pos: &Position, strong_side: Color) -> ScaleFactor {
 fn scale_kbppkb(pos: &Position, strong_side: Color) -> ScaleFactor {
     let weak_side = !strong_side;
 
-    debug_assert!(verify_material(pos, strong_side, BishopValueMg, 2));
-    debug_assert!(verify_material(pos, weak_side, BishopValueMg, 0));
+    debug_assert!(verify_material(pos, strong_side, Value::BishopValueMg, 2));
+    debug_assert!(verify_material(pos, weak_side, Value::BishopValueMg, 0));
 
     let wbsq = pos.square(strong_side, PieceType::BISHOP);
     let bbsq = pos.square(weak_side, PieceType::BISHOP);
@@ -926,8 +925,8 @@ fn scale_kbppkb(pos: &Position, strong_side: Color) -> ScaleFactor {
 fn scale_kbpkn(pos: &Position, strong_side: Color) -> ScaleFactor {
     let weak_side = !strong_side;
 
-    debug_assert!(verify_material(pos, strong_side, BishopValueMg, 1));
-    debug_assert!(verify_material(pos, weak_side, KnightValueMg, 0));
+    debug_assert!(verify_material(pos, strong_side, Value::BishopValueMg, 1));
+    debug_assert!(verify_material(pos, weak_side, Value::KnightValueMg, 0));
 
     let psq = pos.square(strong_side, PieceType::PAWN);
     let sbsq = pos.square(strong_side, PieceType::BISHOP);
@@ -949,7 +948,7 @@ fn scale_kbpkn(pos: &Position, strong_side: Color) -> ScaleFactor {
 fn scale_knpk(pos: &Position, strong_side: Color) -> ScaleFactor {
     let weak_side = !strong_side;
 
-    debug_assert!(verify_material(pos, strong_side, KnightValueMg, 1));
+    debug_assert!(verify_material(pos, strong_side, Value::KnightValueMg, 1));
     debug_assert!(verify_material(pos, weak_side, Value::ZERO, 0));
 
     let psq = normalize(pos, strong_side, pos.square(strong_side, PieceType::PAWN));

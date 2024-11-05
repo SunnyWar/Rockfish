@@ -12,8 +12,7 @@ use crate::timeman;
 use crate::tt;
 use crate::types::{
     bound::Bound, depth::Depth, key::Key, mate_in, mated_in, piece_value, CastlingRight, Color,
-    Move, MoveType, PawnValueEg, PawnValueMg, Piece, Score, Square, Value, EG, MAX_MATE_PLY,
-    MAX_PLY,
+    Move, MoveType, Piece, Score, Square, Value, EG, MAX_MATE_PLY, MAX_PLY,
 };
 use crate::uci;
 use crate::ucioption;
@@ -362,7 +361,7 @@ pub fn thread_search(pos: &mut Position, _th: &threads::ThreadCtrl) {
     let mut multi_pv = ucioption::get_u32("MultiPV") as usize;
     multi_pv = std::cmp::min(multi_pv, pos.root_moves.len());
 
-    let mut base_ct = ucioption::get_i32("Contempt") * PawnValueEg.0 / 100;
+    let mut base_ct = ucioption::get_i32("Contempt") * Value::PawnValueEg.0 / 100;
 
     // In analysis mode, adjust contempt in accordance with user preference
     if limits().infinite || ucioption::get_bool("UCI_AnalyseMode") {
@@ -959,7 +958,7 @@ fn search<NT: NodeType>(
 
             // Null move dynamic reduction based on depth and value
             let r = ((823 + 67 * depth.value()) / 256
-                + std::cmp::min((eval - beta) / PawnValueMg, 3))
+                + std::cmp::min((eval - beta) / Value::PawnValueMg, 3))
                 * Depth::ONE;
 
             ss[5].current_move = Move::NULL;
@@ -1240,7 +1239,7 @@ fn search<NT: NodeType>(
                 }
             } else if depth < Depth::SEVEN
                 && extension == Depth::ZERO
-                && !pos.see_ge(m, -PawnValueEg * (depth.value()))
+                && !pos.see_ge(m, -Value::PawnValueEg * (depth.value()))
             {
                 continue;
             }
@@ -1553,10 +1552,9 @@ fn qsearch<NT: NodeType, const IN_CHECK: bool>(
     beta: Value,
     depth: Depth,
 ) -> Value {
-    let in_check = IN_CHECK;
     let pv_node = NT::NT == Pv::NT;
 
-    debug_assert!(in_check == (pos.checkers() != 0));
+    debug_assert!(IN_CHECK == (pos.checkers() != 0));
     debug_assert!(alpha >= -Value::INFINITE && alpha < beta && beta <= Value::INFINITE);
     debug_assert!(pv_node || (alpha == beta - 1));
     debug_assert!(depth <= Depth::ZERO);
@@ -1573,7 +1571,7 @@ fn qsearch<NT: NodeType, const IN_CHECK: bool>(
 
     // Check for an instant draw or if maximum ply count has been reached
     if pos.is_draw(ss[5].ply) || ss[5].ply >= MAX_PLY {
-        return if ss[5].ply >= MAX_PLY && !in_check {
+        return if ss[5].ply >= MAX_PLY && !IN_CHECK {
             evaluate(pos)
         } else {
             Value::DRAW
@@ -1585,7 +1583,7 @@ fn qsearch<NT: NodeType, const IN_CHECK: bool>(
     // Decide whether or not to include checks: this fixes also the type of
     // TT entry depth that we are going to use. Note that in qsearch we use
     // only two types of depth in TT: DEPTH_QS_CHECKS or DEPTH_QS_NO_CHECKS.
-    let tt_depth = if in_check || depth >= Depth::QS_CHECKS {
+    let tt_depth = if IN_CHECK || depth >= Depth::QS_CHECKS {
         Depth::QS_CHECKS
     } else {
         Depth::QS_NO_CHECKS
@@ -1616,7 +1614,7 @@ fn qsearch<NT: NodeType, const IN_CHECK: bool>(
     let futility_base;
 
     // Evaluate the position staticly
-    if in_check {
+    if IN_CHECK {
         ss[5].static_eval = Value::NONE;
         best_value = -Value::INFINITE;
         futility_base = -Value::INFINITE;
@@ -1702,7 +1700,7 @@ fn qsearch<NT: NodeType, const IN_CHECK: bool>(
 
         move_count += 1;
 
-        if !in_check
+        if !IN_CHECK
             && !gives_check
             && futility_base > -Value::KNOWN_WIN
             && !pos.advanced_pawn_push(m)
@@ -1722,12 +1720,12 @@ fn qsearch<NT: NodeType, const IN_CHECK: bool>(
         }
 
         // Detect non-capture evasions that are candidates to be pruned
-        let evasion_prunable = in_check
+        let evasion_prunable = IN_CHECK
             && (depth != Depth::ZERO || move_count > 2)
             && best_value > Value::MATED_IN_MAX_PLY
             && !pos.capture(m);
 
-        if (!in_check || evasion_prunable) && !pos.see_ge(m, Value::ZERO) {
+        if (!IN_CHECK || evasion_prunable) && !pos.see_ge(m, Value::ZERO) {
             continue;
         }
 
@@ -1784,7 +1782,7 @@ fn qsearch<NT: NodeType, const IN_CHECK: bool>(
 
     // All legal moves have been searched. A special case: If we're in check
     // and no legal moves were found, it is checkmate.
-    if in_check && best_value == -Value::INFINITE {
+    if IN_CHECK && best_value == -Value::INFINITE {
         return mated_in(ss[5].ply); // Plies to mate from the root
     }
 
@@ -1884,7 +1882,7 @@ fn update_stats(
     bonus: i32,
 ) {
     if ss[5].killers[0] != m {
-        ss[5].killers[1] = ss[5].killers[0];
+        ss[5].killers.swap(0, 1);
         ss[5].killers[0] = m;
     }
 

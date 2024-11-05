@@ -6,7 +6,7 @@ use crate::movegen::{Legal, MoveList};
 use crate::position::Position;
 use crate::search;
 use crate::threads;
-use crate::types::{Color, Move, MoveType, PawnValueEg, Square, Value, MAX_PLY};
+use crate::types::{Color, Move, MoveType, Square, Value, MAX_PLY};
 use crate::ucioption;
 use threads::PosData;
 
@@ -248,7 +248,7 @@ pub fn value(v: Value) -> String {
     let w = if v >= Value::ZERO { v } else { -v };
     if w < Value::MATE - Value(MAX_PLY) {
         s.push_str("cp ");
-        s.push_str(&(v * 100 / PawnValueEg).to_string());
+        s.push_str(&(v * 100 / Value::PawnValueEg).to_string());
     } else {
         s.push_str("mate ");
         let mut dtm = if v > Value::ZERO {
