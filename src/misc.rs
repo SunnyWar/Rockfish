@@ -23,9 +23,9 @@ impl Prng {
     }
 
     pub fn rand64(&mut self) -> u64 {
-        self.0 ^= self.0.rotate_right(12);
-        self.0 ^= self.0.rotate_left(25);
-        self.0 ^= self.0.rotate_right(27);
+        self.0 ^= self.0 >> 12;
+        self.0 ^= self.0 << 25;
+        self.0 ^= self.0 >> 27;
         u64::wrapping_mul(self.0, 2_685_821_657_736_338_717)
     }
 }
@@ -62,8 +62,8 @@ mod tests {
         // Perform some calls to rand64 and verify the output is not equal to the seed
         let rand1 = prng.rand64();
         let rand2 = prng.rand64();
-        assert_eq!(rand1, 11_400_667_279_617_234_321);
-        assert_eq!(rand2, 14_862_528_177_411_848_535);
+        assert_eq!(rand1, 18211065302896784785);
+        assert_eq!(rand2, 10667432569070492861);
         assert_ne!(rand1, rand2);
     }
 }
