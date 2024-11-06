@@ -17,6 +17,7 @@ pub const TEMPO: Value = Value(20);
 
 pub static mut CONTEMPT: Score = Score::ZERO;
 
+#[inline(always)]
 fn contempt() -> Score {
     unsafe { CONTEMPT }
 }
@@ -361,25 +362,20 @@ const SPACE_THRESHOLD: Value = Value(12222);
 // for a given color. This is done at the beginning of the evaluation.
 fn initialize<Us: ColorTrait>(pos: &Position, ei: &mut EvalInfo) {
     let us = Us::COLOR;
-    let them = if us == Color::WHITE {
-        Color::BLACK
-    } else {
-        Color::WHITE
-    };
-    let up = if us == Color::WHITE {
-        Direction::NORTH
-    } else {
-        Direction::SOUTH
-    };
-    let down = if us == Color::WHITE {
-        Direction::SOUTH
-    } else {
-        Direction::NORTH
-    };
-    let low_ranks = if us == Color::WHITE {
-        Bitboard::RANK2_BB | Bitboard::RANK3_BB
-    } else {
-        Bitboard::RANK7_BB | Bitboard::RANK6_BB
+    let (them, up, down, low_ranks) = match us {
+        Color::WHITE => (
+            Color::BLACK,
+            Direction::NORTH,
+            Direction::SOUTH,
+            Bitboard::RANK2_BB | Bitboard::RANK3_BB,
+        ),
+        Color::BLACK => (
+            Color::WHITE,
+            Direction::SOUTH,
+            Direction::NORTH,
+            Bitboard::RANK7_BB | Bitboard::RANK6_BB,
+        ),
+        _ => panic!("Unexpected color value"),
     };
 
     // Find our pawns on the first two ranks and those which are blocked
@@ -420,15 +416,16 @@ fn initialize<Us: ColorTrait>(pos: &Position, ei: &mut EvalInfo) {
 fn evaluate_pieces<Us: ColorTrait, Pt: PieceTypeTrait>(pos: &Position, ei: &mut EvalInfo) -> Score {
     let us = Us::COLOR;
     let pt = Pt::TYPE;
-    let them = if us == Color::WHITE {
-        Color::BLACK
-    } else {
-        Color::WHITE
-    };
-    let outpost_ranks = if us == Color::WHITE {
-        Bitboard::RANK4_BB | Bitboard::RANK5_BB | Bitboard::RANK6_BB
-    } else {
-        Bitboard::RANK5_BB | Bitboard::RANK4_BB | Bitboard::RANK3_BB
+    let (them, outpost_ranks) = match us {
+        Color::WHITE => (
+            Color::BLACK,
+            Bitboard::RANK4_BB | Bitboard::RANK5_BB | Bitboard::RANK6_BB,
+        ),
+        Color::BLACK => (
+            Color::WHITE,
+            Bitboard::RANK5_BB | Bitboard::RANK4_BB | Bitboard::RANK3_BB,
+        ),
+        _ => panic!("Unexpected color value"),
     };
 
     let mut score = Score::ZERO;
@@ -592,15 +589,16 @@ fn evaluate_pieces<Us: ColorTrait, Pt: PieceTypeTrait>(pos: &Position, ei: &mut 
 // evaluate_king() assigns bonuses and penalties to a king of a given color
 fn evaluate_king<Us: ColorTrait>(pos: &Position, ei: &mut EvalInfo) -> Score {
     let us = Us::COLOR;
-    let them = if us == Color::WHITE {
-        Color::BLACK
-    } else {
-        Color::WHITE
-    };
-    let camp = if us == Color::WHITE {
-        Bitboard::ALL_SQUARES ^ Bitboard::RANK6_BB ^ Bitboard::RANK7_BB ^ Bitboard::RANK8_BB
-    } else {
-        Bitboard::ALL_SQUARES ^ Bitboard::RANK1_BB ^ Bitboard::RANK2_BB ^ Bitboard::RANK3_BB
+    let (them, camp) = match us {
+        Color::WHITE => (
+            Color::BLACK,
+            Bitboard::ALL_SQUARES ^ Bitboard::RANK6_BB ^ Bitboard::RANK7_BB ^ Bitboard::RANK8_BB,
+        ),
+        Color::BLACK => (
+            Color::WHITE,
+            Bitboard::ALL_SQUARES ^ Bitboard::RANK1_BB ^ Bitboard::RANK2_BB ^ Bitboard::RANK3_BB,
+        ),
+        _ => panic!("Unexpected color value"),
     };
 
     let ksq = pos.square(us, PieceType::KING);
@@ -726,30 +724,22 @@ fn evaluate_king<Us: ColorTrait>(pos: &Position, ei: &mut EvalInfo) -> Score {
 
 fn evaluate_threats<Us: ColorTrait>(pos: &Position, ei: &EvalInfo) -> Score {
     let us = Us::COLOR;
-    let them = if us == Color::WHITE {
-        Color::BLACK
-    } else {
-        Color::WHITE
-    };
-    let up = if us == Color::WHITE {
-        Direction::NORTH
-    } else {
-        Direction::SOUTH
-    };
-    let left = if us == Color::WHITE {
-        Direction::NORTH_WEST
-    } else {
-        Direction::SOUTH_EAST
-    };
-    let right = if us == Color::WHITE {
-        Direction::NORTH_EAST
-    } else {
-        Direction::SOUTH_WEST
-    };
-    let trank3bb = if us == Color::WHITE {
-        Bitboard::RANK3_BB
-    } else {
-        Bitboard::RANK6_BB
+    let (them, up, left, right, trank3bb) = match us {
+        Color::WHITE => (
+            Color::BLACK,
+            Direction::NORTH,
+            Direction::NORTH_WEST,
+            Direction::NORTH_EAST,
+            Bitboard::RANK3_BB,
+        ),
+        Color::BLACK => (
+            Color::WHITE,
+            Direction::SOUTH,
+            Direction::SOUTH_EAST,
+            Direction::SOUTH_WEST,
+            Bitboard::RANK6_BB,
+        ),
+        _ => panic!("Unexpected color value"),
     };
     let mut score = Score::ZERO;
 
@@ -856,15 +846,10 @@ fn capped_distance(s1: Square, s2: Square) -> i32 {
 // pawns of the given color.
 fn evaluate_passed_pawns<Us: ColorTrait>(pos: &Position, ei: &EvalInfo) -> Score {
     let us = Us::COLOR;
-    let them = if us == Color::WHITE {
-        Color::BLACK
-    } else {
-        Color::WHITE
-    };
-    let up = if us == Color::WHITE {
-        Direction::NORTH
-    } else {
-        Direction::SOUTH
+    let (them, up) = match us {
+        Color::WHITE => (Color::BLACK, Direction::NORTH),
+        Color::BLACK => (Color::WHITE, Direction::SOUTH),
+        _ => panic!("Unexpected color value"),
     };
     let mut score = Score::ZERO;
 
@@ -953,16 +938,16 @@ fn evaluate_passed_pawns<Us: ColorTrait>(pos: &Position, ei: &EvalInfo) -> Score
 // game opening.
 fn evaluate_space<Us: ColorTrait>(pos: &Position, ei: &EvalInfo) -> Score {
     let us = Us::COLOR;
-    let them = if us == Color::WHITE {
-        Color::BLACK
-    } else {
-        Color::WHITE
-    };
-
-    let space_mask = if us == Color::WHITE {
-        CENTER_FILES & (Bitboard::RANK2_BB | Bitboard::RANK3_BB | Bitboard::RANK4_BB)
-    } else {
-        CENTER_FILES & (Bitboard::RANK7_BB | Bitboard::RANK6_BB | Bitboard::RANK5_BB)
+    let (them, space_mask) = match us {
+        Color::WHITE => (
+            Color::BLACK,
+            CENTER_FILES & (Bitboard::RANK2_BB | Bitboard::RANK3_BB | Bitboard::RANK4_BB),
+        ),
+        Color::BLACK => (
+            Color::WHITE,
+            CENTER_FILES & (Bitboard::RANK7_BB | Bitboard::RANK6_BB | Bitboard::RANK5_BB),
+        ),
+        _ => panic!("Unexpected color value"),
     };
 
     // Find the safe squares for our pieces inside the areas defended by SpaceMask.
