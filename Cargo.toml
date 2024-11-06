@@ -4,6 +4,9 @@ version = "0.1.0"
 edition = "2021"
 authors = ["Syzygy", "SunnyWar"]
 
+[toolchain]
+channel = "nightly"
+
 [profile.release]
 opt-level = 3
 debug = true
