@@ -15,6 +15,16 @@ codegen-units = 1
 lto = "fat"
 panic = "abort"
 
+[profile.dist]
+inherits = "release"
+opt-level = 3
+debug = false
+strip = "none"
+lto = true
+codegen-units = 1
+incremental = false
+panic = "abort"
+
 [dependencies]
 lazy_static = "1.5.0"
 memmap = "0.7.0"
