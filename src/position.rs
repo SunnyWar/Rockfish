@@ -156,7 +156,7 @@ pub struct Position {
     // for all threads:
     pub thread_ctrl: Option<Arc<ThreadCtrl>>,
     pub is_main: bool,
-    pub thread_idx: i32,
+    pub thread_idx: i16,
     pub pv_idx: usize,
     pub pv_last: usize,
     pub sel_depth: i32,
@@ -222,94 +222,117 @@ impl Position {
         self.states.push(StateInfo::new());
     }
 
+    #[inline(always)]
     fn st(&self) -> &StateInfo {
         self.states.last().unwrap()
     }
 
+    #[inline(always)]
     fn st_mut(&mut self) -> &mut StateInfo {
         self.states.last_mut().unwrap()
     }
 
+    #[inline(always)]
     pub fn side_to_move(&self) -> Color {
         self.side_to_move
     }
 
+    #[inline(always)]
     pub fn empty(&self, s: Square) -> bool {
         self.board[s.0 as usize] == Piece::NO_PIECE
     }
 
+    #[inline(always)]
     pub fn piece_on(&self, s: Square) -> Piece {
         self.board[s.0 as usize]
     }
 
+    #[inline(always)]
     pub fn moved_piece(&self, m: Move) -> Piece {
         self.board[m.from().0 as usize]
     }
 
+    #[inline(always)]
     pub fn pieces(&self) -> Bitboard {
         self.by_type_bb[PieceType::ALL_PIECES.0 as usize]
     }
 
+    #[inline(always)]
     pub fn pieces_p(&self, pt: PieceType) -> Bitboard {
         self.by_type_bb[pt.0 as usize]
     }
 
+    #[inline(always)]
     pub fn pieces_pp(&self, pt1: PieceType, pt2: PieceType) -> Bitboard {
         self.pieces_p(pt1) | self.pieces_p(pt2)
     }
 
+    #[inline(always)]
     pub fn pieces_c(&self, c: Color) -> Bitboard {
         self.by_color_bb[c.0 as usize]
     }
 
+    #[inline(always)]
     pub fn pieces_cp(&self, c: Color, pt: PieceType) -> Bitboard {
         self.pieces_c(c) & self.pieces_p(pt)
     }
 
+    #[inline(always)]
     pub fn pieces_cpp(&self, c: Color, pt1: PieceType, pt2: PieceType) -> Bitboard {
         self.pieces_c(c) & self.pieces_pp(pt1, pt2)
     }
 
+    #[inline(always)]
     pub fn count(&self, c: Color, pt: PieceType) -> i32 {
         self.piece_count[Piece::make(c, pt).0 as usize]
     }
 
+    #[inline(always)]
     pub fn squares(&self, c: Color, pt: PieceType) -> &[Square] {
         &self.piece_list[Piece::make(c, pt).0 as usize]
     }
 
+    #[inline(always)]
     pub fn square_list(&self, c: Color, pt: PieceType) -> SquareList {
         SquareList::construct(self.squares(c, pt))
     }
 
+    #[inline(always)]
     pub fn square(&self, c: Color, pt: PieceType) -> Square {
         self.squares(c, pt)[0]
     }
 
+    #[inline(always)]
     pub fn ep_square(&self) -> Square {
         self.st().ep_square
     }
 
+    #[inline(always)]
     pub fn has_castling_right(&self, cr: CastlingRight) -> bool {
         self.st().castling_rights & cr != 0
     }
 
+    #[inline(always)]
     pub fn castling_rights(&self, c: Color) -> CastlingRight {
         self.st().castling_rights & CastlingRight(3 << (2 * c.0))
     }
 
+    #[inline(always)]
     pub fn can_castle(&self, c: Color) -> bool {
         self.castling_rights(c) != 0
     }
 
+    #[inline(always)]
     pub fn castling_impeded(&self, cr: CastlingRight) -> bool {
         self.pieces() & self.castling_path[cr.0 as usize] != Bitboard(0)
     }
 
+    #[inline(always)]
     pub fn castling_rook_square(&self, cr: CastlingRight) -> Square {
         self.castling_rook_square[cr.0 as usize]
     }
 
+    #[inline(always)]
     pub fn attacks_from_pawn(&self, s: Square, c: Color) -> Bitboard {
         pawn_attacks(c, s)
     }
@@ -325,6 +348,7 @@ impl Position {
         }
     }
 
+    #[inline(always)]
     pub fn attackers_to_occ(&self, s: Square, occ: Bitboard) -> Bitboard {
         (self.attacks_from_pawn(s, Color::BLACK) & self.pieces_cp(Color::WHITE, PieceType::PAWN))
             | (self.attacks_from_pawn(s, Color::WHITE)
@@ -337,67 +361,83 @@ impl Position {
             | (self.attacks_from(PieceType::KING, s) & self.pieces_p(PieceType::KING))
     }
 
+    #[inline(always)]
     pub fn attackers_to(&self, s: Square) -> Bitboard {
         self.attackers_to_occ(s, self.by_type_bb[PieceType::ALL_PIECES.0 as usize])
     }
 
+    #[inline(always)]
     pub fn checkers(&self) -> Bitboard {
         self.st().checkers_bb
     }
 
+    #[inline(always)]
     pub fn blockers_for_king(&self, c: Color) -> Bitboard {
         self.st().blockers_for_king[c.0 as usize]
     }
 
+    #[inline(always)]
     pub fn pinners_for_king(&self, c: Color) -> Bitboard {
         self.st().pinners_for_king[c.0 as usize]
     }
 
+    #[inline(always)]
     pub fn check_squares(&self, pt: PieceType) -> Bitboard {
         self.st().check_squares[pt.0 as usize]
     }
 
+    #[inline(always)]
     pub fn pawn_passed(&self, c: Color, s: Square) -> bool {
         self.pieces_cp(!c, PieceType::PAWN) & passed_pawn_mask(c, s) == 0
     }
 
+    #[inline(always)]
     pub fn advanced_pawn_push(&self, m: Move) -> bool {
         self.moved_piece(m).piece_type() == PieceType::PAWN
             && m.from().relative_rank(self.side_to_move()) > Square::RANK_4
     }
 
+    #[inline(always)]
     pub fn key(&self) -> Key {
         self.st().key
     }
 
+    #[inline(always)]
     pub fn pawn_key(&self) -> Key {
         self.st().pawn_key
     }
 
+    #[inline(always)]
     pub fn material_key(&self) -> Key {
         self.st().material_key
     }
 
+    #[inline(always)]
     pub fn psq_score(&self) -> Score {
         self.st().psq
     }
 
+    #[inline(always)]
     pub fn non_pawn_material_c(&self, c: Color) -> Value {
         self.st().non_pawn_material[c.0 as usize]
     }
 
+    #[inline(always)]
     pub fn non_pawn_material(&self) -> Value {
         self.non_pawn_material_c(Color::WHITE) + self.non_pawn_material_c(Color::BLACK)
     }
 
+    #[inline(always)]
     pub fn game_ply(&self) -> i32 {
         self.game_ply
     }
 
+    #[inline(always)]
     pub fn rule50_count(&self) -> i32 {
         self.st().rule50
     }
 
+    #[inline(always)]
     pub fn opposite_bishops(&self) -> bool {
         self.piece_count[Piece::W_BISHOP.0 as usize] == 1
             && self.piece_count[Piece::B_BISHOP.0 as usize] == 1
@@ -407,6 +447,7 @@ impl Position {
             )
     }
 
+    #[inline(always)]
     pub fn is_chess960(&self) -> bool {
         self.chess960
     }
@@ -429,6 +470,7 @@ impl Position {
         }
     }
 
+    #[inline(always)]
     pub fn captured_piece(&self) -> Piece {
         self.st().captured_piece
     }

@@ -364,7 +364,7 @@ fn evaluate<Us: ColorTrait>(pos: &Position, e: &mut Entry) -> Score {
     e.passed_pawns[us.0 as usize] = Bitboard(0);
     e.pawn_attacks_span[us.0 as usize] = Bitboard(0);
     e.weak_unopposed[us.0 as usize] = 0;
-    e.semiopen_files[us.0 as usize] = std::u8::MAX;
+    e.semiopen_files[us.0 as usize] = u8::MAX;
     e.king_squares[us.0 as usize] = Square::NONE;
     e.pawn_attacks[us.0 as usize] = our_pawns.shift(right) | our_pawns.shift(left);
     e.pawns_on_squares[us.0 as usize][Color::BLACK.0 as usize] =

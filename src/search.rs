@@ -724,7 +724,6 @@ fn search<NT: NodeType>(
     ss[6].ply = ss[5].ply + 1;
     ss[5].current_move = Move::NONE;
     ss[6].excluded_move = Move::NONE;
-    let mut best_move = Move::NONE;
     ss[5].cont_history = pos.cont_history.get(Piece::NO_PIECE, Square(0));
     ss[7].killers = [Move::NONE; 2];
     let prev_sq = ss[4].current_move.to();
@@ -1108,6 +1107,7 @@ fn search<NT: NodeType>(
     let mut skip_quiets = false;
     let mut tt_capture = false;
     let pv_exact = pv_node && tt_hit && tte.bound() == Bound::EXACT;
+    let mut best_move = Move::NONE;
 
     // Step 12. Loop through moves
     // Loop through all pseudo-legal moves until no moves remain or a beta
@@ -1620,26 +1620,27 @@ fn qsearch<NT: NodeType, const IN_CHECK: bool>(
         futility_base = -Value::INFINITE;
     } else {
         if tt_hit {
-            // Never assume anything on values stored in TT
-            let mut tmp = tte.eval();
-            if tmp == Value::NONE {
-                tmp = evaluate(pos);
+            // Evaluate and update static evaluation in the search stack
+            let mut eval_value = tte.eval();
+            if eval_value == Value::NONE {
+                eval_value = evaluate(pos);
             }
-            ss[5].static_eval = tmp;
-            // Can tt_value be used as a better evaluation?
-            if tt_value != Value::NONE
+            ss[5].static_eval = eval_value;
+
+            // Determine if tt_value can be used as a better evaluation
+            best_value = if tt_value != Value::NONE
                 && tte.bound()
-                    & (if tt_value > tmp {
+                    & (if tt_value > eval_value {
                         Bound::LOWER
                     } else {
                         Bound::UPPER
                     })
                     != 0
             {
-                best_value = tt_value;
+                tt_value
             } else {
-                best_value = tmp;
-            }
+                eval_value
+            };
         } else {
             best_value = if ss[4].current_move != Move::NULL {
                 evaluate(pos)
@@ -1833,16 +1834,17 @@ fn value_from_tt(v: Value, ply: i32) -> Value {
 
 // update_pv() adds current move and appends child pv
 fn update_pv(ss: &mut [Stack], m: Move) {
-    ss[5].pv.truncate(0);
+    let next_pv = ss[6].pv.clone(); // Clone the Vec to avoid borrowing issues
+    ss[5].pv.clear();
     ss[5].pv.push(m);
-    let slice_to_extend: Vec<_> = ss[6].pv.clone();
-    ss[5].pv.extend(slice_to_extend);
+    ss[5].pv.extend(next_pv); // Extend from the cloned Vec
 }
 
 // update_continuation_histories() updates histories of the move pairs formed
 // by moves at ply -1, -2 and -4 with current move.
 fn update_continuation_histories(ss: &[Stack], pc: Piece, to: Square, bonus: i32) {
-    for &index in &[3, 2, 0] {
+    // Indices corresponding to ply -1, -2, and -4
+    for &index in [3, 2, 0].iter() {
         if ss[index].current_move.is_ok() {
             ss[index].cont_history.update(pc, to, bonus);
         }
@@ -1881,9 +1883,10 @@ fn update_stats(
     quiets_cnt: usize,
     bonus: i32,
 ) {
+    // Update the killers array by placing the current move in the first position
     if ss[5].killers[0] != m {
-        ss[5].killers.swap(0, 1);
-        ss[5].killers[0] = m;
+        ss[5].killers.swap(0, 1); // Swap the first and second elements
+        ss[5].killers[0] = m; // Place the current move in the first position
     }
 
     let c = pos.side_to_move();

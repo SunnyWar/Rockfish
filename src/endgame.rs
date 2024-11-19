@@ -196,18 +196,21 @@ fn verify_material(pos: &Position, c: Color, npm: Value, pawns_cnt: i32) -> bool
 // Map the square as if strong_side is white and strong_side's only pawn
 // is on the left half of the baord.
 fn normalize(pos: &Position, strong_side: Color, sq: Square) -> Square {
+    // Ensure there is exactly one pawn for the strong side
     debug_assert!(pos.count(strong_side, PieceType::PAWN) == 1);
 
-    let sq = if pos.square(strong_side, PieceType::PAWN).file() >= Square::FILE_E {
+    // Mirror the square if the pawn's file is greater than or equal to FILE_E
+    let mirrored_sq = if pos.square(strong_side, PieceType::PAWN).file() >= Square::FILE_E {
         Square(sq.0 ^ 7) // Mirror SQ_H1 -> SQ_A1
     } else {
         sq
     };
 
+    // Return the mirrored square for Black side; otherwise, return the square as is
     if strong_side == Color::BLACK {
-        !sq
+        !mirrored_sq
     } else {
-        sq
+        mirrored_sq
     }
 }
 
