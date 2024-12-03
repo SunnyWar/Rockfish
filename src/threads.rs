@@ -168,7 +168,7 @@ fn run_thread(idx: usize, tx: Sender<Arc<ThreadCtrl>>) {
             .push(std::cell::UnsafeCell::new(material::Entry::new()));
     }
     pos.is_main = idx == 0;
-    pos.thread_idx = idx as i32;
+    pos.thread_idx = idx as i16;
     let th = Arc::new(ThreadCtrl::new(idx));
     tx.send(th.clone()).unwrap();
     pos.thread_ctrl = Some(th.clone());

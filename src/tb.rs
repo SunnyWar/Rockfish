@@ -2736,7 +2736,7 @@ fn encode<T: Encoding>(p: &mut [Square; TB_PIECES], ei: &EncInfo, entry: &T::Ent
     let n = entry.num() as usize;
 
     if T::ENC != PieceEnc::ENC {
-        p[..entry.pawns(0) as usize].sort_by(|a, b| ptwist::<T>(*b).cmp(&ptwist::<T>(*a)));
+        p[..entry.pawns(0) as usize].sort_by_key(|b| std::cmp::Reverse(ptwist::<T>(*b)));
     }
 
     if p[0].0 & 0x04 != 0 {
