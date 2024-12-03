@@ -1627,7 +1627,7 @@ fn qsearch<NT: NodeType, const IN_CHECK: bool>(
             }
             ss[5].static_eval = tmp;
             // Can tt_value be used as a better evaluation?
-            if tt_value != Value::NONE
+            best_value = if tt_value != Value::NONE
                 && tte.bound()
                     & (if tt_value > tmp {
                         Bound::LOWER
@@ -1636,10 +1636,10 @@ fn qsearch<NT: NodeType, const IN_CHECK: bool>(
                     })
                     != 0
             {
-                best_value = tt_value;
+                tt_value
             } else {
-                best_value = tmp;
-            }
+                tmp
+            };
         } else {
             best_value = if ss[4].current_move != Move::NULL {
                 evaluate(pos)
