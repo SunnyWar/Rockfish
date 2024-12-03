@@ -194,15 +194,21 @@ impl Entry {
         } else {
             Color::WHITE
         };
+
+        const WHITE_SHELTER_MASK: Bitboard = Bitboard(4367616); // bitboard!(A2, B3, C2, F2, G3, H2)
+        const BLACK_SHELTER_MASK: Bitboard = Bitboard(46515938924691456); // bitboard!(A7, B6, C7, F7, G6, H7)
+        const WHITE_STORM_MASK: Bitboard = Bitboard(10813440); // bitboard!(A3, C3, F3, H3)
+        const BLACK_STORM_MASK: Bitboard = Bitboard(181419418583040); // bitboard!(A6, C6, F6, H6)
+
         let shelter_mask = if us == Color::WHITE {
-            bitboard!(A2, B3, C2, F2, G3, H2)
+            WHITE_SHELTER_MASK
         } else {
-            bitboard!(A7, B6, C7, F7, G6, H7)
+            BLACK_SHELTER_MASK
         };
         let storm_mask = if us == Color::WHITE {
-            bitboard!(A3, C3, F3, H3)
+            WHITE_STORM_MASK
         } else {
-            bitboard!(A6, C6, F6, H6)
+            BLACK_STORM_MASK
         };
 
         let center = ksq.file().clamp(Square::FILE_B, Square::FILE_G);
