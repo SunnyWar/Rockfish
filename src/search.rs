@@ -1620,27 +1620,29 @@ fn qsearch<NT: NodeType, const IN_CHECK: bool>(
         futility_base = -Value::INFINITE;
     } else {
         if tt_hit {
-            // Never assume anything on values stored in TT
-            let mut tmp = tte.eval();
-            if tmp == Value::NONE {
-                tmp = evaluate(pos);
+            // Evaluate the position using the transposition table entry (TTE) value if available
+            let mut evaluation = tte.eval();
+            if evaluation == Value::NONE {
+                evaluation = evaluate(pos);
             }
-            ss[5].static_eval = tmp;
-            // Can tt_value be used as a better evaluation?
+            ss[5].static_eval = evaluation;
+
+            // Determine if the TTE value can be used as a better evaluation
             best_value = if tt_value != Value::NONE
-                && tte.bound()
-                    & (if tt_value > tmp {
+                && (tte.bound()
+                    & (if tt_value > evaluation {
                         Bound::LOWER
                     } else {
                         Bound::UPPER
-                    })
+                    }))
                     != 0
             {
                 tt_value
             } else {
-                tmp
+                evaluation
             };
         } else {
+            // If no TTE hit, evaluate the current position
             best_value = if ss[4].current_move != Move::NULL {
                 evaluate(pos)
             } else {
@@ -1708,11 +1710,14 @@ fn qsearch<NT: NodeType, const IN_CHECK: bool>(
             debug_assert!(m.move_type() != MoveType::ENPASSANT);
 
             let futility_value = futility_base + piece_value(EG, pos.piece_on(m.to()));
+
+            // Check futility pruning
             if futility_value <= alpha {
                 best_value = best_value.max(futility_value);
                 continue;
             }
 
+            // Check static exchange evaluation (SEE)
             if futility_base <= alpha && !pos.see_ge(m, Value::ZERO + 1) {
                 best_value = best_value.max(futility_base);
                 continue;
