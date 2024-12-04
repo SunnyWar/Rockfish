@@ -683,7 +683,10 @@ enum TbHashEntry {
 // of the form KQPvKRP, where "KQP" represents the white pieces if
 // flip == false and the black pieces if flip == true.
 fn prt_str(pos: &Position, flip: bool) -> String {
-    let mut c = if flip { Color::BLACK } else { Color::WHITE };
+    let mut c = match flip {
+        true => Color::BLACK,
+        false => Color::WHITE,
+    };
 
     let mut s = String::new();
 
@@ -736,10 +739,9 @@ fn calc_key_from_pieces(pieces: &[u8]) -> Key {
 static mut PATH: Option<String> = None;
 
 fn sep_char() -> char {
-    if cfg!(target_os = "windows") {
-        ';'
-    } else {
-        ':'
+    match cfg!(target_os = "windows") {
+        true => ';',
+        false => ':',
     }
 }
 
@@ -2259,7 +2261,11 @@ pub fn expand_mate(pos: &mut Position, idx: usize) {
     // First get to the end of the incomplete PV
     for i in 0..pos.root_moves[idx].pv.len() {
         let m = pos.root_moves[idx].pv[i];
-        v = if v > Value::ZERO { -v - 1 } else { -v + 1 };
+        v = match v > Value::ZERO {
+            true => -v - 1,
+            false => -v + 1,
+        };
+
         wdl = -wdl;
         let gives_check = pos.gives_check(m);
         pos.do_move(m, gives_check);
@@ -2268,7 +2274,11 @@ pub fn expand_mate(pos: &mut Position, idx: usize) {
     // Now try to expand until the actual mate
     if popcount(pos.pieces()) <= cardinality_dtm() {
         while v != -Value::MATE {
-            v = if v > Value::ZERO { -v - 1 } else { -v + 1 };
+            v = match v > Value::ZERO {
+                true => -v - 1,
+                false => -v + 1,
+            };
+
             wdl = -wdl;
             let mut best_move = Move::NONE;
             for m in MoveList::new::<Legal>(pos) {

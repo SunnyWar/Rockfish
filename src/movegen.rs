@@ -206,35 +206,24 @@ fn generate_pawn_moves<Us: ColorTrait, T: GenType>(
 ) -> usize {
     let us = Us::COLOR;
     let them = !us;
-    let trank_8bb = if us == Color::WHITE {
-        Bitboard::RANK8_BB
-    } else {
-        Bitboard::RANK1_BB
-    };
-    let trank_7bb = if us == Color::WHITE {
-        Bitboard::RANK7_BB
-    } else {
-        Bitboard::RANK2_BB
-    };
-    let trank_3bb = if us == Color::WHITE {
-        Bitboard::RANK3_BB
-    } else {
-        Bitboard::RANK6_BB
-    };
-    let up = if us == Color::WHITE {
-        Direction::NORTH
-    } else {
-        Direction::SOUTH
-    };
-    let right = if us == Color::WHITE {
-        Direction::NORTH_EAST
-    } else {
-        Direction::SOUTH_WEST
-    };
-    let left = if us == Color::WHITE {
-        Direction::NORTH_WEST
-    } else {
-        Direction::SOUTH_EAST
+
+    let (trank_8bb, trank_7bb, trank_3bb, up, right, left) = match us {
+        Color::WHITE => (
+            Bitboard::RANK8_BB,
+            Bitboard::RANK7_BB,
+            Bitboard::RANK3_BB,
+            Direction::NORTH,
+            Direction::NORTH_EAST,
+            Direction::NORTH_WEST,
+        ),
+        _ => (
+            Bitboard::RANK1_BB,
+            Bitboard::RANK2_BB,
+            Bitboard::RANK6_BB,
+            Direction::SOUTH,
+            Direction::SOUTH_WEST,
+            Direction::SOUTH_EAST,
+        ),
     };
 
     let mut empty_squares = Bitboard(0);

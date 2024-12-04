@@ -296,10 +296,9 @@ fn evaluate_kpk(pos: &Position, strong_side: Color) -> Value {
     debug_assert!(verify_material(pos, weak_side, Value::ZERO, 0));
 
     // Assume strong_side is white and the pawn is on files A-D
-    let us = if strong_side == pos.side_to_move() {
-        Color::WHITE
-    } else {
-        Color::BLACK
+    let us = match strong_side == pos.side_to_move() {
+        true => Color::WHITE,
+        false => Color::BLACK,
     };
 
     let wksq = normalize(pos, strong_side, pos.square(strong_side, PieceType::KING));
@@ -1009,10 +1008,9 @@ pub fn scale_kpkp(pos: &Position, strong_side: Color) -> ScaleFactor {
     let bksq = normalize(pos, strong_side, pos.square(weak_side, PieceType::KING));
     let psq = normalize(pos, strong_side, pos.square(strong_side, PieceType::PAWN));
 
-    let us = if strong_side == pos.side_to_move() {
-        Color::WHITE
-    } else {
-        Color::BLACK
+    let us = match strong_side == pos.side_to_move() {
+        true => Color::WHITE,
+        false => Color::BLACK,
     };
 
     // If the pawn has advanced to the fifth rank or further and is not a

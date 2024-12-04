@@ -1020,11 +1020,11 @@ fn evaluate_initiative(pos: &Position, ei: &EvalInfo, eg: Value) -> Score {
 
 // evaluate_scale_factor() computes the scale factor for the winning side
 fn evaluate_scale_factor(pos: &Position, ei: &EvalInfo, eg: Value) -> ScaleFactor {
-    let strong_side = if eg > Value::DRAW {
-        Color::WHITE
-    } else {
-        Color::BLACK
+    let strong_side = match eg > Value::DRAW {
+        true => Color::WHITE,
+        false => Color::BLACK,
     };
+
     let sf = ei.me.scale_factor(pos, strong_side);
 
     // If we don't already have an unusual scale factor, check for certain

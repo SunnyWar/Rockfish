@@ -201,7 +201,7 @@ impl Entry {
         let (shelter_mask, storm_mask) = match us {
             Color::WHITE => (WHITE_SHELTER_MASK, WHITE_STORM_MASK),
             _ => (BLACK_SHELTER_MASK, BLACK_STORM_MASK),
-        };        
+        };
 
         let center = ksq.file().clamp(Square::FILE_B, Square::FILE_G);
         let b = pos.pieces_p(PieceType::PAWN)

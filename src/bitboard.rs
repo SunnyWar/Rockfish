@@ -598,15 +598,14 @@ pub fn init() {
     }
 
     for f in 0..8 {
-        let left = if f > Square::FILE_A {
-            file_bb(f - 1)
-        } else {
-            Bitboard(0)
+        let left = match f {
+            f if f > Square::FILE_A => file_bb(f - 1),
+            _ => Bitboard(0),
         };
-        let right = if f < Square::FILE_H {
-            file_bb(f + 1)
-        } else {
-            Bitboard(0)
+
+        let right = match f {
+            f if f < Square::FILE_H => file_bb(f + 1),
+            _ => Bitboard(0),
         };
 
         unsafe {
@@ -672,10 +671,9 @@ pub fn init() {
                 };
 
                 for &step in steps {
-                    let direction = if color == Color::WHITE {
-                        Direction(step)
-                    } else {
-                        Direction(-step)
+                    let direction = match color {
+                        Color::WHITE => Direction(step),
+                        _ => Direction(-step),
                     };
 
                     let to_square = square + direction;

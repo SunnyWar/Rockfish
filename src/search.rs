@@ -736,17 +736,17 @@ fn search<NT: NodeType>(
     let excluded_move = ss[5].excluded_move;
     let pos_key = pos.key() ^ Key(u64::from(excluded_move.0 << 16));
     let (mut tte, mut tt_hit) = tt::probe(pos_key);
-    let tt_value = if tt_hit {
-        value_from_tt(tte.value(), ss[5].ply)
-    } else {
-        Value::NONE
+    let tt_value = match tt_hit {
+        true => value_from_tt(tte.value(), ss[5].ply),
+        false => Value::NONE,
     };
-    let mut tt_move = if root_node {
-        pos.root_moves[pos.pv_idx].pv[0]
-    } else if tt_hit {
-        tte.mov()
-    } else {
-        Move::NONE
+
+    let mut tt_move = match root_node {
+        true => pos.root_moves[pos.pv_idx].pv[0],
+        false => match tt_hit {
+            true => tte.mov(),
+            false => Move::NONE,
+        },
     };
 
     // At non-PV nodes we check for an early cutoff

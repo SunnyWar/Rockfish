@@ -54,26 +54,28 @@ fn importance(ply: i32) -> f64 {
 }
 
 fn remaining(my_time: i64, movestogo: i32, ply: i32, slow_mover: i64, time_type: TimeType) -> i64 {
-    let max_ratio = if time_type == TimeType::OptimumTime {
-        1.0
-    } else {
-        MAX_RATIO
+    // Determine max_ratio and steal_ratio based on time_type
+    let (max_ratio, steal_ratio) = match time_type {
+        TimeType::OptimumTime => (1.0, 0.0),
+        _ => (MAX_RATIO, STEAL_RATIO),
     };
-    let steal_ratio = if time_type == TimeType::OptimumTime {
-        0.0
-    } else {
-        STEAL_RATIO
-    };
+
+    // Calculate the importance of the current move
     let move_importance = (importance(ply) * slow_mover as f64) / 100.0;
 
+    // Calculate the importance of other moves
     let other_moves_importance: f64 = (1..movestogo).map(|i| importance(ply + 2 * i)).sum();
 
+    // Calculate the ratios
     let ratio1 =
         max_ratio * move_importance / (max_ratio * move_importance + other_moves_importance);
     let ratio2 = (move_importance + steal_ratio * other_moves_importance)
         / (move_importance + other_moves_importance);
+
+    // Use the minimum of the calculated ratios
     let min_ratio = ratio1.min(ratio2);
 
+    // Return the remaining time
     (my_time as f64 * min_ratio) as i64
 }
 
