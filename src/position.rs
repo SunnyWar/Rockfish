@@ -1072,18 +1072,17 @@ impl Position {
                 let rfrom = to; // Castling is encoded as king captures rook
                 let kto = relative_square(
                     self.side_to_move(),
-                    if rfrom > kfrom {
-                        Square::G1
-                    } else {
-                        Square::C1
+                    match rfrom > kfrom {
+                        true => Square::G1,
+                        false => Square::C1,
                     },
                 );
+
                 let rto = relative_square(
                     self.side_to_move(),
-                    if rfrom > kfrom {
-                        Square::F1
-                    } else {
-                        Square::D1
+                    match rfrom > kfrom {
+                        true => Square::F1,
+                        false => Square::D1,
                     },
                 );
 

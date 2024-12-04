@@ -1237,17 +1237,19 @@ fn calc_factors<T: Encoding>(
 }
 
 fn set_norm<T: Encoding>(ei: &mut EncInfo, e: &T::Entry) {
-    let mut i;
-    if T::ENC == PieceEnc::ENC {
-        ei.norm[0] = if e.kk_enc() { 2 } else { 3 };
-        i = ei.norm[0] as usize;
-    } else {
-        ei.norm[0] = e.pawns(0);
-        if e.pawns(1) > 0 {
-            ei.norm[e.pawns(0) as usize] = e.pawns(1);
+    let mut i = match T::ENC == PieceEnc::ENC {
+        true => {
+            ei.norm[0] = if e.kk_enc() { 2 } else { 3 };
+            ei.norm[0] as usize
         }
-        i = (e.pawns(0) + e.pawns(1)) as usize;
-    }
+        false => {
+            ei.norm[0] = e.pawns(0);
+            if e.pawns(1) > 0 {
+                ei.norm[e.pawns(0) as usize] = e.pawns(1);
+            }
+            (e.pawns(0) + e.pawns(1)) as usize
+        }
+    };
 
     while i < e.num() as usize {
         for j in i..e.num() as usize {
@@ -1658,10 +1660,12 @@ fn add_underprom_caps(pos: &Position, list: &mut [ExtMove], end: usize) -> usize
 
     for idx in 0..end {
         let m = list[idx].m;
+
         if m.move_type() == MoveType::PROMOTION && pos.piece_on(m.to()) != Piece::NO_PIECE {
-            list[extra].m = Move(m.0 - (1 << 12));
-            list[extra + 1].m = Move(m.0 - (2 << 12));
-            list[extra + 2].m = Move(m.0 - (3 << 12));
+            // Calculate underpromotion moves and add them to the list
+            list[extra].m = Move(m.0 - (1 << 12)); // Promotion to knight
+            list[extra + 1].m = Move(m.0 - (2 << 12)); // Promotion to bishop
+            list[extra + 2].m = Move(m.0 - (3 << 12)); // Promotion to rook
             extra += 3;
         }
     }
@@ -1705,11 +1709,7 @@ fn probe_ab(pos: &mut Position, alpha: i32, beta: i32, success: &mut i32) -> i32
         }
     }
     let v = probe_table::<Wdl>(pos, (), success);
-    if best_value >= v {
-        best_value
-    } else {
-        v
-    }
+    std::cmp::max(best_value, v)
 }
 
 // Probe the WDL table for a particular position.
@@ -2212,12 +2212,10 @@ fn root_probe_dtm(pos: &mut Position, root_moves: &mut RootMoves) -> bool {
     // Probe each move
     for ref mut rm in root_moves.iter_mut() {
         // Use tb_score to find out if the position is won or lost
-        let wdl = if rm.tb_score > Value::PawnValueEg {
-            2
-        } else if rm.tb_score < -Value::PawnValueEg {
-            -2
-        } else {
-            0
+        let wdl = match rm.tb_score {
+            score if score > Value::PawnValueEg => 2,
+            score if score < -Value::PawnValueEg => -2,
+            _ => 0,
         };
 
         if wdl == 0 {

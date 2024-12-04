@@ -290,10 +290,9 @@ pub fn move_str(m: Move, chess960: bool) -> String {
 
     if m.move_type() == MoveType::CASTLING && !chess960 {
         to = Square::make(
-            if to > from {
-                Square::FILE_G
-            } else {
-                Square::FILE_C
+            match to > from {
+                true => Square::FILE_G,
+                false => Square::FILE_C,
             },
             from.rank(),
         );

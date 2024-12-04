@@ -189,10 +189,9 @@ fn futility_move_counts(i: bool, d: Depth) -> i32 {
 // History and stats update bonus, based on depth
 fn stat_bonus(depth: Depth) -> i32 {
     let d = depth.value();
-    if d > 17 {
-        0
-    } else {
-        d * d + 2 * d - 2
+    match d {
+        d if d > 17 => 0,
+        _ => d * d + 2 * d - 2,
     }
 }
 

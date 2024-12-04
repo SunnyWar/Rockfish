@@ -1082,11 +1082,11 @@ pub fn evaluate(pos: &Position) -> Value {
 
     // Early exit if score is high
     let v = (score.mg() + score.eg()) / 2;
+
     if v.abs() > LAZY_THRESHOLD {
-        return if pos.side_to_move() == Color::WHITE {
-            v
-        } else {
-            -v
+        return match pos.side_to_move() {
+            Color::WHITE => v,
+            _ => -v,
         };
     }
 
