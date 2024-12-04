@@ -186,13 +186,11 @@ impl Entry {
 
     // shelter_storm() calculates shelter and storm penalties for the file
     // the king is on, as well as the two closest files.
-
     fn shelter_storm<Us: ColorTrait>(pos: &Position, ksq: Square) -> Value {
         let us = Us::COLOR;
-        let them = if us == Color::WHITE {
-            Color::BLACK
-        } else {
-            Color::WHITE
+        let them = match us {
+            Color::WHITE => Color::BLACK,
+            _ => Color::WHITE,
         };
 
         const WHITE_SHELTER_MASK: Bitboard = Bitboard(4367616); // bitboard!(A2, B3, C2, F2, G3, H2)
@@ -200,16 +198,10 @@ impl Entry {
         const WHITE_STORM_MASK: Bitboard = Bitboard(10813440); // bitboard!(A3, C3, F3, H3)
         const BLACK_STORM_MASK: Bitboard = Bitboard(181419418583040); // bitboard!(A6, C6, F6, H6)
 
-        let shelter_mask = if us == Color::WHITE {
-            WHITE_SHELTER_MASK
-        } else {
-            BLACK_SHELTER_MASK
-        };
-        let storm_mask = if us == Color::WHITE {
-            WHITE_STORM_MASK
-        } else {
-            BLACK_STORM_MASK
-        };
+        let (shelter_mask, storm_mask) = match us {
+            Color::WHITE => (WHITE_SHELTER_MASK, WHITE_STORM_MASK),
+            _ => (BLACK_SHELTER_MASK, BLACK_STORM_MASK),
+        };        
 
         let center = ksq.file().clamp(Square::FILE_B, Square::FILE_G);
         let b = pos.pieces_p(PieceType::PAWN)

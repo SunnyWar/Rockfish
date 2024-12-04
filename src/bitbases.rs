@@ -110,10 +110,9 @@ impl KPKPosition {
         let us = self.us;
         let psq = self.psq;
 
-        let them = if us == Color::WHITE {
-            Color::BLACK
-        } else {
-            Color::WHITE
+        let them = match us {
+            Color::WHITE => Color::BLACK,
+            _ => Color::WHITE,
         };
 
         let mut r = INVALID;

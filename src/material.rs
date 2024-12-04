@@ -109,10 +109,9 @@ fn is_kqkrps(pos: &Position, us: Color) -> bool {
 // imbalance() calculates the imbalance by comparing the piece count of
 // each piece type for both colors.
 fn imbalance(pc: &[[i32; 6]; 2], us: Color) -> i32 {
-    let them = if us == Color::WHITE {
-        Color::BLACK
-    } else {
-        Color::WHITE
+    let them = match us {
+        Color::WHITE => Color::BLACK,
+        _ => Color::WHITE,
     };
 
     let mut bonus = 0;
