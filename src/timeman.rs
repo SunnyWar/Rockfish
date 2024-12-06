@@ -61,7 +61,7 @@ fn remaining(my_time: i64, movestogo: i32, ply: i32, slow_mover: i64, time_type:
     };
 
     // Calculate the importance of the current move
-    let move_importance = (importance(ply) * slow_mover as f64) / 100.0;
+    let move_importance = (importance(ply) * slow_mover as f64) / 128.0;
 
     // Calculate the importance of other moves
     let other_moves_importance: f64 = (1..movestogo).map(|i| importance(ply + 2 * i)).sum();

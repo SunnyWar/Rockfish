@@ -226,17 +226,27 @@ impl Entry {
                 Square::RANK_1
             };
 
+            // Determine storm condition
+            let storm_condition = if f == ksq.file() && rk_them == ksq.relative_rank(us) + 1 {
+                Self::BLOCKED_BY_KING
+            } else if rk_us == Square::RANK_1 {
+                Self::UNOPPOSED
+            } else if rk_them == rk_us + 1 {
+                Self::BLOCKED_BY_PAWN
+            } else {
+                Self::UNBLOCKED
+            };
+
+            // Calculate shelter weakness
             let d = std::cmp::min(f, Square::FILE_H - f);
-            safety -= SHELTER_WEAKNESS[usize::from(f == ksq.file())][d as usize][rk_us as usize]
-                + STORM_DANGER[if f == ksq.file() && rk_them == ksq.relative_rank(us) + 1 {
-                    Self::BLOCKED_BY_KING
-                } else if rk_us == Square::RANK_1 {
-                    Self::UNOPPOSED
-                } else if rk_them == rk_us + 1 {
-                    Self::BLOCKED_BY_PAWN
-                } else {
-                    Self::UNBLOCKED
-                }][d as usize][rk_them as usize];
+            let shelter_weakness =
+                SHELTER_WEAKNESS[usize::from(f == ksq.file())][d as usize][rk_us as usize];
+
+            // Calculate storm danger
+            let storm_danger = STORM_DANGER[storm_condition][d as usize][rk_them as usize];
+
+            // Update safety
+            safety -= shelter_weakness + storm_danger;
         }
 
         if popcount((our_pawns & shelter_mask) | (their_pawns & storm_mask)) == 5 {
@@ -380,14 +390,9 @@ fn evaluate<Us: ColorTrait>(pos: &Position, e: &mut Entry) -> Score {
         e.pawn_attacks_span[us.0 as usize] |= pawn_attack_span(us, s);
 
         // Flag the pawn
-        let opposed = their_pawns & forward_file_bb(us, s);
         let stoppers = their_pawns & passed_pawn_mask(us, s);
         let lever = their_pawns & pawn_attacks(us, s);
-        let lever_push = their_pawns & pawn_attacks(us, s + up);
-        let doubled = our_pawns & (s - up);
         let neighbours = our_pawns & adjacent_files_bb(f);
-        let phalanx = neighbours & s.rank_bb();
-        let supported = neighbours & (s - up).rank_bb();
 
         // A pawn is backward if it is behind all pawns of the same color on
         // the adjacent files and cannot be safely advanced.
@@ -408,6 +413,9 @@ fn evaluate<Us: ColorTrait>(pos: &Position, e: &mut Entry) -> Score {
         // Passed pawns will be properly scored in evaluation because we need
         // full attack info to evaluate them. Include also not passed pawns
         // which could become passed after one or two pawn pushes.
+        let lever_push = their_pawns & pawn_attacks(us, s + up);
+        let phalanx = neighbours & s.rank_bb();
+        let supported = neighbours & (s - up).rank_bb();
         if stoppers ^ lever ^ lever_push == 0
             && our_pawns & forward_file_bb(us, s) == 0
             && popcount(supported) >= popcount(lever)
@@ -423,6 +431,7 @@ fn evaluate<Us: ColorTrait>(pos: &Position, e: &mut Entry) -> Score {
         }
 
         // Score this pawn
+        let opposed = their_pawns & forward_file_bb(us, s);
         if supported | phalanx != 0 {
             score += unsafe {
                 CONNECTED[usize::from(opposed != 0)][usize::from(phalanx != 0)]
@@ -436,6 +445,7 @@ fn evaluate<Us: ColorTrait>(pos: &Position, e: &mut Entry) -> Score {
             e.weak_unopposed[us.0 as usize] += i32::from(opposed == 0);
         }
 
+        let doubled = our_pawns & (s - up);
         if doubled != 0 && supported == 0 {
             score -= DOUBLED;
         }

@@ -1876,8 +1876,6 @@ fn probe_dtm_loss(pos: &mut Position, success: &mut i32) -> Value {
 }
 
 fn probe_dtm_win(pos: &mut Position, success: &mut i32) -> Value {
-    let mut best = -Value::INFINITE;
-
     // Generate all moves
     let mut list: [ExtMove; 256] = [ExtMove {
         m: Move::NONE,
@@ -1890,6 +1888,7 @@ fn probe_dtm_win(pos: &mut Position, success: &mut i32) -> Value {
     };
 
     // Perform a 1-ply search
+    let mut best = -Value::INFINITE;
     for &m in &list[0..end] {
         if !pos.legal(m.m) {
             continue;

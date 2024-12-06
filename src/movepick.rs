@@ -190,16 +190,19 @@ impl GameStage {
 // including a given limit.
 fn partial_insertion_sort(list: &mut [ExtMove], limit: i32) {
     let mut sorted_end = 0;
+
     for p in 1..list.len() {
         if list[p].value >= limit {
             let tmp = list[p];
             sorted_end += 1;
             list[p] = list[sorted_end];
 
-            let pos = (0..sorted_end)
-                .rfind(|&i| list[i].value >= tmp.value)
-                .map_or(0, |i| i + 1);
-            list.copy_within(pos..sorted_end, pos + 1);
+            let mut pos = sorted_end;
+            while pos > 0 && list[pos - 1].value < tmp.value {
+                list[pos] = list[pos - 1];
+                pos -= 1;
+            }
+
             list[pos] = tmp;
         }
     }
