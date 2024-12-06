@@ -1627,18 +1627,20 @@ fn probe_table<T: TbType>(pos: &Position, s: T::Select, success: &mut i32) -> i3
     // Obtain the position's material signature key
     let key = pos.material_key();
 
-    // Test for KvK
+    // Test for King vs King
     if T::TYPE == Wdl::TYPE && pos.pieces() == pos.pieces_p(PieceType::KING) {
         return 0;
     }
 
+    // Initialize the result variable
     let mut res = 0;
-    let map = unsafe { Box::from_raw(TB_MAP) };
 
+    // Safely access the TB_MAP
+    let map = unsafe { &*TB_MAP };
+
+    // Match the key in the map and probe the appropriate table
     match map.get(&key) {
-        None => {
-            *success = 0;
-        }
+        None => *success = 0,
         Some(&TbHashEntry::Piece(idx)) => {
             let e = unsafe { &PIECE_ENTRIES[idx] };
             res = probe_helper::<T::PieceTable>(pos, e, s, success);
@@ -1649,7 +1651,8 @@ fn probe_table<T: TbType>(pos: &Position, s: T::Select, success: &mut i32) -> i3
         }
     }
 
-    std::mem::forget(map);
+    // No need to call `std::mem::forget`, just ignore the map reference
+    let _ = map;
 
     res
 }

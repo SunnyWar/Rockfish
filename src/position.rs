@@ -753,17 +753,20 @@ impl Position {
             self.st_mut().pawn_key ^= tmp;
         }
 
-        for c in 0..2 {
-            for pt in 2..6 {
-                let pc = Piece::make(Color(c), PieceType(pt));
-                let tmp = self.count(Color(c), PieceType(pt)) * piece_value(MG, pc);
-                self.st_mut().non_pawn_material[c as usize] += tmp;
-            }
+        for color in 0..2 {
+            for piece_type in 1..7 {
+                let piece = Piece::make(Color(color), PieceType(piece_type));
+                let count = self.count(Color(color), PieceType(piece_type));
 
-            for pt in 1..7 {
-                let pc = Piece::make(Color(c), PieceType(pt));
-                for cnt in 0..self.count(Color(c), PieceType(pt)) {
-                    self.st_mut().material_key ^= zobrist::material(pc, cnt);
+                if piece_type >= 2 && piece_type <= 5 {
+                    // Calculate non-pawn material for pieces other than pawns
+                    let material_value = count * piece_value(MG, piece);
+                    self.st_mut().non_pawn_material[color as usize] += material_value;
+                }
+
+                // Update material key for all pieces
+                for i in 0..count {
+                    self.st_mut().material_key ^= zobrist::material(piece, i);
                 }
             }
         }
@@ -1166,6 +1169,8 @@ impl Position {
             // If the captured piece is a pawn, update pawn hash key, otherwise
             // update non-pawn material.
             if captured.piece_type() == PieceType::PAWN {
+                self.st_mut().pawn_key ^= zobrist::psq(captured, capsq);
+
                 if m.move_type() == MoveType::ENPASSANT {
                     capsq -= pawn_push(us);
 
@@ -1177,8 +1182,6 @@ impl Position {
 
                     self.board[capsq.0 as usize] = Piece::NO_PIECE;
                 }
-
-                self.st_mut().pawn_key ^= zobrist::psq(captured, capsq);
             } else {
                 self.st_mut().non_pawn_material[them.0 as usize] -= piece_value(MG, captured);
             }
