@@ -973,13 +973,15 @@ impl Position {
                 return false;
             }
 
-            if self.attacks_from_pawn(from, us) & self.pieces_c(!us) & to == 0
-                && !((from + pawn_push(us) == to) && self.empty(to))
-                && !(from + 2 * pawn_push(us) == to
-                    && from.rank() == relative_rank(us, Square::RANK_2)
-                    && self.empty(to)
-                    && self.empty(to - pawn_push(us)))
-            {
+            let is_attacked_by_pawn =
+                self.attacks_from_pawn(from, us) & self.pieces_c(!us) & to != 0;
+            let is_single_pawn_push = from + pawn_push(us) == to && self.empty(to);
+            let is_double_pawn_push = from + 2 * pawn_push(us) == to
+                && from.rank() == relative_rank(us, Square::RANK_2)
+                && self.empty(to)
+                && self.empty(to - pawn_push(us));
+
+            if !is_attacked_by_pawn && !is_single_pawn_push && !is_double_pawn_push {
                 return false;
             }
         } else if self.attacks_from(pc.piece_type(), from) & to == 0 {
@@ -1442,39 +1444,38 @@ impl Position {
             return Value::ZERO >= value;
         }
 
-        let from = m.from();
-        let to = m.to();
-
         // The opponent may be able to recapture so this is the best result
         // we can hope for.
-        let mut swap = piece_value(MG, self.piece_on(to)) - value;
-        if swap < Value::ZERO {
+        let to = m.to();
+        let mut material_balance = piece_value(MG, self.piece_on(to)) - value;
+        if material_balance < Value::ZERO {
             return false;
         }
 
         // Now assume the worst possible result: that the opponent can
         // capture our piece for free.
-        swap = piece_value(MG, self.piece_on(from)) - swap;
-        if swap <= Value::ZERO {
+        let from: Square = m.from();
+        material_balance = piece_value(MG, self.piece_on(from)) - material_balance;
+        if material_balance <= Value::ZERO {
             return true;
         }
 
         // Find all attackers to the destination square, with the moving piece
         // removed, but possibly an X-ray attacked added behind it.
-        let mut occ = self.pieces() ^ from ^ to;
+        let mut occupied_squares = self.pieces() ^ from ^ to;
         let mut stm = self.piece_on(from).color();
-        let mut attackers = self.attackers_to_occ(to, occ);
+        let mut attackers = self.attackers_to_occ(to, occupied_squares);
         let mut res = Value(1);
 
         loop {
             stm = !stm;
-            attackers &= occ;
+            attackers &= occupied_squares;
             let mut stm_attackers = attackers & self.pieces_c(stm);
             if stm_attackers == 0 {
                 break;
             }
             if stm_attackers & self.blockers_for_king(stm) != 0
-                && self.pinners_for_king(stm) & !occ == 0
+                && self.pinners_for_king(stm) & !occupied_squares == 0
             {
                 stm_attackers &= !self.blockers_for_king(stm);
             }
@@ -1482,66 +1483,63 @@ impl Position {
                 break;
             }
             res = Value(res.0 ^ 1);
-            let bb = stm_attackers & self.pieces_p(PieceType::PAWN);
-            if bb != 0 {
-                swap = Value::PawnValueMg - swap;
-                if swap < res {
+            let piece_bitboard = stm_attackers & self.pieces_p(PieceType::PAWN);
+            if piece_bitboard != 0 {
+                material_balance = Value::PawnValueMg - material_balance;
+                if material_balance < res {
                     break;
                 }
-                occ ^= bb & -bb;
-                attackers |= attacks_bb(PieceType::BISHOP, to, occ)
+                occupied_squares ^= piece_bitboard & -piece_bitboard;
+                attackers |= attacks_bb(PieceType::BISHOP, to, occupied_squares)
                     & self.pieces_pp(PieceType::BISHOP, PieceType::QUEEN);
                 continue;
             }
-            let bb = stm_attackers & self.pieces_p(PieceType::KNIGHT);
-            if bb != 0 {
-                swap = Value::KnightValueMg - swap;
-                if swap < res {
+            let piece_bitboard = stm_attackers & self.pieces_p(PieceType::KNIGHT);
+            if piece_bitboard != 0 {
+                material_balance = Value::KnightValueMg - material_balance;
+                if material_balance < res {
                     break;
                 }
-                occ ^= bb & -bb;
+                occupied_squares ^= piece_bitboard & -piece_bitboard;
                 continue;
             }
-            let bb = stm_attackers & self.pieces_p(PieceType::BISHOP);
-            if bb != 0 {
-                swap = Value::BishopValueMg - swap;
-                if swap < res {
+            let piece_bitboard = stm_attackers & self.pieces_p(PieceType::BISHOP);
+            if piece_bitboard != 0 {
+                material_balance = Value::BishopValueMg - material_balance;
+                if material_balance < res {
                     break;
                 }
-                occ ^= bb & -bb;
-                attackers |= attacks_bb(PieceType::BISHOP, to, occ)
+                occupied_squares ^= piece_bitboard & -piece_bitboard;
+                attackers |= attacks_bb(PieceType::BISHOP, to, occupied_squares)
                     & self.pieces_pp(PieceType::BISHOP, PieceType::QUEEN);
                 continue;
             }
-            let bb = stm_attackers & self.pieces_p(PieceType::ROOK);
-            if bb != 0 {
-                swap = Value::RookValueMg - swap;
-                if swap < res {
+            let piece_bitboard = stm_attackers & self.pieces_p(PieceType::ROOK);
+            if piece_bitboard != 0 {
+                material_balance = Value::RookValueMg - material_balance;
+                if material_balance < res {
                     break;
                 }
-                occ ^= bb & -bb;
-                attackers |= attacks_bb(PieceType::ROOK, to, occ)
+                occupied_squares ^= piece_bitboard & -piece_bitboard;
+                attackers |= attacks_bb(PieceType::ROOK, to, occupied_squares)
                     & self.pieces_pp(PieceType::ROOK, PieceType::QUEEN);
                 continue;
             }
-            let bb = stm_attackers & self.pieces_p(PieceType::QUEEN);
-            if bb != 0 {
-                swap = Value::QueenValueMg - swap;
-                if swap < res {
+            let piece_bitboard = stm_attackers & self.pieces_p(PieceType::QUEEN);
+            if piece_bitboard != 0 {
+                material_balance = Value::QueenValueMg - material_balance;
+                if material_balance < res {
                     break;
                 }
-                occ ^= bb & -bb;
-                attackers |= (attacks_bb(PieceType::BISHOP, to, occ)
+                occupied_squares ^= piece_bitboard & -piece_bitboard;
+                attackers |= (attacks_bb(PieceType::BISHOP, to, occupied_squares)
                     & self.pieces_pp(PieceType::BISHOP, PieceType::QUEEN))
-                    | (attacks_bb(PieceType::ROOK, to, occ)
+                    | (attacks_bb(PieceType::ROOK, to, occupied_squares)
                         & self.pieces_pp(PieceType::ROOK, PieceType::QUEEN));
                 continue;
             }
-            if attackers & !self.pieces_c(stm) != 0 {
-                return res == Value::ZERO;
-            } else {
-                return res != Value::ZERO;
-            }
+
+            return (attackers & !self.pieces_c(stm) != 0) == (res == Value::ZERO);
         }
         res != Value::ZERO
     }
@@ -1585,28 +1583,32 @@ impl Position {
     }
 
     pub fn has_repeated(&self) -> bool {
-        let mut l = self.states.len() - 1;
-        loop {
-            let mut i = 4;
-            let e = std::cmp::min(self.states[l].rule50, self.states[l].plies_from_null);
+        let mut current_index = self.states.len() - 1;
 
-            if e < i {
+        loop {
+            let mut steps = 4;
+            let min_steps = std::cmp::min(
+                self.states[current_index].rule50,
+                self.states[current_index].plies_from_null,
+            );
+
+            if min_steps < steps {
                 return false;
             }
 
-            let mut k = self.states.len() - 3;
+            let mut check_index = self.states.len() - 3;
 
-            while i <= e {
-                k -= 2;
+            while steps <= min_steps {
+                check_index -= 2;
 
-                if self.states[k].key == self.states[l].key {
+                if self.states[check_index].key == self.states[current_index].key {
                     return true;
                 }
 
-                i += 2;
+                steps += 2;
             }
 
-            l -= 2;
+            current_index -= 2;
         }
     }
 

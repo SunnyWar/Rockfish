@@ -185,38 +185,42 @@ pub fn probe(key: Key) -> (&'static mut TTEntry, bool) {
     }
 
     // Find an entry to be replaced according to the replacement strategy
-    let mut r = 0;
+    let mut replacement_index = 0;
+    let current_generation = i32::from(generation());
+    const OFFSET: i32 = 259;
+
     for i in 1..CLUSTER_SIZE {
-        // Due to our packed storage format for generation and its cyclic
-        // nature we add 259 (256 is the modulus plus 3 to keep the lowest
-        // two bound bits from affecting the result) to calculate the entry
-        // age correctly even after generation8 overflows into the next cycle.
-        if i32::from(cl.entry[r].depth8)
-            - ((259 + i32::from(generation()) - i32::from(cl.entry[r].gen_bound8)) & 0xfc) * 2
-            > i32::from(cl.entry[i].depth8)
-                - ((259 + i32::from(generation()) - i32::from(cl.entry[i].gen_bound8)) & 0xfc) * 2
-        {
-            r = i;
+        let r_entry = &cl.entry[replacement_index];
+        let i_entry = &cl.entry[i];
+
+        let r_entry_age = (OFFSET + current_generation - i32::from(r_entry.gen_bound8)) & 0xfc;
+        let i_entry_age = (OFFSET + current_generation - i32::from(i_entry.gen_bound8)) & 0xfc;
+
+        let r_score = i32::from(r_entry.depth8) - r_entry_age * 2;
+        let i_score = i32::from(i_entry.depth8) - i_entry_age * 2;
+
+        if r_score > i_score {
+            replacement_index = i;
         }
     }
 
-    (&mut (cl.entry[r]), false)
+    (&mut (cl.entry[replacement_index]), false)
 }
 
 // tt::hashfull() returns an approximation of the hashtable occupation during
 // a search. The hash is x permill full, as per UCI protocol.
 pub fn hashfull() -> i32 {
     let tt_slice = unsafe { std::slice::from_raw_parts(TABLE, 1000 / CLUSTER_SIZE) };
-
-    let mut cnt = 0;
+    let mut count = 0;
+    let current_generation = generation();
 
     for cluster in tt_slice {
-        for tte in &cluster.entry {
-            if tte.gen_bound8 & 0xfc == generation() {
-                cnt += 1;
+        for entry in &cluster.entry {
+            if entry.gen_bound8 & 0xfc == current_generation {
+                count += 1;
             }
         }
     }
 
-    cnt
+    count
 }
